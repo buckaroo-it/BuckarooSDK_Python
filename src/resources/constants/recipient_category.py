@@ -1,0 +1,2 @@
+PERSON = "Person"
+COMPANY = "Company"

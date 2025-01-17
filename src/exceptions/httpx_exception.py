@@ -1,0 +1,2 @@
+class HttpxException(Exception):
+    pass

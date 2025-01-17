@@ -1,0 +1,2 @@
+class BuckarooException(Exception):
+    pass

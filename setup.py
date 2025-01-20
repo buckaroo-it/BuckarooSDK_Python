@@ -23,12 +23,14 @@ setup(
     install_requires=[
         "httpx==0.28.0",
         "python-dotenv==1.0.1",
+        "setuptools==75.8.0",
     ],
     extras_require={
         "dev": [
             "mypy==1.13.0",
             "pytest==8.3.3",
             "black==24.10.0",
+            "types-setuptools==75.6.0.20241223"
         ],
     },
 )

@@ -1,11 +1,10 @@
 from __future__ import annotations
-from typing import Self
+from typing import Self, Protocol
 
 from src.transaction import TransactionResponse
-from .payment_method_builder_interface import PaymentMethodBuilderInterface
 
 
-class PaymentMethodMixin(PaymentMethodBuilderInterface):
+class PaymentMethodInterface(Protocol):
     def header(self, data: dict) -> Self:
         return self
 

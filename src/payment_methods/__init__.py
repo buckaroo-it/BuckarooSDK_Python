@@ -1,3 +1,3 @@
 from .ideal.ideal import Ideal
-from .payable_method_builder_interface import PayableMethodBuilderInterface
-from .payable_method_factory import payable_method_factory
+from .base.payable.payable_method_interface import PayableMethodInterface
+from .base.payable.payable_method_factory import payable_method_factory

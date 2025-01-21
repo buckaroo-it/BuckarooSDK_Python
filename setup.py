@@ -30,7 +30,7 @@ setup(
             "mypy==1.13.0",
             "pytest==8.3.3",
             "black==24.10.0",
-            "types-setuptools==75.6.0.20241223"
+            "types-setuptools==75.6.0.20241223",
         ],
     },
 )

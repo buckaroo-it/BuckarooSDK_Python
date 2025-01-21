@@ -1,14 +1,19 @@
-from typing import Self, Protocol
+from typing import Self
+from abc import ABC, abstractmethod
 
-from ..has_properties import HasClient
+from ..payment.payment_method_interface import PaymentMethodInterface
 
 
-class PayableMethodInterface(Protocol, HasClient):
+class PayableMethodInterface(PaymentMethodInterface, ABC):
+
+    @abstractmethod
     def pay(self, data: dict) -> Self:
-        return self
+        pass
 
+    @abstractmethod
     def refund(self, data: dict) -> Self:
-        return self
+        pass
 
+    @abstractmethod
     def pay_remainder(self, data: dict) -> Self:
-        return self
+        pass

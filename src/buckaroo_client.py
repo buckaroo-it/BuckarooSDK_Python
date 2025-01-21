@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, Union
 
 from src.config import DefaultConfig, ConfigInterface
 from src.payment_methods import payable_method_factory, PayableMethodInterface
 from src.config import ConfigInterface
 from src.transaction import Client
+from typing import Type
 
 
 class BuckarooClient:

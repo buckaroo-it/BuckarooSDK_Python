@@ -1,23 +1,15 @@
 from __future__ import annotations
-from typing import Self, Protocol
+from typing import Self
+from abc import ABC, abstractmethod
 
 from src.transaction import TransactionResponse
 
 
-class PaymentMethodInterface(Protocol):
+class PaymentMethodInterface(ABC):
+    @abstractmethod
     def header(self, data: dict) -> Self:
-        return self
+        pass
 
+    @abstractmethod
     def execute(self) -> TransactionResponse:
-        return TransactionResponse(
-            {
-                "status": 200,
-                "message": "OK",
-            },
-            {
-                "currency": "EUR",
-                "returnURL": "https://www.example.com/return",
-                "returnURLCancel": "https://www.example.com/cancel",
-                "pushURL": "https://www.example.com/push",
-            },
-        )
+        pass

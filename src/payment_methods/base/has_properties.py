@@ -1,4 +1,4 @@
-from typing import Protocol, Self
+from typing import Protocol
 
 from src.transaction import Client
 

@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, Union
 
 from src.config import DefaultConfig, ConfigInterface
-from src.payment_methods import payable_method_factory, PayableMethodBuilderInterface
+from src.payment_methods import payable_method_factory, PayableMethodInterface
 from src.config import ConfigInterface
 from src.transaction import Client
+from typing import Type
 
 
 class BuckarooClient:
@@ -32,7 +33,7 @@ class BuckarooClient:
     def client(self, client: Client) -> None:
         self._client = client
 
-    def payable(self, payment_method: str) -> PayableMethodBuilderInterface:
+    def payable(self, payment_method: str) -> PayableMethodInterface:
         return payable_method_factory(payment_method, self.client)
 
     # @todo: Implement authorizable(payment_method: string): AuthorizableMethodBuilderInterface
@@ -121,7 +122,7 @@ class BuckarooClient:
         pass
 
     # @todo: Implement get_active_subscriptions(): list
-    def get_active_subscriptions(self) -> list:
+    def get_active_subscriptions(self):
         # @todo: Add the implementation for get_active_subscriptions method
         pass
 

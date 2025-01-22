@@ -1,12 +1,11 @@
-from abc import ABC, abstractmethod
 from __future__ import annotations
 from typing import Self
+from abc import ABC, abstractmethod
 
 from src.transaction import TransactionResponse
 
 
-class PaymentMethodBuilderInterface(ABC):
-
+class PaymentMethodInterface(ABC):
     @abstractmethod
     def header(self, data: dict) -> Self:
         pass

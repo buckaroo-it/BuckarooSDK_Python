@@ -2,10 +2,10 @@ from __future__ import annotations
 from typing import Self
 
 from src.transaction import TransactionResponse
-from .payment_method_builder_interface import PaymentMethodBuilderInterface
+from .payment_method_interface import PaymentMethodInterface
 
 
-class PaymentMethodMixin(PaymentMethodBuilderInterface):
+class PaymentMethodMixin(PaymentMethodInterface):
     def header(self, data: dict) -> Self:
         return self
 

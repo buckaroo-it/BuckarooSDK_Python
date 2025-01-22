@@ -1,4 +1,5 @@
 import json
+from typing import Self
 
 from .http_post import HttpPost
 from .json import Json
@@ -15,7 +16,7 @@ class ReplyHandler:
         self._is_valid = False
         self.strategy: ReplyStrategyInterface
 
-    def validate(self):
+    def validate(self) -> Self:
         self.set_strategy()
         self._is_valid = self.strategy.validate()
         return self

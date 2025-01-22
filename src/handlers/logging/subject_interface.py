@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
+
 from .observer_interface import ObserverInterface
 
 

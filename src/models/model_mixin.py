@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, List, Self
+from typing import Any, Dict, Optional, Self
 
 from .model_interface import ModelInterface
 
@@ -22,7 +22,9 @@ class ModelMixin(ModelInterface):
         return self
 
     def service_parameter_key_of(self, property_name: str) -> str:
-        return property_name.capitalize()
+        cleaned_parameter = property_name.lstrip("_")
+        parameter_words = cleaned_parameter.split("_")
+        return "".join(word.capitalize() for word in parameter_words)
 
     def to_dict(self) -> Dict:
         return self._recursive_to_dict(self.__dict__)

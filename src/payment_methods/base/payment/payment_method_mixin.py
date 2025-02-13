@@ -3,11 +3,12 @@ from typing import Self
 
 from src.transaction import TransactionResponse
 from .payment_method_interface import PaymentMethodInterface
+from ..has_properties import HasClient, HasPayload
 
 
-class PaymentMethodMixin(PaymentMethodInterface):
+class PaymentMethodMixin(PaymentMethodInterface, HasClient, HasPayload):
     def header(self, data: dict) -> Self:
-        return self
+        return self.client.add_header(data)
 
     def execute(self) -> TransactionResponse:
         return TransactionResponse(

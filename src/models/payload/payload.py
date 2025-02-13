@@ -8,26 +8,26 @@ from ..custom_parameters import CustomParameters
 
 class Payload(ModelMixin):
     def __init__(self, values: Optional[Dict] = None):
-        self.clientIP: Optional[ClientIP] = None
-        self.currency: str = ""
-        self.returnURL: str = ""
-        self.returnURLError: str = ""
-        self.returnURLCancel: str = ""
-        self.returnURLReject: str = ""
-        self.pushURL: str = ""
-        self.pushURLFailure: str = ""
-        self.invoice: str = ""
-        self.description: str = ""
-        self.originalTransactionKey: str = ""
-        self.originalTransactionReference: str = ""
-        self.websiteKey: str = ""
-        self.culture: str = ""
-        self.startRecurrent: bool = False
-        self.continueOnIncomplete: str = ""
-        self.servicesSelectableByClient: str = ""
-        self.servicesExcludedForClient: str = ""
-        self.additionalParameters: Optional[AdditionalParameters] = None
-        self.customParameters: Optional[CustomParameters] = None
+        self._client_ip: Optional[ClientIP] = None
+        self._currency: str = ""
+        self._return_url: str = ""
+        self._return_url_error: str = ""
+        self._return_url_cancel: str = ""
+        self._return_url_reject: str = ""
+        self._push_url: str = ""
+        self._push_url_failure: str = ""
+        self._invoice: str = ""
+        self._description: str = ""
+        self._original_transaction_key: str = ""
+        self._original_transaction_reference: str = ""
+        self._website_key: str = ""
+        self._culture: str = ""
+        self._start_recurrent: bool = False
+        self._continue_on_incomplete: str = ""
+        self._services_selectable_by_client: str = ""
+        self._services_excluded_for_client: str = ""
+        self._additional_parameters: Optional[AdditionalParameters] = None
+        self._custom_parameters: Optional[CustomParameters] = None
 
         self.set_properties(values)
 
@@ -36,18 +36,18 @@ class Payload(ModelMixin):
             return self
 
         if "customParameters" in data:
-            self.customParameters = CustomParameters(data["customParameters"])
+            self._custom_parameters = CustomParameters(data["customParameters"])
             del data["customParameters"]
 
         if "additionalParameters" in data:
-            self.additionalParameters = AdditionalParameters(
+            self._additional_parameters = AdditionalParameters(
                 data["additionalParameters"]
             )
             del data["additionalParameters"]
 
         if "clientIP" in data:
             client_ip_data = data["clientIP"]
-            self.clientIP = ClientIP(
+            self._client_ip = ClientIP(
                 ip=client_ip_data.get("address"),
                 ip_type=client_ip_data.get("type"),
             )

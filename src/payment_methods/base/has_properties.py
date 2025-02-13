@@ -1,8 +1,21 @@
-from typing import Protocol
+from abc import ABC, abstractmethod
 
-from src.transaction import Client
+from src.transaction import Client, TransactionRequest
 
+class HasClient(ABC):
 
-class HasClient(Protocol):
     @property
-    def client(self) -> Client: ...
+    @abstractmethod
+    def client(self) -> Client: pass    
+
+class HasPayload(ABC):
+    
+    @property
+    @abstractmethod
+    def payload(self) -> dict: pass
+
+class HasTransationRequest(ABC):   
+
+    @property
+    @abstractmethod
+    def transaction_request(self) -> TransactionRequest: pass

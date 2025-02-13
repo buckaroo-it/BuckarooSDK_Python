@@ -5,7 +5,7 @@ from ..base.payable.payable_method_mixin import PayableMethodMixin
 from ..base.payment.payment_method_mixin import PaymentMethodMixin
 
 
-class Ideal(PayableMethodMixin, PaymentMethodMixin):
+class Ideal(PaymentMethodMixin, PayableMethodMixin):
     def __init__(self, client: Client):
         self._payment_name = "ideal"
         self._required_config_fields = [

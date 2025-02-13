@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+from .model_interface import ModelInterface
 
-class ServiceParameterInterface(ABC):
+
+class ServiceParameterInterface(ABC, ModelInterface):
 
     @abstractmethod
     def get_group_type(self, key: str) -> Optional[str]:

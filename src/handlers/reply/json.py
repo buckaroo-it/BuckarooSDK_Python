@@ -1,15 +1,15 @@
 from typing import Any, Dict
 
-from src.handlers import Validator
-from src.config import ConfigInterface
-from .reply_strategy_interface import ReplyStrategyInterface
+import src.handlers.hmac.validator as hmacValidator
+import src.handlers.config.config_interface as config_interface
+import src.handlers.reply.reply_strategy_interface as reply_strategy_interface
 
 
-class Json(ReplyStrategyInterface):
+class Json(reply_strategy_interface.ReplyStrategyInterface):
 
     def __init__(
         self,
-        config: ConfigInterface,
+        config: config_interface.ConfigInterface,
         data: Dict[str, Any],
         auth_header: str,
         uri: str,
@@ -23,5 +23,5 @@ class Json(ReplyStrategyInterface):
 
     def validate(self) -> bool:
 
-        validator = Validator(self.config)
+        validator = hmacValidator.Validator(self.config)
         return validator.validate(self.auth_header, self.uri, self.method, self.data)

@@ -1,52 +1,52 @@
-from src.resources import response_status as ResponseStatus
-from .response import Response
+import src.resources.constants.response_status as response_status
+import src.transaction.response.response as response
 
 
-class TransactionResponse(Response):
+class TransactionResponse(response.Response):
     def is_success(self):
-        return self.get_status_code() == ResponseStatus.BUCKAROO_STATUSCODE_SUCCESS
+        return self.get_status_code() == response_status.BUCKAROO_STATUSCODE_SUCCESS
 
     def is_failed(self):
-        return self.get_status_code() == ResponseStatus.BUCKAROO_STATUSCODE_FAILED
+        return self.get_status_code() == response_status.BUCKAROO_STATUSCODE_FAILED
 
     def is_canceled(self):
         status_code = self.get_status_code()
         return status_code in [
-            ResponseStatus.BUCKAROO_STATUSCODE_CANCELLED_BY_USER,
-            ResponseStatus.BUCKAROO_STATUSCODE_CANCELLED_BY_MERCHANT,
+            response_status.BUCKAROO_STATUSCODE_CANCELLED_BY_USER,
+            response_status.BUCKAROO_STATUSCODE_CANCELLED_BY_MERCHANT,
         ]
 
     def is_awaiting_consumer(self):
         return (
             self.get_status_code()
-            == ResponseStatus.BUCKAROO_STATUSCODE_WAITING_ON_CONSUMER
+            == response_status.BUCKAROO_STATUSCODE_WAITING_ON_CONSUMER
         )
 
     def is_pending_processing(self):
         return (
             self.get_status_code()
-            == ResponseStatus.BUCKAROO_STATUSCODE_PENDING_PROCESSING
+            == response_status.BUCKAROO_STATUSCODE_PENDING_PROCESSING
         )
 
     def is_waiting_on_user_input(self):
         return (
             self.get_status_code()
-            == ResponseStatus.BUCKAROO_STATUSCODE_WAITING_ON_USER_INPUT
+            == response_status.BUCKAROO_STATUSCODE_WAITING_ON_USER_INPUT
         )
 
     def is_rejected(self):
-        return self.get_status_code() == ResponseStatus.BUCKAROO_STATUSCODE_REJECTED
+        return self.get_status_code() == response_status.BUCKAROO_STATUSCODE_REJECTED
 
     def is_pending_approval(self):
         return (
             self.get_status_code()
-            == ResponseStatus.BUCKAROO_STATUSCODE_PENDING_APPROVAL
+            == response_status.BUCKAROO_STATUSCODE_PENDING_APPROVAL
         )
 
     def is_validation_failure(self):
         return (
             self.get_status_code()
-            == ResponseStatus.BUCKAROO_STATUSCODE_VALIDATION_FAILURE
+            == response_status.BUCKAROO_STATUSCODE_VALIDATION_FAILURE
         )
 
     def data(self, key=None):

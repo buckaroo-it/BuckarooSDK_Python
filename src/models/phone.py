@@ -1,7 +1,7 @@
-from .model_mixin import ModelMixin
+import src.models.model_mixin as model_mixin
 
 
-class Phone(ModelMixin):
+class Phone(model_mixin.ModelMixin):
     _land_line: str
     _mobile: str
     _phone: str

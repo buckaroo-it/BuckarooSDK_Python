@@ -1,12 +1,12 @@
 from typing import Any, Dict
 
-from .header.default_header import DefaultHeader
-from .header.hmac_header import HmacHeader
-from .header.culture_header import CultureHeader
-from .header.channel_header import ChannelHeader
-from .header.software_header import SoftwareHeader
-from .header.header_interface import HeaderInterface
-from src.config import ConfigInterface
+import src.transaction.request.header.default_header as default_header
+import src.transaction.request.header.hmac_header as hmac_header
+import src.transaction.request.header.culture_header as culture_header
+import src.transaction.request.header.channel_header as channel_header
+import src.transaction.request.header.software_header as software_header
+import src.transaction.request.header.header_interface as header_interface
+import src.handlers.config.config_interface as config_interface
 
 
 class Request:
@@ -29,18 +29,22 @@ class Request:
         self._headers.update(header)
 
     def get_headers(
-        self, url: str, data: str, method: str, config: ConfigInterface
+        self, url: str, data: str, method: str, config: config_interface.ConfigInterface
     ) -> dict:
-        internal_headers: HeaderInterface = DefaultHeader(
-            {
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": "application/json",
-            }
+        internal_headers: header_interface.HeaderInterface = (
+            default_header.DefaultHeader(
+                {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Accept": "application/json",
+                }
+            )
         )
-        internal_headers = HmacHeader(internal_headers, config, url, data, method)
-        internal_headers = CultureHeader(internal_headers, config)
-        internal_headers = ChannelHeader(internal_headers, config)
-        internal_headers = SoftwareHeader(internal_headers, config)
+        internal_headers = hmac_header.HmacHeader(
+            internal_headers, config, url, data, method
+        )
+        internal_headers = culture_header.CultureHeader(internal_headers, config)
+        internal_headers = channel_header.ChannelHeader(internal_headers, config)
+        internal_headers = software_header.SoftwareHeader(internal_headers, config)
 
         complete_internal_headers = internal_headers.get_headers()
         complete_internal_headers.update(self._headers)

@@ -1,11 +1,17 @@
-from .header_interface import HeaderInterface
-from src.config import ConfigInterface
 import json
 
 
-class SoftwareHeader(HeaderInterface):
+import src.handlers.config.config_interface as config_interface
+import src.transaction.request.header.header_interface as header_interface
 
-    def __init__(self, header: HeaderInterface, config: ConfigInterface):
+
+class SoftwareHeader(header_interface.HeaderInterface):
+
+    def __init__(
+        self,
+        header: header_interface.HeaderInterface,
+        config: config_interface.ConfigInterface,
+    ):
         self._header = header
         self._config = config
 

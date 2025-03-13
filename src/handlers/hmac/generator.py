@@ -3,17 +3,21 @@ import time
 import hmac
 import hashlib
 import base64
-from typing import Any
-from .hmac import Hmac
-from src.config import ConfigInterface
+
+import src.handlers.config.config_interface as config_interface
+import src.handlers.hmac.hmac as HMAC
 
 
 class Generator:
 
     def __init__(
-        self, config: ConfigInterface, data: str, uri: str, method: str = "POST"
+        self,
+        config: config_interface.ConfigInterface,
+        data: str,
+        uri: str,
+        method: str = "POST",
     ):
-        self._hmac = Hmac(
+        self._hmac = HMAC.Hmac(
             config,
             data,
             uri,
@@ -23,7 +27,7 @@ class Generator:
         self._method = method
 
     @property
-    def HMAC(self) -> Hmac:
+    def HMAC(self) -> HMAC.Hmac:
         return self._hmac
 
     def generate(self) -> str:

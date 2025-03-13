@@ -1,55 +1,60 @@
-from typing import Optional, Dict
-from src.config import ConfigInterface
-from src.exceptions import BuckarooException
-from src.handlers import DefaultLogger, SubjectInterface
-from src.resources import endpoints
-from .http_client import http_client_factory
-from .http_client.http_client_interface import HttpClientInterface
-from .response.transaction_response import TransactionResponse
-from .response.response import Response
-from .request.request import Request
+from typing import Optional
+import json
+
+import src.exceptions.buckaroo_exception as buckaroo_exception
+import src.resources.constants.endpoints as endpoints
+import src.handlers.config.config_interface as config_interface
+import src.handlers.logging.default_logger as default_logger
+import src.handlers.logging.subject_interface as subject_interface
+import src.transaction.request.transaction_request as transaction_request
+import src.transaction.request.request as request
+import src.transaction.response.response as response
+import src.transaction.response.transaction_response as transaction_response
+import src.transaction.http_client.http_client_interface as http_client_interface
+import src.transaction.http_client.http_client_factory as http_client_factory
+import src.transaction.http_client.http_client_interface as http_client_interface
 
 
 class Client:
     _METHOD_GET = "GET"
     _METHOD_POST = "POST"
-    _config: ConfigInterface
-    _http_client: HttpClientInterface
-    _logger: SubjectInterface
+    _config: config_interface.ConfigInterface
+    _http_client: http_client_interface.HttpClientInterface
+    _logger: subject_interface.SubjectInterface
 
-    def __init__(self, config: ConfigInterface):
+    def __init__(self, config: config_interface.ConfigInterface):
         self._config = config
         self._http_client = http_client_factory.create_client()
-        self._logger = DefaultLogger()
-        self._request = Request()
+        self._logger = default_logger.DefaultLogger()
+        self._request = request.Request()
 
     @property
-    def config(self) -> ConfigInterface:
+    def config(self) -> config_interface.ConfigInterface:
         return self._config
 
     @config.setter
-    def config(self, config: Optional[ConfigInterface] = None) -> None:
+    def config(self, config: Optional[config_interface.ConfigInterface] = None) -> None:
         if config:
             self._config = config
 
         if not self.config:
-            raise BuckarooException(
+            raise buckaroo_exception.BuckarooException(
                 self.logger,
                 "No config has been configured. Please pass your credentials to the constructor or set up a Config object.",
             )
 
     @property
-    def http_client(self) -> HttpClientInterface:
+    def http_client(self) -> http_client_interface.HttpClientInterface:
         return self._http_client
 
     @property
-    def logger(self) -> SubjectInterface:
+    def logger(self) -> subject_interface.SubjectInterface:
         return self._logger
 
     @property
-    def request(self) -> Request:
+    def request(self) -> request.Request:
         return self._request
-    
+
     def add_header(self, header: dict) -> None:
         self._request.add_header(header)
 
@@ -62,48 +67,65 @@ class Client:
 
     def get(
         self, end_point: Optional[str] = None
-    ) -> TransactionResponse:
-        return self.call(method=self._METHOD_GET, end_point=end_point)
-    
+    ) -> transaction_response.TransactionResponse:
+        return self._call(method=self._METHOD_GET, data=None, end_point=end_point)
+
     def get_with_generic_response(
         self, end_point: Optional[str] = None
-    ) -> Response:
-        return self.call(method=self._METHOD_GET, end_point=end_point)
+    ) -> response.Response:
+        return self._call(method=self._METHOD_GET, data=None, end_point=end_point)
 
-    def post(self, data: Optional[Dict] = None) -> TransactionResponse:
-        return self.call(self._METHOD_POST, data)
+    def post(
+        self, data: transaction_request.TransactionRequest
+    ) -> transaction_response.TransactionResponse:
+        return self._call(self._METHOD_POST, data)
 
-    def data_request(self, data: Optional[Dict] = None) -> TransactionResponse:
+    def data_request(
+        self, data: transaction_request.TransactionRequest
+    ) -> transaction_response.TransactionResponse:
         end_point = self.get_endpoint("json/DataRequest/")
-        return self.call(self._METHOD_POST, data, end_point)
+        return self._call(self._METHOD_POST, data, end_point)
 
-    def data_batch_request(self, data: Optional[Dict] = None) -> TransactionResponse:
+    def data_batch_request(
+        self, data: transaction_request.TransactionRequest
+    ) -> transaction_response.TransactionResponse:
         end_point = self.get_endpoint("json/batch/DataRequests")
-        return self.call(self._METHOD_POST, data, end_point)
+        return self._call(self._METHOD_POST, data, end_point)
 
     def transaction_batch_request(
-        self, data: Optional[Dict] = None
-    ) -> TransactionResponse:
+        self, data: transaction_request.TransactionRequest
+    ) -> transaction_response.TransactionResponse:
         end_point = self.get_endpoint("json/batch/Transactions")
-        return self.call(self._METHOD_POST, data, end_point)
+        return self._call(self._METHOD_POST, data, end_point)
 
     def specification(
-        self, payment_name: str, data: Optional[Dict] = None, service_version: int = 0
-    ) -> TransactionResponse:
+        self,
+        payment_name: str,
+        data: transaction_request.TransactionRequest,
+        service_version: int = 0,
+    ) -> transaction_response.TransactionResponse:
         end_point = self.get_endpoint(
             f"json/Transaction/Specification/{payment_name}?serviceVersion={service_version}"
         )
-        return self.call(self._METHOD_GET, data, end_point)
+        return self._call(self._METHOD_GET, data, end_point)
 
-    def call(
-        self, method: str, data: Optional[Dict], end_point: Optional[str] = None
-    ) -> TransactionResponse:
+    def _call(
+        self,
+        method: str,
+        data: transaction_request.TransactionRequest | None,
+        end_point: Optional[str] = None,
+    ) -> transaction_response.TransactionResponse:
         end_point = end_point or self.get_transaction_url()
 
         headers = self.request.get_headers(
-            end_point, str(data) if data else "", method, self.config
+            end_point,
+            method=method,
+            data=data.get_data_as_json() if data else "",
+            config=self.config,
         )
-        headers.update(data.get("headers", {}) if data else {})
+
+        if data:
+            headers.update(json.loads(data.get_data_as_json()))
 
         self.config.get_logger().info(f"{method} {end_point}")
         self.config.get_logger().info(f"HEADERS: {headers}")
@@ -112,8 +134,8 @@ class Client:
             self.config.get_logger().info(f"PAYLOAD: {data}")
 
         response, decoded_result = self.http_client.call(
-            end_point, headers, method, data if data else {}
+            end_point, headers, method, data.get_data_as_json() if data else ""
         )
-        response = TransactionResponse(response, decoded_result)
+        response = transaction_response.TransactionResponse(response, decoded_result)
 
         return response

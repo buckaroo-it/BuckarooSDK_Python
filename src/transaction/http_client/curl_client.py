@@ -1,14 +1,12 @@
 import subprocess
 import json
-from typing import Any, Mapping
-from src.exceptions import HttpxException
-from .http_client_interface import HttpClientInterface
+from typing import Any
+
+import src.transaction.http_client.http_client_interface as http_client_interface
 
 
-class CurlClient(HttpClientInterface):
-    def call(
-        self, url: str, headers: dict, method: str, data: Mapping[str, Any] | None
-    ) -> Any:
+class CurlClient(http_client_interface.HttpClientInterface):
+    def call(self, url: str, headers: dict, method: str, data: str | None) -> Any:
         try:
             command = [
                 "curl",

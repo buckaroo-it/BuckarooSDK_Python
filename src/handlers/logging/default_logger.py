@@ -1,36 +1,41 @@
 from typing import List, Union
-from .observer_interface import ObserverInterface
-from .subject_interface import SubjectInterface
 from dotenv import load_dotenv
 import os
-from .observers.error_reporter import ErrorReporter
-from .observers.logger_reporter import LoggerReporter
+
+import src.handlers.logging.observers.error_reporter as error_reporter
+import src.handlers.logging.observers.logger_reporter as logger_reporter
+import src.handlers.logging.observer_interface as observer_interface
+import src.handlers.logging.subject_interface as subject_interface
 
 load_dotenv()
 
 
-class DefaultLogger(SubjectInterface):
+class DefaultLogger(subject_interface.SubjectInterface):
     def __init__(self) -> None:
-        self._observers: List[ObserverInterface] = []
+        self._observers: List[observer_interface.ObserverInterface] = []
 
         if os.getenv("BPE_LOG") == "true":
-            self.attach(LoggerReporter())
+            self.attach(logger_reporter.LoggerReporter())
 
         if os.getenv("BPE_REPORT_ERROR") == "true":
-            self.attach(ErrorReporter())
+            self.attach(error_reporter.ErrorReporter())
 
     def attach(
-        self, observer_interface: Union[ObserverInterface, List[ObserverInterface]]
+        self,
+        new_observer_interface: Union[
+            observer_interface.ObserverInterface,
+            List[observer_interface.ObserverInterface],
+        ],
     ) -> None:
-        if isinstance(observer_interface, list):
-            for obs_interface in observer_interface:
+        if isinstance(new_observer_interface, list):
+            for obs_interface in new_observer_interface:
                 self.attach(obs_interface)
             return
 
-        if isinstance(observer_interface, ObserverInterface):
-            self._observers.append(observer_interface)
+        if isinstance(new_observer_interface, observer_interface.ObserverInterface):
+            self._observers.append(new_observer_interface)
 
-    def detach(self, ObserverInterface: ObserverInterface) -> None:
+    def detach(self, ObserverInterface: observer_interface.ObserverInterface) -> None:
         self._observers = [
             o for o in self._observers if not isinstance(o, type(ObserverInterface))
         ]

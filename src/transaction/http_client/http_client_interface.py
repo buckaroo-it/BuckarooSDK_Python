@@ -5,7 +5,5 @@ from typing import Any, Mapping
 class HttpClientInterface(ABC):
 
     @abstractmethod
-    def call(
-        self, url: str, headers: dict, method: str, data: Mapping[str, Any] | None
-    ) -> Any:
+    def call(self, url: str, headers: dict, method: str, data: str | None) -> Any:
         pass

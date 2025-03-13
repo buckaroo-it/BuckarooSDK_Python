@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from .model_interface import ModelInterface
+import src.models.model_interface as model_interface
 
 
-class ServiceParameterInterface(ABC, ModelInterface):
+class ServiceParameterInterface(model_interface.ModelInterface, ABC):
 
     @abstractmethod
     def get_group_type(self, key: str) -> Optional[str]:
         pass
 
     @abstractmethod
-    def get_group_key(self, key: str, key_count: int = 0) -> Optional[int]:
+    def get_group_key(self, key: str) -> Optional[int]:
         pass

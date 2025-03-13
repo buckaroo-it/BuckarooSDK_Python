@@ -1,7 +1,7 @@
-from .model_mixin import ModelMixin
+import src.models.model_mixin as model_mixin
 
 
-class Article(ModelMixin):
+class Article(model_mixin.ModelMixin):
     _identifier: str
     _type: str
     _brand: str

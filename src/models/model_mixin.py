@@ -1,16 +1,16 @@
 from typing import Any, Dict, Optional, Self
 
-from .model_interface import ModelInterface
+import src.models.model_interface as model_interface
 
 
-class ModelMixin(ModelInterface):
+class ModelMixin(model_interface.ModelInterface):
     def __getattr__(self, property_name: str) -> Any:
         if property_name in self.__dict__:
             return self.__dict__.get(property_name)
         return None
 
     def __setattr__(self, property_name: str, value: Any) -> None:
-        self.__dict__[property_name] = value
+        self.__dict__[property_name.removeprefix("_")] = value
 
     def get_object_vars(self) -> Dict:
         return self.__dict__
@@ -22,7 +22,7 @@ class ModelMixin(ModelInterface):
         return self
 
     def service_parameter_key_of(self, property_name: str) -> str:
-        cleaned_parameter = property_name.lstrip("_")
+        cleaned_parameter = property_name.removeprefix("_")
         parameter_words = cleaned_parameter.split("_")
         return "".join(word.capitalize() for word in parameter_words)
 

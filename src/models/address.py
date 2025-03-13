@@ -1,7 +1,7 @@
-from .model_mixin import ModelMixin
+import src.models.model_mixin as model_mixin
 
 
-class Address(ModelMixin):
+class Address(model_mixin.ModelMixin):
     _street: str
     _house_number: str
     _house_number_additional: str

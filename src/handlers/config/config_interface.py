@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List
-from src.handlers import SubjectInterface
+
+import src.handlers.logging.subject_interface as subject_interface
 
 
 class ConfigInterface(ABC):
@@ -65,9 +65,9 @@ class ConfigInterface(ABC):
         pass
 
     @abstractmethod
-    def set_logger(self, logger: SubjectInterface) -> None:
+    def set_logger(self, logger: subject_interface.SubjectInterface) -> None:
         pass
 
     @abstractmethod
-    def get_logger(self) -> SubjectInterface:
+    def get_logger(self) -> subject_interface.SubjectInterface:
         pass

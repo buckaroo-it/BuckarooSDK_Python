@@ -2,18 +2,19 @@ import base64
 import hmac
 import hashlib
 from typing import Any
-from src.config import ConfigInterface
-from src.exceptions import BuckarooException
-from .hmac import Hmac
+
+import src.handlers.config.config_interface as config_interface
+import src.exceptions.buckaroo_exception as buckaroo_exception
+import src.handlers.hmac.hmac as HMAC
 
 
 class Validator:
-    def __init__(self, config: ConfigInterface):
-        self._hmac = Hmac(config, "", "", "", "")
+    def __init__(self, config: config_interface.ConfigInterface):
+        self._hmac = HMAC.Hmac(config, "", "", "", "")
         self._hash = ""
 
     @property
-    def HMAC(self) -> Hmac:
+    def HMAC(self) -> HMAC.Hmac:
         return self._hmac
 
     def validate(self, header: str, uri: str, method: str, data: Any) -> bool:
@@ -42,4 +43,4 @@ class Validator:
         if self.validate(header, uri, method, data):
             return True
 
-        raise BuckarooException("HMAC validation failed.")
+        raise buckaroo_exception.BuckarooException("HMAC validation failed.")

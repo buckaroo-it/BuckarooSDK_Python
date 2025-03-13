@@ -1,5 +1,5 @@
-from .payload import Payload
+import src.models.payload.payload as payload
 
 
-class RefundPayload(Payload):
+class RefundPayload(payload.Payload):
     _amount_credit: float

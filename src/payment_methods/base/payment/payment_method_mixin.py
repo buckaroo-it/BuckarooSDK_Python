@@ -1,25 +1,19 @@
 from __future__ import annotations
 from typing import Self
 
-from src.transaction import TransactionResponse
-from .payment_method_interface import PaymentMethodInterface
-from ..has_properties import HasClient, HasPayload
+import src.transaction.response.transaction_response as transaction_response
+import src.payment_methods.base.payment.payment_method_interface as payment_method_interface
+import src.payment_methods.base.has_properties as has_properties
 
 
-class PaymentMethodMixin(PaymentMethodInterface, HasClient, HasPayload):
+class PaymentMethodMixin(
+    payment_method_interface.PaymentMethodInterface,
+    has_properties.HasClient,
+    has_properties.HasTransationRequest,
+):
     def header(self, data: dict) -> Self:
-        return self.client.add_header(data)
+        self.client.add_header(data)
+        return self
 
-    def execute(self) -> TransactionResponse:
-        return TransactionResponse(
-            {
-                "status": 200,
-                "message": "OK",
-            },
-            {
-                "currency": "EUR",
-                "returnURL": "https://www.example.com/return",
-                "returnURLCancel": "https://www.example.com/cancel",
-                "pushURL": "https://www.example.com/push",
-            },
-        )
+    def execute(self) -> transaction_response.TransactionResponse:
+        return self.client.post(self.transaction_request)

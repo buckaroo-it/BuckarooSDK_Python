@@ -1,15 +1,22 @@
 from typing import Dict, Any, Self
 import os
+import json
 
-from .request import Request
-from src.models import ModelInterface
+import src.models.model_interface as model_interface
+import src.models.service_list as service_list
+import src.transaction.request.request as request
 
-class TransactionRequest(Request):
+
+class TransactionRequest(request.Request):
     def __init__(self):
         self._data: Dict[str, Any] = {}
         self._data["ClientUserAgent"] = self.get_client_user_agent()
 
-    def set_payload(self, model: ModelInterface) -> Self:
+    @property
+    def data(self) -> Dict[str, Any]:
+        return self._data
+
+    def set_payload(self, model: model_interface.ModelInterface) -> Self:
         for key, value in model.to_dict().items():
             self.data[model.service_parameter_key_of(key)] = value
         return self
@@ -21,11 +28,16 @@ class TransactionRequest(Request):
     def get_data(self) -> Dict[str, Any]:
         return self.data
 
-    def get_services(self) -> Dict[str, Any]:
-        if "Services" not in self.data:
-            return {}
-        return self.data["Services"]
-    
+    def get_data_as_json(self) -> str:
+        data = self.get_data()
+        return json.dumps(self.get_data())
+
+    def set_services(self, service_list: service_list.ServiceList) -> None:
+        if "Services" in self.data:
+            self.data["Services"].extend(service_list)
+        else:
+            self.data["Services"] = service_list
+
     @staticmethod
     def get_client_user_agent() -> str:
         return os.getenv("HTTP_USER_AGENT", "")

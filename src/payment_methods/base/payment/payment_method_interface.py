@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Self
 from abc import ABC, abstractmethod
 
-from src.transaction import TransactionResponse
+import src.transaction.response.transaction_response as transaction_response
 
 
 class PaymentMethodInterface(ABC):
@@ -11,5 +11,5 @@ class PaymentMethodInterface(ABC):
         pass
 
     @abstractmethod
-    def execute(self) -> TransactionResponse:
+    def execute(self) -> transaction_response.TransactionResponse:
         pass

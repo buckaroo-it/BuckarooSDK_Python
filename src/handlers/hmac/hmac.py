@@ -3,14 +3,15 @@ from urllib.parse import urlparse, urlencode
 import json
 import hashlib
 import base64
-from src.config import ConfigInterface
 from typing import Union
+
+import src.handlers.config.config_interface as config_interface
 
 
 class Hmac:
     def __init__(
         self,
-        config: ConfigInterface,
+        config: config_interface.ConfigInterface,
         base64_data: str = "",
         uri: str = "",
         nonce: str = "",
@@ -23,7 +24,7 @@ class Hmac:
         self._time = time
 
     @property
-    def config(self) -> ConfigInterface:
+    def config(self) -> config_interface.ConfigInterface:
         return self._config
 
     @property

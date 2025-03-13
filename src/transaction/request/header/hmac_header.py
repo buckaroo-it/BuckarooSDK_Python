@@ -1,15 +1,15 @@
-from .header_interface import HeaderInterface
-from src.config import ConfigInterface
-from src.handlers import Generator
+import src.handlers.config.config_interface as config_interface
+import src.handlers.hmac.generator as generator
+import src.transaction.request.header.header_interface as header_interface
 
 
-class HmacHeader(HeaderInterface):
-    _hmac_generator: Generator
+class HmacHeader(header_interface.HeaderInterface):
+    _hmac_generator: generator.Generator
 
     def __init__(
         self,
-        header: HeaderInterface,
-        config: ConfigInterface,
+        header: header_interface.HeaderInterface,
+        config: config_interface.ConfigInterface,
         request_uri: str,
         data: str,
         http_method: str,
@@ -19,7 +19,9 @@ class HmacHeader(HeaderInterface):
         self._request_uri = request_uri
         self._data = data
         self._http_method = http_method
-        self._hmac_generator = Generator(config, data, request_uri, http_method)
+        self._hmac_generator = generator.Generator(
+            config, data, request_uri, http_method
+        )
 
     def get_headers(self) -> dict:
         headers = self._header.get_headers()

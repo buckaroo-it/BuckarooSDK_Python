@@ -1,9 +1,12 @@
 from typing import Optional, Dict
 
-from .service_parameter_interface import ServiceParameterInterface
-from .model_mixin import ModelMixin
+import src.models.service_parameter_interface as service_parameter_interface
+import src.models.model_mixin as model_mixin
 
-class ServiceParameter(ServiceParameterInterface, ModelMixin):
+
+class ServiceParameter(
+    service_parameter_interface.ServiceParameterInterface, model_mixin.ModelMixin
+):
     def set_properties(self, data: Optional[Dict] = None):
         if data is None:
             return self
@@ -17,9 +20,9 @@ class ServiceParameter(ServiceParameterInterface, ModelMixin):
                 setattr(self, property_name, value)
 
         return self
-    
+
     def get_group_type(self, key: str) -> Optional[str]:
-        return self.group_data.get(key, {}).get('groupType', None)
-    
+        return self.group_data.get(key, {}).get("groupType", None)
+
     def get_group_key(self, key: str) -> Optional[int]:
-        return self.group_data.get(key, {}).get('groupKey', None)
+        return self.group_data.get(key, {}).get("groupKey", None)

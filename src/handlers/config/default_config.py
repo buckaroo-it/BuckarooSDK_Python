@@ -1,13 +1,15 @@
-from typing import Optional, List
+from typing import Optional
 from dotenv import load_dotenv
 import os
-from src.config import ConfigInterface
-from src.handlers import SubjectInterface, DefaultLogger
+
+import src.handlers.logging.default_logger as default_logger
+import src.handlers.logging.subject_interface as subject_interface
+import src.handlers.config.config_interface as config_interface
 
 load_dotenv()
 
 
-class DefaultConfig(ConfigInterface):
+class DefaultConfig(config_interface.ConfigInterface):
     def __init__(
         self,
         website_key: str,
@@ -24,7 +26,7 @@ class DefaultConfig(ConfigInterface):
         module_version: Optional[str] = None,
         culture: Optional[str] = None,
         channel: Optional[str] = None,
-        logger: Optional[SubjectInterface] = None,
+        logger: Optional[subject_interface.SubjectInterface] = None,
     ) -> None:
         self.LIVE_MODE = "live"
         self.TEST_MODE = "test"
@@ -52,7 +54,7 @@ class DefaultConfig(ConfigInterface):
         self._module_version = os.getenv("ModuleVersion", module_version or "1.0.0")
         self._culture = os.getenv("Culture", culture or "")
         self._channel = os.getenv("Channel", channel or "")
-        self._logger = logger or DefaultLogger()
+        self._logger = logger or default_logger.DefaultLogger()
 
     def website_key(self) -> str:
         return self._website_key
@@ -103,10 +105,10 @@ class DefaultConfig(ConfigInterface):
         if mode:
             self._mode = mode
 
-    def set_logger(self, logger: SubjectInterface) -> None:
+    def set_logger(self, logger: subject_interface.SubjectInterface) -> None:
         self._logger = logger
 
-    def get_logger(self) -> SubjectInterface:
+    def get_logger(self) -> subject_interface.SubjectInterface:
         if not self._logger:
             raise ValueError("Logger has not been set.")
         return self._logger

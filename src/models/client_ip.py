@@ -2,11 +2,11 @@ from typing import Optional, Self
 import os
 import socket
 
-from src.resources import ip_protocol_version
-from .model_mixin import ModelMixin
+import src.resources.constants.ip_protocol_version as ip_protocol_version
+import src.models.model_mixin as model_mixin
 
 
-class ClientIP(ModelMixin):
+class ClientIP(model_mixin.ModelMixin):
     def __init__(self, ip: Optional[str] = None, ip_type: Optional[int] = None):
         self._Type: Optional[int] = None
         self._Address: Optional[str] = None

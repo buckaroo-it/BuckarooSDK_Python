@@ -1,10 +1,10 @@
 from typing import Self
 from abc import ABC, abstractmethod
 
-from ..payment.payment_method_interface import PaymentMethodInterface
+import src.payment_methods.base.payment.payment_method_interface as payment_method_interface
 
 
-class PayableMethodInterface(PaymentMethodInterface, ABC):
+class PayableMethodInterface(payment_method_interface.PaymentMethodInterface, ABC):
 
     @abstractmethod
     def pay(self, data: dict) -> Self:

@@ -1,8 +1,8 @@
-from .model_mixin import ModelMixin
-from .recipient_interface import RecipientInterface
+import src.models.model_mixin as model_mixin
+import src.models.recipient_interface as recipient_interface
 
 
-class Person(ModelMixin, RecipientInterface):
+class Person(model_mixin.ModelMixin, recipient_interface.RecipientInterface):
     _category: str
     _gender: str
     _culture: str

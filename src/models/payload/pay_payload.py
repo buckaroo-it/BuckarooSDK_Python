@@ -1,9 +1,9 @@
 import uuid
 
-from .payload import Payload
+import src.models.payload.payload as payload
 
 
-class PayPayload(Payload):
+class PayPayload(payload.Payload):
     _order: str
 
     def __init__(self, values=dict):

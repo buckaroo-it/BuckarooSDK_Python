@@ -1,14 +1,14 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Self
 
-from ..model_mixin import ModelMixin
-from ..client_ip import ClientIP
-from ..additional_parameters import AdditionalParameters
-from ..custom_parameters import CustomParameters
+import src.models.model_mixin as model_mixin
+import src.models.client_ip as client_ip
+import src.models.additional_parameters as additional_parameters
+import src.models.custom_parameters as custom_parameters
 
 
-class Payload(ModelMixin):
+class Payload(model_mixin.ModelMixin):
     def __init__(self, values: Optional[Dict] = None):
-        self._client_ip: Optional[ClientIP] = None
+        self._client_ip: Optional[client_ip.ClientIP] = None
         self._currency: str = ""
         self._return_url: str = ""
         self._return_url_error: str = ""
@@ -26,28 +26,32 @@ class Payload(ModelMixin):
         self._continue_on_incomplete: str = ""
         self._services_selectable_by_client: str = ""
         self._services_excluded_for_client: str = ""
-        self._additional_parameters: Optional[AdditionalParameters] = None
-        self._custom_parameters: Optional[CustomParameters] = None
+        self._additional_parameters: Optional[
+            additional_parameters.AdditionalParameters
+        ] = None
+        self._custom_parameters: Optional[custom_parameters.CustomParameters] = None
 
         self.set_properties(values)
 
-    def set_properties(self, data: Optional[Dict] = None) -> "Payload":
+    def set_properties(self, data: Optional[Dict] = None) -> Self:
         if data is None:
             return self
 
         if "customParameters" in data:
-            self._custom_parameters = CustomParameters(data["customParameters"])
+            self._custom_parameters = custom_parameters.CustomParameters(
+                data["customParameters"]
+            )
             del data["customParameters"]
 
         if "additionalParameters" in data:
-            self._additional_parameters = AdditionalParameters(
+            self._additional_parameters = additional_parameters.AdditionalParameters(
                 data["additionalParameters"]
             )
             del data["additionalParameters"]
 
         if "clientIP" in data:
             client_ip_data = data["clientIP"]
-            self._client_ip = ClientIP(
+            self._client_ip = client_ip.ClientIP(
                 ip=client_ip_data.get("address"),
                 ip_type=client_ip_data.get("type"),
             )

@@ -2,13 +2,13 @@ from abc import ABC
 from typing import Any, Dict
 import hashlib
 
-from .reply_strategy_interface import ReplyStrategyInterface
-from src.config import ConfigInterface
+import src.handlers.config.config_interface as config_interface
+import src.handlers.reply.reply_strategy_interface as reply_strategy_interface
 
 
-class HttpPost(ReplyStrategyInterface):
+class HttpPost(reply_strategy_interface.ReplyStrategyInterface):
 
-    def __init__(self, config: ConfigInterface, data: Dict[str, Any]):
+    def __init__(self, config: config_interface.ConfigInterface, data: Dict[str, Any]):
         self.config = config
         self.data = data
         self.data = dict(sorted(self.data.items(), key=lambda item: item[0].lower()))

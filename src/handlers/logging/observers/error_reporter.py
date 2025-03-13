@@ -1,8 +1,9 @@
 from typing import List
-from ..observer_interface import ObserverInterface
+
+import src.handlers.logging.observer_interface as observer_interface
 
 
-class ErrorReporter(ObserverInterface):
+class ErrorReporter(observer_interface.ObserverInterface):
     def __init__(self) -> None:
         self._reportables: List[str] = ["error", "critical", "emergency"]
 

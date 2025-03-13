@@ -1,9 +1,9 @@
 from typing import List, Optional, Self
 
-from .model_mixin import ModelMixin
+import src.models.model_mixin as model_mixin
 
 
-class AdditionalParameters(ModelMixin):
+class AdditionalParameters(model_mixin.ModelMixin):
     def __init__(self, values: Optional[dict] = None, is_data_request: bool = False):
         self.AdditionalParameter: Optional[List[dict]] = []
         self.List: Optional[List[dict]] = []

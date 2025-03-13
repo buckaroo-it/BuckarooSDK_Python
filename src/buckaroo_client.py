@@ -1,40 +1,47 @@
-from typing import Optional, Union
+from typing import Optional
 
-from src.config import DefaultConfig, ConfigInterface
-from src.payment_methods import payable_method_factory, PayableMethodInterface
-from src.config import ConfigInterface
-from src.transaction import Client
-from typing import Type
+import src.handlers.config.config_interface as config_interface
+import src.handlers.config.default_config as default_config
+import src.payment_methods.base.payable.payable_method_factory as payable_method_factory
+import src.payment_methods.base.payable.payable_method_interface as payable_method_interface
+import src.transaction.client as client
 
 
 class BuckarooClient:
-    _config: ConfigInterface
-    _client: Client
+    _config: config_interface.ConfigInterface
+    _client: client.Client
 
     def __init__(
-        self, website_key: str | ConfigInterface, secret_key: str, mode: Optional[str]
+        self,
+        website_key: str | config_interface.ConfigInterface,
+        secret_key: str,
+        mode: Optional[str],
     ):
         self._config = self.generate_config(website_key, secret_key, mode)
-        self._client = Client(self._config)
+        self._client = client.Client(self._config)
 
     @property
-    def config(self) -> ConfigInterface:
+    def config(self) -> config_interface.ConfigInterface:
         return self._config
 
     @config.setter
-    def config(self, config: ConfigInterface) -> None:
+    def config(self, config: config_interface.ConfigInterface) -> None:
         self._config = config
 
     @property
-    def client(self) -> Client:
+    def client(self) -> client.Client:
         return self._client
 
     @client.setter
-    def client(self, client: Client) -> None:
+    def client(self, client: "client.Client") -> None:
         self._client = client
 
-    def payable(self, payment_method: str) -> PayableMethodInterface:
-        return payable_method_factory(payment_method, self.client)
+    def payable(
+        self, payment_method: str
+    ) -> payable_method_interface.PayableMethodInterface:
+        return payable_method_factory.payable_method_factory(
+            payment_method, self.client
+        )
 
     # @todo: Implement authorizable(payment_method: string): AuthorizableMethodBuilderInterface
     def authorizable(self, payment_method: str):
@@ -142,9 +149,12 @@ class BuckarooClient:
         pass
 
     def generate_config(
-        self, website_key: str | ConfigInterface, secret_key: str, mode: Optional[str]
-    ) -> ConfigInterface:
-        if isinstance(website_key, ConfigInterface):
+        self,
+        website_key: str | config_interface.ConfigInterface,
+        secret_key: str,
+        mode: Optional[str],
+    ) -> config_interface.ConfigInterface:
+        if isinstance(website_key, config_interface.ConfigInterface):
             return website_key
         else:
-            return DefaultConfig(website_key, secret_key, mode)
+            return default_config.DefaultConfig(website_key, secret_key, mode)

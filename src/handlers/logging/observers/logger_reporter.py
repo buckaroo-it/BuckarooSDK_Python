@@ -1,9 +1,9 @@
 import logging
 from typing import List, Dict
-from src.handlers import ObserverInterface
+import src.handlers.logging.observer_interface as observer_interface
 
 
-class LoggerReporter(ObserverInterface):
+class LoggerReporter(observer_interface.ObserverInterface):
     def __init__(self):
         self.log = logging.getLogger("Buckaroo log")
         self.log.setLevel(logging.INFO)

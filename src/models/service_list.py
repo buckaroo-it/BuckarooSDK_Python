@@ -1,23 +1,35 @@
 from typing import Any, Dict, Optional, Self
 
-from .model_interface import ModelInterface
-from src.services import ServiceListParameterInterface, DefaultParameters, ModelParameters
-from .service_parameter_interface import ServiceParameterInterface
+import src.services.service_list_parameters.service_list_parameter_interface as service_list_parameter_interface
+import src.services.service_list_parameters.default_parameters as default_parameters
+import src.services.service_list_parameters.model_parameters as model_parameters
+import src.models.service_parameter_interface as service_parameter_interface
+import src.models.model_interface as model_interface
+import src.models.service_list_interface as service_list_interface
 
-class ServiceList:
-    def __init__(self, name: str, version: int, action: str, model: Optional[ModelInterface] = None):
-        self.name: str = name
-        self.version: int = version
-        self.action: str = action
-        self.parameters: Dict[str, Any] = {}
-        self.parameter_service: ServiceListParameterInterface = DefaultParameters(self)
+
+class ServiceList(service_list_interface.ServiceListInterface):
+    def __init__(
+        self,
+        name: str,
+        version: int,
+        action: str,
+        model: Optional[model_interface.ModelInterface] = None,
+    ):
+        self._name: str = name
+        self._version: int = version
+        self._action: str = action
+        self._parameters: Dict[str, Any] = {}
+        self._parameter_service: (
+            service_list_parameter_interface.ServiceListParameterInterface
+        ) = default_parameters.DefaultParameters(self)
 
         if model:
-            self.decorate_parameters(model)
-            self.parameter_service.data()
+            self._decorate_parameters(model)
+            self._parameter_service.data()
 
     def get_parameters(self) -> Dict[str, Any]:
-        return self.parameters
+        return self._parameters
 
     def append_parameter(self, value: Any, key: Optional[str] = None) -> Self:
         if isinstance(value, list) and all(isinstance(v, list) for v in value):
@@ -26,28 +38,41 @@ class ServiceList:
             return self
 
         if key:
-            self.parameters[key] = value
-        else:
-            self.parameters[len(self.parameters)] = value
-        
+            self._parameters[key] = value
+
         return self
 
-    def decorate_parameters(self, model: ModelInterface, group_type: Optional[str] = None, group_key: Optional[int] = None) -> Self:
-        self.parameter_service = ModelParameters(self.parameter_service, model, group_type, group_key)
-        self.iterate_through_object(model, model.get_object_vars())
+    def _decorate_parameters(
+        self,
+        model: model_interface.ModelInterface,
+        group_type: Optional[str] = None,
+        group_key: Optional[int] = None,
+    ) -> Self:
+        self._parameter_service = model_parameters.ModelParameters(
+            self._parameter_service, model, group_type, group_key
+        )
+        self._iterate_through_object(model, model.get_object_vars())
         return self
 
-    def iterate_through_object(self, model: ModelInterface, array: Dict[str, Any], key_name: Optional[str] = None) -> Self:
+    def _iterate_through_object(
+        self,
+        model: model_interface.ModelInterface,
+        array: Dict[str, Any],
+        key_name: Optional[str] = None,
+    ) -> Self:
         for key, value in array.items():
-            if isinstance(model, ServiceParameterInterface) and isinstance(value, ModelInterface):
-                self.decorate_parameters(
+            if isinstance(
+                model, service_parameter_interface.ServiceParameterInterface
+            ) and isinstance(value, model_interface.ModelInterface):
+                self._decorate_parameters(
                     value,
                     model.get_group_type(key_name or key),
-                    model.get_group_key(key_name or key, key if isinstance(key, int) else None)
+                    model.get_group_key(key_name or key),
                 )
                 continue
 
-            if isinstance(value, list) and len(value):
-                self.iterate_through_object(model, {k: v for k, v in enumerate(value)}, key)
+            if isinstance(value, list) and value:
+                formatted_data = {str(index): item for index, item in enumerate(value)}
+                self._iterate_through_object(model, formatted_data, key)
 
         return self

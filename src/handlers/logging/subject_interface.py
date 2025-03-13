@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
-from .observer_interface import ObserverInterface
+import src.handlers.logging.observer_interface as observer_interface
 
 
 class SubjectInterface(ABC):
     @abstractmethod
-    def attach(self, observer: ObserverInterface) -> None:
+    def attach(self, observer: observer_interface.ObserverInterface) -> None:
         pass
 
     @abstractmethod
-    def detach(self, observer: ObserverInterface) -> None:
+    def detach(self, observer: observer_interface.ObserverInterface) -> None:
         pass
 
     @abstractmethod

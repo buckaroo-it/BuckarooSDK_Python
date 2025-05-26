@@ -3,10 +3,9 @@ import platform
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.parse import urlencode
-from config import DefaultConfig, ConfigInterface
+from buckaroo.config import DefaultConfig, ConfigInterface
 
 from .version import VERSION
-
 
 class Client:
     CLIENT_VERSION: str = VERSION

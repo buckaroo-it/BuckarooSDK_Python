@@ -1,66 +1,94 @@
 from typing import Optional
 from dotenv import load_dotenv
-import os
 
-import src.handlers.logging.default_logger as default_logger
-import src.handlers.logging.subject_interface as subject_interface
-import src.handlers.config.config_interface as config_interface
+from buckaroo.config.config_interface import ConfigInterface
+
+import os 
 
 load_dotenv()
 
+class DefaultConfig(ConfigInterface):
 
-class DefaultConfig(config_interface.ConfigInterface):
-    def __init__(
-        self,
-        website_key: str,
-        secret_key: str,
-        mode: Optional[str] = None,
-        currency: Optional[str] = None,
-        return_url: Optional[str] = None,
-        return_url_cancel: Optional[str] = None,
-        push_url: Optional[str] = None,
-        platform_name: Optional[str] = None,
-        platform_version: Optional[str] = None,
-        module_supplier: Optional[str] = None,
-        module_name: Optional[str] = None,
-        module_version: Optional[str] = None,
-        culture: Optional[str] = None,
-        channel: Optional[str] = None,
-        logger: Optional[subject_interface.SubjectInterface] = None,
-    ) -> None:
-        self.LIVE_MODE = "live"
-        self.TEST_MODE = "test"
+    def __init(self) -> None:
+        # """Initialize the Buckaroo DefaultConfig class."""
 
-        self._website_key = website_key
-        self._secret_key = secret_key
+        self.__website_key = os.getenv("BPE_WEBSITE_KEY", "")
+        self.__secret_key = os.getenv("BPE_SECRET_KEY", "")
 
-        self._mode = os.getenv("BPE_MODE", mode or self.TEST_MODE)
-        self._currency = os.getenv("BPE_CURRENCY_CODE", currency or "EUR")
-        self._return_url = os.getenv("BPE_RETURN_URL", return_url or "")
-        self._return_url_cancel = os.getenv(
-            "BPE_RETURN_URL_CANCEL", return_url_cancel or ""
-        )
-        self._push_url = os.getenv("BPE_PUSH_URL", push_url or "")
-        self._platform_name = os.getenv(
-            "PlatformName", platform_name or "Default Platform"
-        )
-        self._platform_version = os.getenv(
-            "PlatformVersion", platform_version or "1.0.0"
-        )
-        self._module_supplier = os.getenv(
-            "ModuleSupplier", module_supplier or "Default Supplier"
-        )
-        self._module_name = os.getenv("ModuleName", module_name or "Default Module")
-        self._module_version = os.getenv("ModuleVersion", module_version or "1.0.0")
-        self._culture = os.getenv("Culture", culture or "")
-        self._channel = os.getenv("Channel", channel or "")
-        self._logger = logger or default_logger.DefaultLogger()
+        # self._mode = os.getenv("BPE_MODE", self.TEST_MODE)
+        # self._currency = os.getenv("BPE_CURRENCY_CODE", "EUR")
+        # self._return_url = os.getenv("BPE_RETURN_URL", "")
+        # self._return_url_cancel = os.getenv("BPE_RETURN_URL_CANCEL", "")
+        # self._push_url = os.getenv("BPE_PUSH_URL", "")
+        # self._platform_name = os.getenv("PlatformName", "Default Platform")
+        # self._platform_version = os.getenv("PlatformVersion", "1.0.0")
+        # self._module_supplier = os.getenv("ModuleSupplier", "Default Supplier")
+        # self._module_name = os.getenv("ModuleName", "Default Module")
+        # self._module_version = os.getenv("ModuleVersion", "1.0.0")
+        # self._culture = os.getenv("Culture", "")
+        # self._channel = os.getenv("Channel", "")
 
+    # def __init__(
+    #     self,
+    #     website_key: str,
+    #     secret_key: str,
+    #     mode: Optional[str] = None,
+    #     currency: Optional[str] = None,
+    #     return_url: Optional[str] = None,
+    #     return_url_cancel: Optional[str] = None,
+    #     push_url: Optional[str] = None,
+    #     platform_name: Optional[str] = None,
+    #     platform_version: Optional[str] = None,
+    #     module_supplier: Optional[str] = None,
+    #     module_name: Optional[str] = None,
+    #     module_version: Optional[str] = None,
+    #     culture: Optional[str] = None,
+    #     channel: Optional[str] = None,
+    #     logger: Optional[subject_interface.SubjectInterface] = None,
+    # ) -> None:
+    #     self.LIVE_MODE = "live"
+    #     self.TEST_MODE = "test"
+
+    #     self._website_key = website_key
+    #     self._secret_key = secret_key
+
+    #     self._mode = os.getenv("BPE_MODE", mode or self.TEST_MODE)
+    #     self._currency = os.getenv("BPE_CURRENCY_CODE", currency or "EUR")
+    #     self._return_url = os.getenv("BPE_RETURN_URL", return_url or "")
+    #     self._return_url_cancel = os.getenv(
+    #         "BPE_RETURN_URL_CANCEL", return_url_cancel or ""
+    #     )
+    #     self._push_url = os.getenv("BPE_PUSH_URL", push_url or "")
+    #     self._platform_name = os.getenv(
+    #         "PlatformName", platform_name or "Default Platform"
+    #     )
+    #     self._platform_version = os.getenv(
+    #         "PlatformVersion", platform_version or "1.0.0"
+    #     )
+    #     self._module_supplier = os.getenv(
+    #         "ModuleSupplier", module_supplier or "Default Supplier"
+    #     )
+    #     self._module_name = os.getenv("ModuleName", module_name or "Default Module")
+    #     self._module_version = os.getenv("ModuleVersion", module_version or "1.0.0")
+    #     self._culture = os.getenv("Culture", culture or "")
+    #     self._channel = os.getenv("Channel", channel or "")
+    #     self._logger = logger or default_logger.DefaultLogger()
+
+    @property
     def website_key(self) -> str:
-        return self._website_key
+        return self.__website_key
 
+    @property
     def secret_key(self) -> str:
-        return self._secret_key
+        return self.__secret_key
+    
+    def set_website_key(self, website_key: str) -> None:
+        if website_key:
+            self.__website_key = website_key
+            
+    def set_secret_key(self, secret_key: str) -> None:
+        if secret_key:
+            self.__secret_key = secret_key
 
     def is_live_mode(self) -> bool:
         return self._mode == self.LIVE_MODE
@@ -105,10 +133,10 @@ class DefaultConfig(config_interface.ConfigInterface):
         if mode:
             self._mode = mode
 
-    def set_logger(self, logger: subject_interface.SubjectInterface) -> None:
-        self._logger = logger
+    # def set_logger(self, logger: subject_interface.SubjectInterface) -> None:
+    #     self._logger = logger
 
-    def get_logger(self) -> subject_interface.SubjectInterface:
-        if not self._logger:
-            raise ValueError("Logger has not been set.")
-        return self._logger
+    # def get_logger(self) -> subject_interface.SubjectInterface:
+    #     if not self._logger:
+    #         raise ValueError("Logger has not been set.")
+    #     return self._logger

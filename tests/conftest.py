@@ -36,10 +36,27 @@ class ImprovedRequestsMock(responses.RequestsMock):
         return self.add(responses.PATCH, url, body=body, status=status, content_type="application/hal+json", **kwargs)
 
     def _get_body(self, filename):
-        """Read the response fixture file and return it."""
+        """
+        Read the response fixture file and return its contents as a string.
+
+        Args:
+            filename (str): The name of the fixture file (without extension).
+
+        Returns:
+            str: The contents of the fixture file.
+
+        Raises:
+            FileNotFoundError: If the fixture file does not exist.
+            IOError: If there is an error reading the file.
+        """
         file = os.path.join(os.path.dirname(__file__), "responses", f"{filename}.json")
-        with open(file, encoding="utf-8") as f:
-            return f.read()
+        try:
+            with open(file, encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Fixture file not found: {file}") from e
+        except IOError as e:
+            raise IOError(f"Error reading fixture file: {file}") from e
 
 @pytest.fixture
 def response():

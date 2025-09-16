@@ -17,7 +17,19 @@ class Client:
         self.__config = DefaultConfig()
 
     def set_config(self, config: ConfigInterface) -> None:
-        # """Set the Buckaroo configuration."""
+        """
+        Set the Buckaroo configuration for the client.
+
+        This method allows you to update the configuration used by the Buckaroo client instance.
+        The configuration should implement the ConfigInterface, which defines the required settings
+        for interacting with the Buckaroo API.
+
+        Args:
+            config (ConfigInterface): An object implementing the configuration interface.
+
+        Returns:
+            None
+        """
         self.__config = config
 
     @property

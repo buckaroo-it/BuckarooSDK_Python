@@ -1,2 +1,0 @@
-PERSON = "Person"
-COMPANY = "Company"

@@ -1,8 +1,0 @@
-mypy
-pytest
-requests
-black
-python-dotenv
-setuptools
-types-setuptools
-types-requests

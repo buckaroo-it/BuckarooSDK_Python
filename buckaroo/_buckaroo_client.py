@@ -15,3 +15,5 @@ class BuckarooClient(object):
         
         self.store_key = store_key.strip()
         self.secret_key = secret_key.strip()
+
+        self.payments = PaymentService(self)

@@ -1,0 +1,17 @@
+services:
+  python.sdk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: python.sdk
+    container_name: python.sdk
+    volumes:
+      - .:/app
+    working_dir: /app
+    tty: true
+    networks:
+      - develop
+networks:
+    develop:
+        name: 'develop'
+        external: true

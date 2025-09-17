@@ -1,0 +1,13 @@
+# build artifacts
+/build
+/dist
+/*.egg-info
+/.eggs
+
+# test and local dev artifacts
+/.pytest_cache
+/.coverage
+/.idea
+.DS_Store
+*.pyc
+/env

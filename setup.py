@@ -1,0 +1,62 @@
+import os
+from codecs import open
+from setuptools import setup, find_packages
+
+
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+
+long_description = open(os.path.join(ROOT_DIR, "README.md"), encoding="utf-8").read()
+
+version_contents = {}
+with open(os.path.join(ROOT_DIR, "buckaroo", "_version.py"), encoding="utf-8") as f:
+    exec(f.read(), version_contents)
+    
+setup(
+    name="buckaroo-sdk-python",
+    version=version_contents["VERSION"],
+    description="Python bindings for the Buckaroo API",
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
+    author="Buckaroo",
+    author_email="wecare@buckaroon.nl",
+    url="https://github.com/buckaroo-it/BuckarooSDK_Python",
+    license="MIT",
+    keywords="buckaroo api payments",
+    packages=find_packages(exclude=["tests", "tests.*"]),
+    package_data={"buckaroo": ["data/ca-certificates.crt", "py.typed"]},
+    zip_safe=False,
+    install_requires=[
+        'typing_extensions <= 4.2.0, > 3.7.2; python_version < "3.7"',
+        # The best typing support comes from 4.5.0+ but we can support down to
+        # 3.7.2 without throwing exceptions.
+        'typing_extensions >= 4.5.0; python_version >= "3.7"',
+        'requests >= 2.20; python_version >= "3.0"',
+    ],
+    python_requires=">=3.6",
+    project_urls={
+        "Bug Tracker": "https://github.com/buckaroo-it/BuckarooSDK_Python/issues",
+        "Changes": "https://github.com/buckaroo-it/BuckarooSDK_Python//blob/master/CHANGELOG.md",
+        "Documentation": "https://stripe.com/docs/api/?lang=python",
+        "Source Code": "https://github.com/buckaroo-it/BuckarooSDK_Python/",
+    },
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
+    setup_requires=["wheel"],
+)

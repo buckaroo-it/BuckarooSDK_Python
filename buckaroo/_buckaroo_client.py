@@ -56,7 +56,6 @@ class BuckarooClient(object):
             http_strategy (str, optional): HTTP strategy to use ('requests' or 'curl')
                                          If None, will auto-select best available strategy
         """
->>>>>>> Stashed changes
 
         if store_key is None or not store_key.strip():
             raise AuthenticationError("Store key must be provided")
@@ -66,10 +65,6 @@ class BuckarooClient(object):
         
         self.store_key = store_key.strip()
         self.secret_key = secret_key.strip()
-<<<<<<< Updated upstream
-
-        self.payments = PaymentService(self)
-=======
         self.http_strategy = http_strategy
         
         # Handle configuration

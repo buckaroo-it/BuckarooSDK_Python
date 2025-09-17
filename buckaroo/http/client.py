@@ -14,9 +14,30 @@ from typing import Dict, Any, Optional, Union
 from urllib.parse import urlencode, quote
 import uuid
 
+<<<<<<< HEAD
 from ..config.buckaroo_config import BuckarooConfig
 from ..exceptions._authentication_error import AuthenticationError
 from .strategies import HttpStrategyFactory, HttpStrategy, HttpResponse
+=======
+try:
+    import requests
+    from requests.adapters import HTTPAdapter
+    try:
+        from urllib3.util.retry import Retry
+    except ImportError:
+        from requests.packages.urllib3.util.retry import Retry
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    # Create dummy classes for type hints when requests is not available
+    class HTTPAdapter:
+        pass
+    class Retry:
+        pass
+
+from ..config.buckaroo_config import BuckarooConfig
+from ..exceptions._authentication_error import AuthenticationError
+>>>>>>> origin/shu-dev-redo
 
 
 class BuckarooHttpClient:
@@ -29,13 +50,17 @@ class BuckarooHttpClient:
     - Retry logic
     - Error handling
     
+<<<<<<< HEAD
     Uses a strategy pattern to support different HTTP implementations
     (requests library, curl command, etc.).
     
+=======
+>>>>>>> origin/shu-dev-redo
     Args:
         store_key (str): Buckaroo store key
         secret_key (str): Buckaroo secret key
         config (BuckarooConfig): Configuration object
+<<<<<<< HEAD
         http_strategy (str, optional): Preferred HTTP strategy ('requests' or 'curl')
     """
     
@@ -65,6 +90,53 @@ class BuckarooHttpClient:
         }
         
         self.http_strategy.configure(**strategy_config)
+=======
+    """
+    
+    def __init__(self, store_key: str, secret_key: str, config: BuckarooConfig):
+        if not REQUESTS_AVAILABLE:
+            raise ImportError(
+                "The 'requests' library is required for HTTP functionality. "
+                "Please install it with: pip install requests"
+            )
+            
+        self.store_key = store_key
+        self.secret_key = secret_key
+        self.config = config
+        self.session = self._create_session()
+    
+    def _create_session(self) -> requests.Session:
+        """
+        Create and configure a requests session.
+        
+        Returns:
+            requests.Session: Configured session with retry logic
+        """
+        session = requests.Session()
+        
+        # Configure retry strategy if available
+        try:
+            retry_strategy = Retry(
+                total=self.config.retry_attempts,
+                backoff_factor=self.config.retry_delay,
+                status_forcelist=[429, 500, 502, 503, 504],
+                allowed_methods=["POST", "GET", "PUT", "DELETE"]
+            )
+            
+            adapter = HTTPAdapter(max_retries=retry_strategy)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+        except (NameError, TypeError):
+            # Fallback if Retry is not available
+            adapter = HTTPAdapter(max_retries=self.config.retry_attempts)
+            session.mount("http://", adapter)
+            session.mount("https://", adapter)
+        
+        # Set default headers
+        session.headers.update(self.config.get_request_headers())
+        
+        return session
+>>>>>>> origin/shu-dev-redo
     
     def _generate_hmac_signature(
         self, 
@@ -204,6 +276,7 @@ class BuckarooHttpClient:
         # Generate authentication headers
         auth_headers = self._generate_hmac_signature(method, url, content)
         
+<<<<<<< HEAD
         try:
             # Make the request using strategy
             http_response = self.http_strategy.request(
@@ -222,10 +295,36 @@ class BuckarooHttpClient:
             if http_response.status_code == 401:
                 raise AuthenticationError("Authentication failed - check your store key and secret key")
             elif http_response.status_code == 403:
+=======
+        # Prepare request
+        request_kwargs = {
+            'method': method,
+            'url': url,
+            'headers': auth_headers,
+            'timeout': self.config.timeout,
+            'verify': self.config.verify_ssl
+        }
+        
+        if content:
+            request_kwargs['data'] = content
+        
+        try:
+            # Make the request
+            response = self.session.request(**request_kwargs)
+            
+            # Create response object
+            buckaroo_response = BuckarooResponse(response)
+            
+            # Handle authentication errors
+            if response.status_code == 401:
+                raise AuthenticationError("Authentication failed - check your store key and secret key")
+            elif response.status_code == 403:
+>>>>>>> origin/shu-dev-redo
                 raise AuthenticationError("Access forbidden - check your API permissions")
             
             return buckaroo_response
             
+<<<<<<< HEAD
         except Exception as e:
             # Convert strategy exceptions to BuckarooApiError
             if "timeout" in str(e).lower():
@@ -234,6 +333,14 @@ class BuckarooHttpClient:
                 raise BuckarooApiError(str(e))
             else:
                 raise BuckarooApiError(f"Request failed: {str(e)}")
+=======
+        except requests.exceptions.Timeout:
+            raise BuckarooApiError(f"Request timeout after {self.config.timeout} seconds")
+        except requests.exceptions.ConnectionError:
+            raise BuckarooApiError("Connection error - check your internet connection")
+        except requests.exceptions.RequestException as e:
+            raise BuckarooApiError(f"Request failed: {str(e)}")
+>>>>>>> origin/shu-dev-redo
 
 
 class BuckarooResponse:
@@ -243,10 +350,17 @@ class BuckarooResponse:
     This class provides convenient access to response data and status information.
     
     Args:
+<<<<<<< HEAD
         response (HttpResponse): The HTTP response object from strategy
     """
     
     def __init__(self, response: HttpResponse):
+=======
+        response (requests.Response): The requests response object
+    """
+    
+    def __init__(self, response: requests.Response):
+>>>>>>> origin/shu-dev-redo
         self._response = response
         self._data = None
         self._parse_response()
@@ -255,7 +369,11 @@ class BuckarooResponse:
         """Parse the response content."""
         try:
             if self._response.text:
+<<<<<<< HEAD
                 self._data = json.loads(self._response.text)
+=======
+                self._data = self._response.json()
+>>>>>>> origin/shu-dev-redo
             else:
                 self._data = {}
         except json.JSONDecodeError:
@@ -279,7 +397,11 @@ class BuckarooResponse:
     @property
     def headers(self) -> Dict[str, str]:
         """Get the response headers."""
+<<<<<<< HEAD
         return self._response.headers
+=======
+        return dict(self._response.headers)
+>>>>>>> origin/shu-dev-redo
     
     @property
     def text(self) -> str:

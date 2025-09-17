@@ -1,11 +1,47 @@
 
+from typing import Optional, Union
 from .exceptions._authentication_error import AuthenticationError
+from .services.payment_service import PaymentService
+from .config.buckaroo_config import BuckarooConfig, create_config_from_mode
+from .http.client import BuckarooHttpClient
 
 
 class BuckarooClient(object):
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+    """
+    Buckaroo Payment Gateway Client.
+    
+    This is the main client class for interacting with the Buckaroo payment gateway.
+    It provides access to payment services and manages authentication and configuration.
+    
+    Args:
+        store_key (str): Your Buckaroo store key.
+        secret_key (str): Your Buckaroo secret key.
+        mode (str, optional): Environment mode ('test' or 'live'). Defaults to 'test'.
+            This parameter is deprecated, use config parameter instead.
+        config (BuckarooConfig, optional): Configuration object. If not provided,
+            a default configuration will be created based on the mode parameter.
+    
+    Example:
+        Basic usage with mode:
+        >>> client = BuckarooClient("store_key", "secret_key", mode="test")
+        
+        Advanced usage with configuration:
+        >>> from buckaroo.config.buckaroo_config import BuckarooConfig, Environment
+        >>> config = BuckarooConfig(environment=Environment.LIVE, timeout=60)
+        >>> client = BuckarooClient("store_key", "secret_key", config=config)
+    """
+>>>>>>> origin/shu-dev-redo
 
-    def __init__(self, store_key: str, secret_key: str) -> None:
+    def __init__(
+        self, 
+        store_key: str, 
+        secret_key: str, 
+        mode: str = "test",
+        config: Optional[BuckarooConfig] = None
+    ) -> None:
         """Initialize the Buckaroo Client class."""
 =======
     """
@@ -65,7 +101,10 @@ class BuckarooClient(object):
         
         self.store_key = store_key.strip()
         self.secret_key = secret_key.strip()
+<<<<<<< HEAD
         self.http_strategy = http_strategy
+=======
+>>>>>>> origin/shu-dev-redo
         
         # Handle configuration
         if config is not None:
@@ -74,6 +113,7 @@ class BuckarooClient(object):
             # Create config from mode for backward compatibility
             self.config = create_config_from_mode(mode)
         
+<<<<<<< HEAD
         # Initialize HTTP client with strategy
         self.http_client = BuckarooHttpClient(
             self.store_key, 
@@ -81,6 +121,10 @@ class BuckarooClient(object):
             self.config, 
             self.http_strategy
         )
+=======
+        # Initialize HTTP client
+        self.http_client = BuckarooHttpClient(self.store_key, self.secret_key, self.config)
+>>>>>>> origin/shu-dev-redo
         
         # Initialize services
         self.payments = PaymentService(self)
@@ -129,5 +173,9 @@ class BuckarooClient(object):
             "retry_attempts": self.config.retry_attempts,
             "api_version": self.config.api_version.value,
             "logging_enabled": self.config.logging_enabled,
+<<<<<<< HEAD
         }
 >>>>>>> Stashed changes
+=======
+        }
+>>>>>>> origin/shu-dev-redo

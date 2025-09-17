@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Union, cast
+from typing import Dict, Optional
 
 class BuckarooError(Exception):
     _message: Optional[str]

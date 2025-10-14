@@ -10,5 +10,6 @@
 /.idea
 .DS_Store
 *.pyc
-/env
 .env
+
+*.log

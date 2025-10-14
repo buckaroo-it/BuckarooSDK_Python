@@ -1,14 +1,17 @@
 services:
-  python.sdk:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: python.sdk
-    container_name: python.sdk
+  # Development container - keeps running for interactive development
+  dev:
+    image: python:3.14-alpine3.21
+    container_name: buckaroo-python-sdk-dev
     volumes:
       - .:/app
     working_dir: /app
+    environment:
+      - BUCKAROO_STORE_KEY=${BUCKAROO_STORE_KEY}
+      - BUCKAROO_SECRET_KEY=${BUCKAROO_SECRET_KEY}
+    command: tail -f /dev/null  # Keep container running
     tty: true
+    stdin_open: true
     networks:
       - develop
 networks:

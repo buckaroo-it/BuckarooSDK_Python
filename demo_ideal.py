@@ -7,12 +7,27 @@ Enhanced demo script showing different ways to create payments:
 """
 
 import json
+import os
 from buckaroo._buckaroo_client import BuckarooClient
 
 
 def demo_ideal_payments():
     """Demonstrate different ways to create iDEAL payments."""
-    client = BuckarooClient("IBjihN7Fhp", "AB6176482E7B44C3BA7DB47F156088B5", mode="test")
+    # Get credentials from environment variables
+    store_key = os.getenv("BUCKAROO_STORE_KEY", "")
+    secret_key = os.getenv("BUCKAROO_SECRET_KEY", "")
+    
+    if not store_key:
+        print("Warning: BUCKAROO_STORE_KEY environment variable not set!")
+        print("Please set it using: export BUCKAROO_STORE_KEY='your_store_key'")
+        return
+    
+    if not secret_key:
+        print("Warning: BUCKAROO_SECRET_KEY environment variable not set!")
+        print("Please set it using: export BUCKAROO_SECRET_KEY='your_secret_key'")
+        return
+    
+    client = BuckarooClient(store_key, secret_key, mode="test")
     
     print("=" * 60)
     print("iDEAL PAYMENT EXAMPLES")

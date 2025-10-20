@@ -21,11 +21,7 @@ class PaymentBuilder(ABC):
         self._continue_on_incomplete: str = "1"
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: Dict[str, Any] = {}
-        
-        # Operation-specific attributes
-        self._operation_type: str = 'pay'
-        self._original_transaction_key: Optional[str] = None
-        self._operation_amount: Optional[float] = None
+        self._payload: Dict[str, Any] = {}  # Store original payload
     
     def currency(self, currency: str) -> 'PaymentBuilder':
         """Set the currency for the payment."""
@@ -148,6 +144,9 @@ class PaymentBuilder(ABC):
                 for key, value in service_params.items():
                     self.add_parameter(key, value)
         
+        # Store the original payload for later use
+        self._payload = data.copy()
+        
         return self
     
     @abstractmethod
@@ -227,23 +226,51 @@ class PaymentBuilder(ABC):
         # Send to Buckaroo API
         response = self._client.http_client.post('/json/transaction', request_data)
         
+        # Check if response is valid
+        if response is None:
+            raise ValueError("HTTP client returned None response")
+        
         # Return structured response object
         return PaymentResponse(response.to_dict())
     
     
-    def refund(self) -> PaymentResponse:
-        """Execute a refund transaction."""
-        # Build base request
-        payment_request = self.build("Refund")
-        request_data = payment_request.to_dict()
+    def refund(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
+        """
+        Execute a refund transaction.
         
-        # Set refund-specific parameters
-        request_data['OriginalTransactionKey'] = self._original_transaction_key
-
-        # Handle amount for refund
-        if self._operation_amount is not None:
-            request_data['AmountCredit'] = self._operation_amount
-            request_data.pop('AmountDebit', None)
+        Args:
+            original_transaction_key (str, optional): The transaction key of the original payment.
+                                                    If None, will try to get from payload.
+            amount (float, optional): Amount to refund. If None, will try to get from payload
+                                    or refund the full amount.
+        
+        Returns:
+            PaymentResponse: The refund response
+            
+        Raises:
+            ValueError: If required fields are missing
+        """
+        # Get original_transaction_key from parameter or payload
+        txn_key = original_transaction_key or self._payload.get('original_transaction_key')
+        if not txn_key:
+            raise ValueError("Original transaction key is required for refunds (provide as parameter or in payload)")
+        
+        # Get amount from parameter or payload
+        refund_amount = amount or self._payload.get('refund_amount')
+        
+        # Build refund request with original transaction reference
+        payment_request = self.build()
+        
+        # Convert to dictionary and modify for refund
+        request_data = payment_request.to_dict()
+        request_data['OriginalTransactionKey'] = txn_key
+        
+        # Set refund amount if specified, otherwise use original amount
+        if refund_amount is not None:
+            request_data['AmountCredit'] = refund_amount
+            # Remove debit amount for refunds
+            if 'AmountDebit' in request_data:
+                del request_data['AmountDebit']
         else:
             # Full refund - swap debit to credit
             if 'AmountDebit' in request_data:
@@ -252,51 +279,97 @@ class PaymentBuilder(ABC):
         
         # Send refund request
         response = self._client.http_client.post('/json/transaction', request_data)
+        
+        # Check if response is valid
+        if response is None:
+            raise ValueError("HTTP client returned None response")
 
-        print(response.to_dict())
-        exit()
         return PaymentResponse(response.to_dict())
     
-    def capture(self) -> PaymentResponse:
-        """Execute a capture transaction."""
-        # Build base request
+    def capture(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
+        """
+        Capture a previously authorized payment.
+        
+        Args:
+            original_transaction_key (str, optional): The transaction key of the authorization.
+                                                     If None, will try to get from payload.
+            amount (float, optional): Amount to capture. If None, will try to get from payload
+                                    or capture the full authorized amount.
+        
+        Returns:
+            PaymentResponse: The capture response
+        """
+        # Get authorization key from parameter or payload
+        auth_key = original_transaction_key or self._payload.get('authorization_key') or self._payload.get('original_transaction_key')
+        if not auth_key:
+            raise ValueError("Authorization key is required for captures (provide as parameter or in payload)")
+        
+        # Get capture amount from parameter or payload
+        capture_amount = amount or self._payload.get('capture_amount')
+        
+        # Build capture request
         payment_request = self.build()
         request_data = payment_request.to_dict()
         
         # Set capture-specific parameters
-        request_data['OriginalTransactionKey'] = self._original_transaction_key
+        request_data['OriginalTransactionKey'] = auth_key
         
         # Set capture amount if specified
-        if self._operation_amount is not None:
-            request_data['AmountDebit'] = self._operation_amount
+        if capture_amount is not None:
+            request_data['AmountDebit'] = capture_amount
         
         # Send capture request
         response = self._client.http_client.post('/json/transaction', request_data)
+        
+        # Check if response is valid
+        if response is None:
+            raise ValueError("HTTP client returned None response")
+            
         return PaymentResponse(response.to_dict())
     
-    def cancel(self) -> PaymentResponse:
-        """Execute a cancellation transaction."""
-        # Build base request
+    def cancel(self, original_transaction_key: Optional[str] = None) -> PaymentResponse:
+        """
+        Cancel a pending or authorized transaction.
+        
+        Args:
+            original_transaction_key (str, optional): The transaction key to cancel.
+                                                     If None, will try to get from payload.
+        
+        Returns:
+            PaymentResponse: The cancellation response
+        """
+        # Get transaction key from parameter or payload
+        txn_key = original_transaction_key or self._payload.get('cancel_key') or self._payload.get('original_transaction_key')
+        if not txn_key:
+            raise ValueError("Transaction key is required for cancellations (provide as parameter or in payload)")
+        
+        # Build cancel request
         payment_request = self.build()
         request_data = payment_request.to_dict()
         
         # Set cancellation parameters
-        request_data['OriginalTransactionKey'] = self._original_transaction_key
+        request_data['OriginalTransactionKey'] = txn_key
         # Remove amounts for cancellation
         request_data.pop('AmountDebit', None)
         request_data.pop('AmountCredit', None)
         
         # Send cancellation request
         response = self._client.http_client.post('/json/transaction', request_data)
+        
+        # Check if response is valid
+        if response is None:
+            raise ValueError("HTTP client returned None response")
+            
         return PaymentResponse(response.to_dict())
     
-    def partial_refund(self, original_transaction_key: str, amount: float) -> PaymentResponse:
+    def partial_refund(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
         """
         Execute a partial refund transaction.
         
         Args:
-            original_transaction_key (str): The transaction key of the original payment
-            amount (float): Amount to refund (must be less than original amount)
+            original_transaction_key (str, optional): The transaction key of the original payment.
+                                                     If None, will try to get from payload.
+            amount (float, optional): Amount to refund. If None, will try to get from payload.
         
         Returns:
             PaymentResponse: The partial refund response
@@ -304,35 +377,9 @@ class PaymentBuilder(ABC):
         Raises:
             ValueError: If amount is not provided or invalid
         """
-        if not amount or amount <= 0:
-            raise ValueError("Partial refund amount must be greater than 0")
+        # Get amount from parameter or payload
+        refund_amount = amount or self._payload.get('refund_amount') or self._payload.get('partial_refund_amount')
+        if not refund_amount or refund_amount <= 0:
+            raise ValueError("Partial refund amount must be greater than 0 (provide as parameter or in payload)")
         
-        return self.refund(original_transaction_key, amount)
-    
-    def cancel(self, original_transaction_key: str) -> PaymentResponse:
-        """
-        Cancel a pending or authorized transaction.
-        
-        Args:
-            original_transaction_key (str): The transaction key to cancel
-        
-        Returns:
-            PaymentResponse: The cancellation response
-        """
-        if not original_transaction_key:
-            raise ValueError("Original transaction key is required for cancellations")
-        
-        # Build cancel request
-        payment_request = self.build()
-        request_data = payment_request.to_dict()
-        
-        # Set cancellation parameters
-        request_data['OriginalTransactionKey'] = original_transaction_key
-        # Remove amounts for cancellation
-        request_data.pop('AmountDebit', None)
-        request_data.pop('AmountCredit', None)
-        
-        # Send cancellation request
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        return PaymentResponse(response.to_dict())
+        return self.refund(original_transaction_key, refund_amount)

@@ -237,20 +237,26 @@ class BuckarooResponse:
             return False
         
         # Check Buckaroo-specific success indicators
-        if "Status" in self.data:
+        if self._data and "Status" in self._data:
             # Buckaroo status codes for successful payments
             success_statuses = [190, 490, 491, 492, 790, 791, 792, 793]
-            return self.data.get("Status", {}).get("Code", {}) in success_statuses
+            status = self._data.get("Status", {})
+            if status and "Code" in status:
+                return status.get("Code") in success_statuses
         
         return self.success
     
     def get_payment_key(self) -> Optional[str]:
         """Get the payment key from the response."""
-        return self.data.get("Key")
+        if not self._data:
+            return None
+        return self._data.get("Key")
     
     def get_transaction_key(self) -> Optional[str]:
         """Get the transaction key from the response."""
-        services = self.data.get("Services", [])
+        if not self._data:
+            return None
+        services = self._data.get("Services", [])
         if isinstance(services, list) and services:
             return services[0].get("TransactionKey")
         elif isinstance(services, dict):
@@ -261,15 +267,27 @@ class BuckarooResponse:
     
     def get_status_code(self) -> Optional[int]:
         """Get the Buckaroo status code."""
-        return self.data.get("Status", {}).get("Code", {})
+        if not self._data:
+            return None
+        return self._data.get("Status", {}).get("Code", None)
     
     def get_status_message(self) -> Optional[str]:
         """Get the Buckaroo status message."""
-        return self.data.get("Status", {}).get("SubCode", {}).get("Description", "")
+        if not self._data:
+            return ""
+        status = self._data.get("Status", {})
+        if not status:
+            return ""
+        sub_code = status.get("SubCode", {})
+        if not sub_code:
+            return ""
+        return sub_code.get("Description", "")
     
     def get_redirect_url(self) -> Optional[str]:
         """Get the redirect URL for payments that require redirection."""
-        required_action = self.data.get("RequiredAction")
+        if not self._data:
+            return None
+        required_action = self._data.get("RequiredAction")
         if required_action and "RedirectURL" in required_action:
             return required_action["RedirectURL"]
         return None

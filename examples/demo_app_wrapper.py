@@ -51,14 +51,60 @@ def demo_with_app_wrapper():
             "return_url_error": "https://www.buckaroo.nl/error", 
             "return_url_reject": "https://www.buckaroo.nl/reject",
             "original_transaction_key": "TXN_123",
+            "refund_amount": 15.75,
             "issuer": "ABNANL2A"  # This tells the factory it's an iDEAL payment
         })
         
-        # Execute with automatic logging
-        response = payment.refund()
-
-        print(response.to_dict())
-        print("✅ Payment created and executed successfully!")
+        # Execute refund - values from payload (no parameters needed)
+        response = payment.refund()  # Uses original_transaction_key and refund_amount from payload
+        print(response)
+        # Or override payload values with parameters
+        # response = payment.refund("DIFFERENT_TXN_123", 10.00)  # Override with specific values
+        
+        print(f"✅ Payment builder created: {type(payment).__name__}")
+        print("   Methods can use payload values or parameters:")
+        print("   - payment.execute() for new payment")
+        print("   - payment.refund() uses payload 'original_transaction_key' and 'refund_amount'") 
+        print("   - payment.refund('TXN_KEY', amount) to override payload values")
+        print("   - payment.capture() uses payload 'authorization_key' and 'capture_amount'")
+        print("   - payment.cancel() uses payload 'cancel_key' or 'original_transaction_key'")
+        
+        # # Show additional payload examples
+        # print("\n   Additional payload examples:")
+        
+        # # Capture example with payload values
+        # capture_payment = app.payments.create({
+        #     "amount": 100.00,
+        #     "currency": "EUR", 
+        #     "invoice": "CAPTURE-001",
+        #     "description": "Capture demo",
+        #     "return_url": "https://www.buckaroo.nl",
+        #     "return_url_cancel": "https://www.buckaroo.nl/cancel", 
+        #     "return_url_error": "https://www.buckaroo.nl/error",
+        #     "return_url_reject": "https://www.buckaroo.nl/reject",
+        #     "authorization_key": "AUTH_456",  # For capture operations
+        #     "capture_amount": 75.00,           # Partial capture amount
+        #     "card_number": "1234567890123456"  # Credit card payment
+        # })
+        # print("   Created capture payment with authorization_key and capture_amount")
+        # # capture_payment.capture()  # Would use AUTH_456 and 75.00 from payload
+        
+        # # Cancel example with payload values  
+        # cancel_payment = app.payments.create({
+        #     "amount": 50.00,
+        #     "currency": "EUR",
+        #     "invoice": "CANCEL-001", 
+        #     "description": "Cancel demo",
+        #     "return_url": "https://www.buckaroo.nl",
+        #     "return_url_cancel": "https://www.buckaroo.nl/cancel",
+        #     "return_url_error": "https://www.buckaroo.nl/error", 
+        #     "return_url_reject": "https://www.buckaroo.nl/reject",
+        #     "cancel_key": "PENDING_789",       # For cancel operations
+        #     "issuer": "ABNANL2A"
+        # })
+        # print("   Created cancel payment with cancel_key")
+        # # cancel_payment.cancel()  # Would use PENDING_789 from payload
+        
         app.log_info("Quick setup demo completed successfully")
         
     except Exception as e:

@@ -129,6 +129,6 @@ class PaymentService(object):
         """
         # Detect payment method from payload
         method = self._factory.detect_payment_method_from_payload(payload)
-        
+
         # Create payment using the detected method
         return self.create_payment(method, payload)

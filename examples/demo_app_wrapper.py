@@ -42,6 +42,7 @@ def demo_with_app_wrapper():
         
         # Create iDEAL payment using factory pattern - auto-detected by 'issuer' field
         payment = app.payments.create({
+            "method": "ideal",
             "amount": 25.50,
             "currency": "EUR", 
             "invoice": "QUICK-001",
@@ -51,8 +52,7 @@ def demo_with_app_wrapper():
             "return_url_error": "https://www.buckaroo.nl/error", 
             "return_url_reject": "https://www.buckaroo.nl/reject",
             "original_transaction_key": "TXN_123",
-            "refund_amount": 15.75,
-            "issuer": "ABNANL2A"  # This tells the factory it's an iDEAL payment
+            "refund_amount": 15.75
         })
 
         response = payment.refund()

@@ -86,76 +86,11 @@ class PaymentMethodFactory:
             ValueError: If payment method cannot be determined from payload
         """
         # Check for explicit payment method in payload
-        if 'payment_method' in payload:
-            return payload['payment_method'].lower()
         if 'method' in payload:
             return payload['method'].lower()
-        if 'service' in payload:
-            return payload['service'].lower()
-            
-        # Auto-detect based on specific parameters
-        
-        # iDEAL indicators
-        if 'issuer' in payload:
-            return 'ideal'
-            
-        # Credit card indicators
-        credit_card_fields = {'card_number', 'cardNumber', 'expiry_month', 'expiryMonth', 
-                             'expiry_year', 'expiryYear', 'cvv', 'cardholder_name', 'cardholderName'}
-        if any(field in payload for field in credit_card_fields):
-            return 'creditcard'
-            
-        # Apple Pay indicators
-        apple_pay_fields = {'payment_data', 'paymentData', 'apple_pay_token', 'applePayToken'}
-        if any(field in payload for field in apple_pay_fields):
-            return 'applepay'
-            
-        # PayPal indicators (typically no special fields, but could be explicit)
-        if any(key.lower().startswith('paypal') for key in payload.keys()):
-            return 'paypal'
-            
-        # iDEAL QR indicators
-        if 'qr' in str(payload).lower() or 'idealqr' in str(payload).lower():
-            return 'idealqr'
             
         # Default fallback - could be configurable
         raise ValueError(
             "Cannot determine payment method from payload. "
-            "Please include 'payment_method', 'method', or 'service' field, "
-            "or use method-specific parameters like 'issuer' for iDEAL, "
-            "'card_number' for credit cards, etc."
+            "Please include 'method'."
         )
-    
-    @classmethod
-    def detect_operation_from_payload(cls, payload: Dict) -> str:
-        """
-        Detect the operation type from payload parameters.
-        
-        Args:
-            payload (Dict): Payment parameters dictionary
-            
-        Returns:
-            str: Detected operation type ('pay', 'refund', 'capture', 'cancel')
-        """
-        # Check for explicit operation in payload
-        if 'operation' in payload:
-            return payload['operation'].lower()
-        if 'action' in payload:
-            return payload['action'].lower()
-            
-        # Auto-detect based on specific parameters
-        
-        # Refund indicators
-        if 'original_transaction_key' in payload or 'refund_amount' in payload:
-            return 'refund'
-            
-        # Capture indicators  
-        if 'authorization_key' in payload or 'capture_amount' in payload:
-            return 'capture'
-            
-        # Cancel indicators
-        if 'cancel_key' in payload or payload.get('operation_type') == 'cancel':
-            return 'cancel'
-            
-        # Default to payment
-        return 'pay'

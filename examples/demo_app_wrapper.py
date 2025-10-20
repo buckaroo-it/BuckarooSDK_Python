@@ -55,7 +55,7 @@ def demo_with_app_wrapper():
             "refund_amount": 15.75
         })
 
-        response = payment.refund()
+        response = payment.payFastCheckout()
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload

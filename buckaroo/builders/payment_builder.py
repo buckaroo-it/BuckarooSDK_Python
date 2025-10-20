@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Union
 from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
 from ..models.payment_response import PaymentResponse
+from ..http.client import BuckarooApiError
 
 
 class PaymentBuilder(ABC):
@@ -226,15 +227,16 @@ class PaymentBuilder(ABC):
         # Send to Buckaroo API
         response = self._client.http_client.post('/json/transaction', request_data)
         
-        # Check if response is valid
+        # Check if response is valid and convert to dict
         if response is None:
-            raise ValueError("HTTP client returned None response")
+            # Return a PaymentResponse with empty data for None responses
+            return PaymentResponse({})
         
         # Return structured response object
         return PaymentResponse(response.to_dict())
     
     
-    def refund(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
+    def refund(self) -> PaymentResponse:
         """
         Execute a refund transaction.
         
@@ -251,15 +253,15 @@ class PaymentBuilder(ABC):
             ValueError: If required fields are missing
         """
         # Get original_transaction_key from parameter or payload
-        txn_key = original_transaction_key or self._payload.get('original_transaction_key')
+        txn_key = self._payload.get('original_transaction_key')
         if not txn_key:
             raise ValueError("Original transaction key is required for refunds (provide as parameter or in payload)")
         
         # Get amount from parameter or payload
-        refund_amount = amount or self._payload.get('refund_amount')
+        refund_amount = self._payload.get('refund_amount')
         
         # Build refund request with original transaction reference
-        payment_request = self.build()
+        payment_request = self.build('Refund')
         
         # Convert to dictionary and modify for refund
         request_data = payment_request.to_dict()
@@ -280,10 +282,11 @@ class PaymentBuilder(ABC):
         # Send refund request
         response = self._client.http_client.post('/json/transaction', request_data)
         
-        # Check if response is valid
+        # Check if response is valid and convert to dict
         if response is None:
-            raise ValueError("HTTP client returned None response")
-
+            # Return a PaymentResponse with empty data for None responses
+            return PaymentResponse({})
+        
         return PaymentResponse(response.to_dict())
     
     def capture(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
@@ -321,9 +324,10 @@ class PaymentBuilder(ABC):
         # Send capture request
         response = self._client.http_client.post('/json/transaction', request_data)
         
-        # Check if response is valid
+        # Check if response is valid and convert to dict
         if response is None:
-            raise ValueError("HTTP client returned None response")
+            # Return a PaymentResponse with empty data for None responses
+            return PaymentResponse({})
             
         return PaymentResponse(response.to_dict())
     
@@ -356,9 +360,10 @@ class PaymentBuilder(ABC):
         # Send cancellation request
         response = self._client.http_client.post('/json/transaction', request_data)
         
-        # Check if response is valid
+        # Check if response is valid and convert to dict
         if response is None:
-            raise ValueError("HTTP client returned None response")
+            # Return a PaymentResponse with empty data for None responses
+            return PaymentResponse({})
             
         return PaymentResponse(response.to_dict())
     

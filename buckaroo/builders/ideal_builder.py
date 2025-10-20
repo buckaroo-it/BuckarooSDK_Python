@@ -9,11 +9,11 @@ class IdealBuilder(PaymentBuilder):
         """Get the service name for iDEAL payments."""
         return "ideal"
     
-    def issuer(self, issuer: str) -> 'IdealPaymentBuilder':
+    def issuer(self, issuer: str) -> 'IdealBuilder':
         """Set the iDEAL issuer."""
         return self.add_parameter("issuer", issuer)
     
-    def from_dict(self, data: Dict[str, Any]) -> 'IdealPaymentBuilder':
+    def from_dict(self, data: Dict[str, Any]) -> 'IdealBuilder':
         """
         Populate the iDEAL builder from a dictionary of parameters.
         
@@ -21,7 +21,7 @@ class IdealBuilder(PaymentBuilder):
             data (Dict[str, Any]): Dictionary containing payment parameters
             
         Returns:
-            IdealPaymentBuilder: Self for method chaining
+            IdealBuilder: Self for method chaining
             
         Additional iDEAL-specific keys:
             - issuer: iDEAL bank issuer code (str)

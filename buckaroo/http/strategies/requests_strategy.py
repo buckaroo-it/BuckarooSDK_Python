@@ -118,7 +118,7 @@ class RequestsStrategy(HttpStrategy):
             'timeout': timeout or 30,
             'verify': verify_ssl
         }
-        
+
         if data:
             request_kwargs['data'] = data
         

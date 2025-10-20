@@ -54,10 +54,12 @@ def demo_with_app_wrapper():
             "refund_amount": 15.75,
             "issuer": "ABNANL2A"  # This tells the factory it's an iDEAL payment
         })
-        
+
+        response = payment.refund()
+        print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
-        response = payment.refund()  # Uses original_transaction_key and refund_amount from payload
-        print(response)
+        # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload
+        # print(response)
         # Or override payload values with parameters
         # response = payment.refund("DIFFERENT_TXN_123", 10.00)  # Override with specific values
         
@@ -68,6 +70,12 @@ def demo_with_app_wrapper():
         print("   - payment.refund('TXN_KEY', amount) to override payload values")
         print("   - payment.capture() uses payload 'authorization_key' and 'capture_amount'")
         print("   - payment.cancel() uses payload 'cancel_key' or 'original_transaction_key'")
+        
+        # Show payload values that would be used
+        print(f"\n   Payload values available:")
+        print(f"   - original_transaction_key: {payment._payload.get('original_transaction_key')}")
+        print(f"   - refund_amount: {payment._payload.get('refund_amount')}")
+        print(f"   - issuer: {payment._payload.get('issuer')}")
         
         # # Show additional payload examples
         # print("\n   Additional payload examples:")
@@ -87,6 +95,8 @@ def demo_with_app_wrapper():
         #     "card_number": "1234567890123456"  # Credit card payment
         # })
         # print("   Created capture payment with authorization_key and capture_amount")
+        # print(f"   - Authorization key: {capture_payment._payload.get('authorization_key')}")
+        # print(f"   - Capture amount: {capture_payment._payload.get('capture_amount')}")
         # # capture_payment.capture()  # Would use AUTH_456 and 75.00 from payload
         
         # # Cancel example with payload values  
@@ -103,6 +113,7 @@ def demo_with_app_wrapper():
         #     "issuer": "ABNANL2A"
         # })
         # print("   Created cancel payment with cancel_key")
+        # print(f"   - Cancel key: {cancel_payment._payload.get('cancel_key')}")
         # # cancel_payment.cancel()  # Would use PENDING_789 from payload
         
         app.log_info("Quick setup demo completed successfully")

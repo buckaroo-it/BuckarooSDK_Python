@@ -18,10 +18,29 @@ class StatusCode:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'StatusCode':
         """Create StatusCode from dictionary."""
-        return cls(
-            code=data.get('Code', 0),
-            description=data.get('Description', '')
-        )
+        if data is None:
+            data = {}
+        
+        # Handle nested Code structure: {"Code": 490, "Description": "Failed"}
+        if isinstance(data, dict) and "Code" in data and "Description" in data:
+            return cls(
+                code=data.get('Code', 0),
+                description=data.get('Description', '')
+            )
+        # Handle simple structure: {"Code": 490} or just integer
+        elif isinstance(data, dict):
+            return cls(
+                code=data.get('Code', 0),
+                description=data.get('Description', '')
+            )
+        # Handle direct integer
+        elif isinstance(data, int):
+            return cls(
+                code=data,
+                description=''
+            )
+        else:
+            return cls(code=0, description='')
 
 
 @dataclass
@@ -34,9 +53,17 @@ class Status:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Status':
         """Create Status from dictionary."""
+        if data is None:
+            data = {}
+        
+        # Handle SubCode being None
+        sub_code_data = data.get('SubCode')
+        if sub_code_data is None:
+            sub_code_data = {}
+            
         return cls(
             code=StatusCode.from_dict(data.get('Code', {})),
-            sub_code=StatusCode.from_dict(data.get('SubCode', {})),
+            sub_code=StatusCode.from_dict(sub_code_data),
             datetime=data.get('DateTime', '')
         )
 
@@ -53,6 +80,8 @@ class RequiredAction:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'RequiredAction':
         """Create RequiredAction from dictionary."""
+        if data is None:
+            data = {}
         return cls(
             redirect_url=data.get('RedirectURL'),
             requested_information=data.get('RequestedInformation'),
@@ -71,6 +100,8 @@ class ServiceParameter:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ServiceParameter':
         """Create ServiceParameter from dictionary."""
+        if data is None:
+            data = {}
         return cls(
             name=data.get('Name', ''),
             value=data.get('Value')
@@ -87,6 +118,9 @@ class Service:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Service':
         """Create Service from dictionary."""
+        if data is None:
+            data = {}
+        
         parameters = []
         if 'Parameters' in data and data['Parameters']:
             parameters = [ServiceParameter.from_dict(param) for param in data['Parameters']]
@@ -113,6 +147,8 @@ class PaymentResponse:
         Args:
             response_data: Raw response data from BuckarooResponse.to_dict()
         """
+        if response_data is None:
+            response_data = {}
         self._raw_data = response_data
         self._parse_response()
     
@@ -133,7 +169,8 @@ class PaymentResponse:
         self.status = Status.from_dict(data.get('Status', {})) if 'Status' in data else None
         
         # Required action (for redirects, etc.)
-        self.required_action = RequiredAction.from_dict(data.get('RequiredAction', {})) if 'RequiredAction' in data else None
+        required_action_data = data.get('RequiredAction')
+        self.required_action = RequiredAction.from_dict(required_action_data) if required_action_data is not None else None
         
         # Services
         self.services = []
@@ -146,6 +183,7 @@ class PaymentResponse:
         self.is_test = data.get('IsTest', False)
         self.currency = data.get('Currency')
         self.amount_debit = data.get('AmountDebit')
+        self.amount_credit = data.get('AmountCredit')  # For refunds
         self.transaction_type = data.get('TransactionType')
         self.mutation_type = data.get('MutationType')
         

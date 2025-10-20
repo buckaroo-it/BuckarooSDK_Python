@@ -242,7 +242,16 @@ class BuckarooResponse:
             success_statuses = [190, 490, 491, 492, 790, 791, 792, 793]
             status = self._data.get("Status", {})
             if status and "Code" in status:
-                return status.get("Code") in success_statuses
+                code = status.get("Code")
+                # Handle nested Code structure
+                if isinstance(code, dict):
+                    actual_code = code.get("Code")
+                elif isinstance(code, int):
+                    actual_code = code
+                else:
+                    actual_code = None
+                    
+                return actual_code in success_statuses if actual_code is not None else False
         
         return self.success
     
@@ -269,19 +278,47 @@ class BuckarooResponse:
         """Get the Buckaroo status code."""
         if not self._data:
             return None
-        return self._data.get("Status", {}).get("Code", None)
+        
+        status = self._data.get("Status", {})
+        if not status:
+            return None
+            
+        code = status.get("Code")
+        if code is None:
+            return None
+            
+        # Handle nested Code structure: {"Code": 490, "Description": "Failed"}
+        if isinstance(code, dict):
+            return code.get("Code")
+        # Handle simple integer code
+        elif isinstance(code, int):
+            return code
+            
+        return None
     
     def get_status_message(self) -> Optional[str]:
         """Get the Buckaroo status message."""
         if not self._data:
             return ""
+            
         status = self._data.get("Status", {})
         if not status:
             return ""
-        sub_code = status.get("SubCode", {})
-        if not sub_code:
+            
+        # Handle SubCode being None
+        sub_code = status.get("SubCode")
+        if sub_code is None:
+            # Try to get description from Code if SubCode is None
+            code = status.get("Code")
+            if isinstance(code, dict) and "Description" in code:
+                return code.get("Description", "")
             return ""
-        return sub_code.get("Description", "")
+            
+        # Handle SubCode being a dict
+        if isinstance(sub_code, dict):
+            return sub_code.get("Description", "")
+            
+        return ""
     
     def get_redirect_url(self) -> Optional[str]:
         """Get the redirect URL for payments that require redirection."""
@@ -299,12 +336,12 @@ class BuckarooResponse:
             "success": self.success,
             "data": self.data,
             "headers": self.headers,
-            "is_successful_payment": self.is_successful_payment(),
-            "payment_key": self.get_payment_key(),
-            "transaction_key": self.get_transaction_key(),
-            "buckaroo_status_code": self.get_status_code(),
-            "buckaroo_status_message": self.get_status_message(),
-            "redirect_url": self.get_redirect_url()
+            # "is_successful_payment": self.is_successful_payment(),
+            # "payment_key": self.get_payment_key(),
+            # "transaction_key": self.get_transaction_key(),
+            # "buckaroo_status_code": self.get_status_code(),
+            # "buckaroo_status_message": self.get_status_message(),
+            # "redirect_url": self.get_redirect_url()
         }
 
 

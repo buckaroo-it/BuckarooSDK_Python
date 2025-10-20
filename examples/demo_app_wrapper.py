@@ -35,31 +35,29 @@ def demo_with_app_wrapper():
     
     try:
         # Quick setup - logger is automatically initialized
-        app = Buckaroo.quick_setup(
-            store_key=store_key,
-            secret_key=secret_key,
-            mode="test",
-            log_to_stdout=True  # Log to stdout only
-        )
-        
+        app = Buckaroo()
+
         # Logger is already available, no need to initialize
         app.log_info("Quick setup demo started")
         
-        # Create and execute iDEAL payment with automatic logging
-        payment = app.create_ideal_payment(
-            amount=25.50,
-            currency="EUR",
-            description="Quick setup demo payment",
-            return_url="https://www.buckaroo.nl",
-            return_url_cancel="https://www.buckaroo.nl/cancel",
-            return_url_error="https://www.buckaroo.nl/error",
-            return_url_reject="https://www.buckaroo.nl/reject",
-            issuer="ABNANL2A"
-        )
+        # Create iDEAL payment using factory pattern - auto-detected by 'issuer' field
+        payment = app.payments.create({
+            "amount": 25.50,
+            "currency": "EUR", 
+            "invoice": "QUICK-001",
+            "description": "Quick setup demo payment",
+            "return_url": "https://www.buckaroo.nl",
+            "return_url_cancel": "https://www.buckaroo.nl/cancel",
+            "return_url_error": "https://www.buckaroo.nl/error", 
+            "return_url_reject": "https://www.buckaroo.nl/reject",
+            "original_transaction_key": "TXN_123",
+            "issuer": "ABNANL2A"  # This tells the factory it's an iDEAL payment
+        })
         
         # Execute with automatic logging
-        response = app.execute_payment(payment)
-        
+        response = payment.refund()
+
+        print(response.to_dict())
         print("✅ Payment created and executed successfully!")
         app.log_info("Quick setup demo completed successfully")
         
@@ -218,9 +216,9 @@ def main():
     print("- BUCKAROO_LOG_MASK_SENSITIVE=true|false")
     
     demo_with_app_wrapper()
-    demo_with_environment_config()
-    demo_with_custom_config()
-    demo_with_context_manager()
+    # demo_with_environment_config()
+    # demo_with_custom_config()
+    # demo_with_context_manager()
     
     print("\n" + "=" * 60)
     print("🎉 ALL DEMOS COMPLETED!")

@@ -9,6 +9,7 @@ convenient methods for common operations.
 import os
 from typing import Optional, Dict, Any, Union
 from dataclasses import dataclass
+from .services.payment_service import PaymentService
 
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.observers import (
@@ -51,6 +52,7 @@ class BuckarooConfig:
         
         # Get log destination from env
         log_dest_str = os.getenv("BUCKAROO_LOG_DESTINATION", "stdout").lower()
+
         log_destination = LogDestination(log_dest_str) if log_dest_str in [d.value for d in LogDestination] else LogDestination.STDOUT
         
         return cls(
@@ -157,6 +159,9 @@ class Buckaroo:
                 mode=self.config.mode
             )
             
+            # Expose payments service directly on app for cleaner API
+            self.payments = PaymentService(self.client)
+
             if self.logger:
                 self.logger.log_info("Buckaroo client initialized successfully",
                                    store_key_length=len(self.config.store_key),

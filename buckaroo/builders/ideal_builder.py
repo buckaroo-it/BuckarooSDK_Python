@@ -2,7 +2,7 @@ from typing import Dict, Any
 from .payment_builder import PaymentBuilder
 
 
-class IdealPaymentBuilder(PaymentBuilder):
+class IdealBuilder(PaymentBuilder):
     """Builder for iDEAL payments."""
     
     def get_service_name(self) -> str:

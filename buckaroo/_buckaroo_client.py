@@ -1,7 +1,6 @@
 
 from typing import Optional, Union
 from .exceptions._authentication_error import AuthenticationError
-from .services.payment_service import PaymentService
 from .config.buckaroo_config import BuckarooConfig, create_config_from_mode
 from .http.client import BuckarooHttpClient
 
@@ -80,9 +79,6 @@ class BuckarooClient(object):
             self.config, 
             self.http_strategy
         )
-        
-        # Initialize services
-        self.payments = PaymentService(self)
     
     @property
     def is_test_environment(self) -> bool:

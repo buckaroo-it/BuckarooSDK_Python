@@ -21,6 +21,11 @@ class PaymentBuilder(ABC):
         self._continue_on_incomplete: str = "1"
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: Dict[str, Any] = {}
+        
+        # Operation-specific attributes
+        self._operation_type: str = 'pay'
+        self._original_transaction_key: Optional[str] = None
+        self._operation_amount: Optional[float] = None
     
     def currency(self, currency: str) -> 'PaymentBuilder':
         """Set the currency for the payment."""
@@ -167,14 +172,14 @@ class PaymentBuilder(ABC):
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
     
-    def build(self) -> PaymentRequest:
+    def build(self, action = "Pay") -> PaymentRequest:
         """Build the payment request."""
         self._validate_required_fields()
         
         # Create service with parameters
         service = Service(
             name=self.get_service_name(),
-            action="Pay",
+            action=action,
             parameters=self._service_parameters if self._service_parameters else None
         )
         
@@ -198,11 +203,12 @@ class PaymentBuilder(ABC):
         
         return payment_request
     
-    def execute(self) -> PaymentResponse:
+    def pay(self) -> PaymentResponse:
         """
-        Execute the payment request.
+        Execute the payment operation based on the configured operation type.
         
-        Sends the payment request to the Buckaroo API and returns the response.
+        This method automatically detects the operation type from the payload
+        and executes the appropriate action (pay, refund, capture, cancel).
         
         Returns:
             PaymentResponse: Structured payment response object
@@ -222,4 +228,111 @@ class PaymentBuilder(ABC):
         response = self._client.http_client.post('/json/transaction', request_data)
         
         # Return structured response object
+        return PaymentResponse(response.to_dict())
+    
+    
+    def refund(self) -> PaymentResponse:
+        """Execute a refund transaction."""
+        # Build base request
+        payment_request = self.build("Refund")
+        request_data = payment_request.to_dict()
+        
+        # Set refund-specific parameters
+        request_data['OriginalTransactionKey'] = self._original_transaction_key
+
+        # Handle amount for refund
+        if self._operation_amount is not None:
+            request_data['AmountCredit'] = self._operation_amount
+            request_data.pop('AmountDebit', None)
+        else:
+            # Full refund - swap debit to credit
+            if 'AmountDebit' in request_data:
+                request_data['AmountCredit'] = request_data['AmountDebit']
+                del request_data['AmountDebit']
+        
+        # Send refund request
+        response = self._client.http_client.post('/json/transaction', request_data)
+
+        print(response.to_dict())
+        exit()
+        return PaymentResponse(response.to_dict())
+    
+    def capture(self) -> PaymentResponse:
+        """Execute a capture transaction."""
+        # Build base request
+        payment_request = self.build()
+        request_data = payment_request.to_dict()
+        
+        # Set capture-specific parameters
+        request_data['OriginalTransactionKey'] = self._original_transaction_key
+        
+        # Set capture amount if specified
+        if self._operation_amount is not None:
+            request_data['AmountDebit'] = self._operation_amount
+        
+        # Send capture request
+        response = self._client.http_client.post('/json/transaction', request_data)
+        return PaymentResponse(response.to_dict())
+    
+    def cancel(self) -> PaymentResponse:
+        """Execute a cancellation transaction."""
+        # Build base request
+        payment_request = self.build()
+        request_data = payment_request.to_dict()
+        
+        # Set cancellation parameters
+        request_data['OriginalTransactionKey'] = self._original_transaction_key
+        # Remove amounts for cancellation
+        request_data.pop('AmountDebit', None)
+        request_data.pop('AmountCredit', None)
+        
+        # Send cancellation request
+        response = self._client.http_client.post('/json/transaction', request_data)
+        return PaymentResponse(response.to_dict())
+    
+    def partial_refund(self, original_transaction_key: str, amount: float) -> PaymentResponse:
+        """
+        Execute a partial refund transaction.
+        
+        Args:
+            original_transaction_key (str): The transaction key of the original payment
+            amount (float): Amount to refund (must be less than original amount)
+        
+        Returns:
+            PaymentResponse: The partial refund response
+            
+        Raises:
+            ValueError: If amount is not provided or invalid
+        """
+        if not amount or amount <= 0:
+            raise ValueError("Partial refund amount must be greater than 0")
+        
+        return self.refund(original_transaction_key, amount)
+    
+    def cancel(self, original_transaction_key: str) -> PaymentResponse:
+        """
+        Cancel a pending or authorized transaction.
+        
+        Args:
+            original_transaction_key (str): The transaction key to cancel
+        
+        Returns:
+            PaymentResponse: The cancellation response
+        """
+        if not original_transaction_key:
+            raise ValueError("Original transaction key is required for cancellations")
+        
+        # Build cancel request
+        payment_request = self.build()
+        request_data = payment_request.to_dict()
+        
+        # Set cancellation parameters
+        request_data['OriginalTransactionKey'] = original_transaction_key
+        # Remove amounts for cancellation
+        request_data.pop('AmountDebit', None)
+        request_data.pop('AmountCredit', None)
+        
+        # Send cancellation request
+        response = self._client.http_client.post('/json/transaction', request_data)
+        
         return PaymentResponse(response.to_dict())

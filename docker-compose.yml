@@ -34,7 +34,7 @@ services:
       - BUCKAROO_LOG_DESTINATION=${BUCKAROO_LOG_DESTINATION:-both}
       - BUCKAROO_LOG_FILE=${BUCKAROO_LOG_FILE:-demo_payments.log}
       - BUCKAROO_LOG_MASK_SENSITIVE=${BUCKAROO_LOG_MASK_SENSITIVE:-true}
-    command: sh -c "pip install -r requirements.txt && python examples/demo_ideal_with_logging.py"
+    command: sh -c "pip install --root-user-action=ignore -r requirements.txt && python examples/demo_ideal_with_logging.py"
     networks:
       - develop
 
@@ -49,7 +49,37 @@ services:
       - BUCKAROO_LOG_DESTINATION=${BUCKAROO_LOG_DESTINATION:-both}
       - BUCKAROO_LOG_FILE=${BUCKAROO_LOG_FILE:-logging_example.log}
       - BUCKAROO_LOG_MASK_SENSITIVE=${BUCKAROO_LOG_MASK_SENSITIVE:-true}
-    command: sh -c "pip install -r requirements.txt && python examples/logging_observer_example.py"
+    command: sh -c "pip install --root-user-action=ignore -r requirements.txt && python examples/logging_observer_example.py"
+    networks:
+      - develop
+
+  # Service for running tests
+  test:
+    image: python:3.14-alpine3.21
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - BUCKAROO_STORE_KEY=${BUCKAROO_STORE_KEY}
+      - BUCKAROO_SECRET_KEY=${BUCKAROO_SECRET_KEY}
+      - BUCKAROO_LOG_LEVEL=${BUCKAROO_LOG_LEVEL:-INFO}
+      - BUCKAROO_LOG_DESTINATION=${BUCKAROO_LOG_DESTINATION:-stdout}
+    command: sh -c "pip install --root-user-action=ignore -r requirements.txt && python -m unittest discover tests -v"
+    networks:
+      - develop
+
+  # Service for running specific Buckaroo app tests
+  test-app:
+    image: python:3.14-alpine3.21
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - BUCKAROO_STORE_KEY=${BUCKAROO_STORE_KEY}
+      - BUCKAROO_SECRET_KEY=${BUCKAROO_SECRET_KEY}
+      - BUCKAROO_LOG_LEVEL=${BUCKAROO_LOG_LEVEL:-DEBUG}
+      - BUCKAROO_LOG_DESTINATION=${BUCKAROO_LOG_DESTINATION:-stdout}
+    command: sh -c "pip install --root-user-action=ignore -r requirements.txt && python tests/test_buckaroo_app.py"
     networks:
       - develop
 networks:

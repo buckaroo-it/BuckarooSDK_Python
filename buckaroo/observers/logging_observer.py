@@ -423,7 +423,7 @@ class ContextualLoggingObserver:
 
 def create_logger(level: LogLevel = LogLevel.INFO,
                  destination: LogDestination = LogDestination.BOTH,
-                 log_file: str = "buckaroo_sdk.log",
+                 log_file: str = "buckaroo.log",
                  **kwargs) -> BuckarooLoggingObserver:
     """
     Convenience function to create a logging observer.

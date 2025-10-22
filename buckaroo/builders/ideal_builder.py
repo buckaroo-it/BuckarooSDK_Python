@@ -44,13 +44,4 @@ class IdealBuilder(PaymentBuilder):
         # Convert to dictionary for API
         request_data = payment_request.to_dict()
 
-        # Send to Buckaroo API
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-        
-        # Return structured response object
-        return PaymentResponse(response.to_dict())
+        return self._post_transaction(request_data)

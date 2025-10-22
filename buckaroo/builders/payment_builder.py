@@ -224,16 +224,7 @@ class PaymentBuilder(ABC):
         # Convert to dictionary for API
         request_data = payment_request.to_dict()
         
-        # Send to Buckaroo API
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-        
-        # Return structured response object
-        return PaymentResponse(response.to_dict())
+        return self._post_transaction(request_data)
     
     
     def refund(self) -> PaymentResponse:
@@ -279,15 +270,7 @@ class PaymentBuilder(ABC):
                 request_data['AmountCredit'] = request_data['AmountDebit']
                 del request_data['AmountDebit']
         
-        # Send refund request
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-        
-        return PaymentResponse(response.to_dict())
+        return self._post_transaction(request_data)
     
     def capture(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
         """
@@ -321,15 +304,7 @@ class PaymentBuilder(ABC):
         if capture_amount is not None:
             request_data['AmountDebit'] = capture_amount
         
-        # Send capture request
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-            
-        return PaymentResponse(response.to_dict())
+        return self._post_transaction(request_data)
     
     def cancel(self, original_transaction_key: Optional[str] = None) -> PaymentResponse:
         """
@@ -357,15 +332,7 @@ class PaymentBuilder(ABC):
         request_data.pop('AmountDebit', None)
         request_data.pop('AmountCredit', None)
         
-        # Send cancellation request
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-            
-        return PaymentResponse(response.to_dict())
+        return self._post_transaction(request_data)
     
     def partial_refund(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
         """
@@ -388,3 +355,16 @@ class PaymentBuilder(ABC):
             raise ValueError("Partial refund amount must be greater than 0 (provide as parameter or in payload)")
         
         return self.refund(original_transaction_key, refund_amount)
+
+    def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
+        """Helper method to post transaction and handle response."""
+        # Send to Buckaroo API
+        response = self._client.http_client.post('/json/transaction', request_data)
+        
+        # Check if response is valid and convert to dict
+        if response is None:
+            # Return a PaymentResponse with empty data for None responses
+            return PaymentResponse({})
+        
+        # Return structured response object
+        return PaymentResponse(response.to_dict())

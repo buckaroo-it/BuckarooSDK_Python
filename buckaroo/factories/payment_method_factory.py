@@ -97,9 +97,31 @@ class PaymentMethodFactory:
         # Check for explicit payment method in payload
         if 'method' in payload:
             return payload['method'].lower()
+        
+        # Check Services.ServiceList for payment method detection
+        services = payload.get('Services', {})
+        service_list = services.get('ServiceList', [])
+        
+        if service_list:
+            for service in service_list:
+                service_name = service.get('Name', '').lower()
+                if service_name in cls._payment_methods:
+                    return service_name
+                
+                # Map known service names to payment methods
+                service_mapping = {
+                    'alipay': 'alipay',
+                    'ideal': 'ideal', 
+                    'creditcard': 'creditcard',
+                    'sofort': 'sofort',
+                    'payconiq': 'payconiq'
+                }
+                
+                if service_name in service_mapping:
+                    return service_mapping[service_name]
             
         # Default fallback - could be configurable
         raise ValueError(
             "Cannot determine payment method from payload. "
-            "Please include 'method'."
+            "Please include 'method' or specify service in Services.ServiceList."
         )

@@ -21,7 +21,7 @@ class PaymentBuilder(ABC):
         self._return_url_reject: Optional[str] = None
         self._continue_on_incomplete: str = "1"
         self._client_ip: Optional[ClientIP] = None
-        self._service_parameters: Dict[str, Any] = {}
+        self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
     
     def currency(self, currency: str) -> 'PaymentBuilder':
@@ -76,7 +76,10 @@ class PaymentBuilder(ABC):
     
     def add_parameter(self, key: str, value: Any) -> 'PaymentBuilder':
         """Add a custom parameter to the service."""
-        self._service_parameters[key] = value
+        # Convert value to string for API compatibility
+        str_value = str(value).lower() if isinstance(value, bool) else str(value)
+        parameter = Parameter(name=key, value=str_value)
+        self._service_parameters.append(parameter)
         return self
     
     def from_dict(self, data: Dict[str, Any]) -> 'PaymentBuilder':

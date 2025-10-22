@@ -9,11 +9,11 @@ class AlipayBuilder(PaymentBuilder):
     
     def get_service_name(self) -> str:
         """Get the service name for Alipay payments."""
-        return "alipay"
+        return "Alipay"
     
     def use_mobile_view(self, value: bool) -> 'AlipayBuilder':
         """Set the mobile view preference."""
-        return self.add_parameter("usemobileview", value)
+        return self.add_parameter("UseMobileView", value)
     
     def from_dict(self, data: Dict[str, Any]) -> 'AlipayBuilder':
         """
@@ -27,6 +27,10 @@ class AlipayBuilder(PaymentBuilder):
         """
         super().from_dict(data)
         
-        self.use_mobile_view(data.get("usemobileview", False))
+        # Handle UseMobileView parameter (case-insensitive)
+        use_mobile_view = data.get("UseMobileView") or data.get("usemobileview", False)
+        if isinstance(use_mobile_view, str):
+            use_mobile_view = use_mobile_view.lower() == "true"
+        self.use_mobile_view(use_mobile_view)
 
         return self

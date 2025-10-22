@@ -52,9 +52,7 @@ def demo_with_app_wrapper():
             "return_url_error": "https://www.buckaroo.nl/error", 
             "return_url_reject": "https://www.buckaroo.nl/reject",
             "original_transaction_key": "TXN_123",
-            "parameters": { 
-                "usemobileview": True
-            }
+            "usemobileview": True
         })
 
         response = payment.pay()

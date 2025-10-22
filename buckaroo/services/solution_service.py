@@ -4,13 +4,13 @@ from ..factories.payment_method_factory import PaymentMethodFactory
 from ..builders.payments.payment_builder import PaymentBuilder
 
 
-class PaymentService(object):
+class SolutionService(object):
     """Service for handling payment operations."""
     
     def __init__(self, client):
         """
-        Initialize the PaymentService.
-        
+        Initialize the SolutionService.
+
         Args:
             client: The Buckaroo client instance
         """
@@ -33,14 +33,14 @@ class PaymentService(object):
             
         Example:
             >>> # Using fluent interface only
-            >>> payment = client.payments.create_payment("ideal") \\
+            >>> payment = client.solution.create_payment("ideal") \\
             ...     .currency("EUR") \\
             ...     .amount(6.0) \\
             ...     .description("Test payment") \\
             ...     .execute()
             
             >>> # Using parameters dictionary for quick setup
-            >>> payment = client.payments.create_payment("ideal", {
+            >>> payment = client.solution.create_payment("ideal", {
             ...     'currency': 'EUR',
             ...     'amount': 6.0,
             ...     'description': 'Test payment',

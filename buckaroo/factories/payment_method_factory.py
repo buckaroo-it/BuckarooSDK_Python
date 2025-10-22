@@ -1,13 +1,20 @@
 from typing import Dict, Type, Any
-from ..builders.payment_builder import PaymentBuilder
-from ..builders.ideal_builder import IdealBuilder
+
+from buckaroo.builders.payments.creditcard_builder import CreditcardBuilder
+from ..builders.payments.payment_builder import PaymentBuilder
+from ..builders.payments.ideal_builder import IdealBuilder
+from ..builders.payments.sofort_builder import SofortBuilder
+from ..builders.payments.payconiq_builder import PayconiqBuilder
 
 class PaymentMethodFactory:
     """Factory for creating payment method builders."""
     
     # Registry of available payment methods
     _payment_methods: Dict[str, Type[PaymentBuilder]] = {
-        "ideal": IdealBuilder
+        "ideal": IdealBuilder,
+        "creditcard": CreditcardBuilder,
+        "sofort": SofortBuilder,
+        "payconiq": PayconiqBuilder,
     }
     
     @classmethod

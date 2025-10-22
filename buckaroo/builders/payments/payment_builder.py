@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Union
-from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
-from ..models.payment_response import PaymentResponse
-from ..http.client import BuckarooApiError
+from ...models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
+from ...models.payment_response import PaymentResponse
+from ...http.client import BuckarooApiError
 
 
 class PaymentBuilder(ABC):
@@ -368,3 +368,20 @@ class PaymentBuilder(ABC):
         
         # Return structured response object
         return PaymentResponse(response.to_dict())
+    
+    def execute_action(self, action: str) -> PaymentResponse:
+        """
+        Execute a custom action for the payment method.
+        
+        This is a generic method that can be used for any action supported
+        by the payment method (instantRefund, payFastCheckout, etc.).
+        
+        Args:
+            action (str): The action to execute
+            
+        Returns:
+            PaymentResponse: The action response
+        """
+        payment_request = self.build(action)
+        request_data = payment_request.to_dict()
+        return self._post_transaction(request_data)

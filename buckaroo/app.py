@@ -10,6 +10,7 @@ import os
 from typing import Optional, Dict, Any, Union
 from dataclasses import dataclass
 from .services.payment_service import PaymentService
+from .services.solution_service import SolutionService
 
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.observers import (
@@ -161,6 +162,8 @@ class Buckaroo:
             
             # Expose payments service directly on app for cleaner API
             self.payments = PaymentService(self.client)
+
+            self.solutions = SolutionService(self.client)
 
             if self.logger:
                 self.logger.log_info("Buckaroo client initialized successfully",

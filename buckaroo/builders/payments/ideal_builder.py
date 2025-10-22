@@ -1,9 +1,10 @@
 from typing import Dict, Any
 from .payment_builder import PaymentBuilder
-from ..models.payment_response import PaymentResponse
+from .capabilities import BankTransferCapabilities
+from ...models.payment_response import PaymentResponse
 
-class IdealBuilder(PaymentBuilder):
-    """Builder for iDEAL payments."""
+class IdealBuilder(PaymentBuilder, BankTransferCapabilities):
+    """Builder for iDEAL payments with bank transfer capabilities."""
     
     def get_service_name(self) -> str:
         """Get the service name for iDEAL payments."""
@@ -36,12 +37,10 @@ class IdealBuilder(PaymentBuilder):
             
         return self
     
-    def payFastCheckout(self) -> 'IdealBuilder':
+    def payFastCheckout(self) -> PaymentResponse:
         """Enable PayFast Checkout for iDEAL payments."""
-
-        payment_request = self.build("payFastCheckout")
-        
-        # Convert to dictionary for API
-        request_data = payment_request.to_dict()
-
-        return self._post_transaction(request_data)
+        return self.pay_fast_checkout()  # From BankTransferCapabilities
+    
+    def instantRefund(self) -> PaymentResponse:
+        """Initiate an instant refund for iDEAL payments."""
+        return self.instant_refund()  # From BankTransferCapabilities

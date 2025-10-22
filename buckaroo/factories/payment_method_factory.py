@@ -1,6 +1,7 @@
 from typing import Dict, Type, Any
 
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
+from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
 from buckaroo.builders.payments.creditcard_builder import CreditcardBuilder
 from ..builders.payments.payment_builder import PaymentBuilder
 from ..builders.payments.ideal_builder import IdealBuilder
@@ -13,6 +14,8 @@ class PaymentMethodFactory:
     # Registry of available payment methods
     _payment_methods: Dict[str, Type[PaymentBuilder]] = {
         "alipay": AlipayBuilder,
+        "applepay": ApplePayBuilder,
+        "bancontact": BancontactBuilder,
         "ideal": IdealBuilder,
         "creditcard": CreditcardBuilder,
         "sofort": SofortBuilder,
@@ -111,6 +114,7 @@ class PaymentMethodFactory:
                 # Map known service names to payment methods
                 service_mapping = {
                     'alipay': 'alipay',
+                    'applepay': 'applepay',
                     'ideal': 'ideal', 
                     'creditcard': 'creditcard',
                     'sofort': 'sofort',

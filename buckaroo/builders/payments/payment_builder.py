@@ -223,7 +223,8 @@ class PaymentBuilder(ABC):
         
         # Convert to dictionary for API
         request_data = payment_request.to_dict()
-        
+        print(request_data)
+        exit()
         return self._post_transaction(request_data)
     
     

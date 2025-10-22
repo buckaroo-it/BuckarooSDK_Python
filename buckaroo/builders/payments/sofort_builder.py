@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from .payment_builder import PaymentBuilder
-from .capabilities import BankTransferCapabilities
+from .capabilities.bank_transfer_capabilities import BankTransferCapabilities
 from ...models.payment_response import PaymentResponse
 
 class SofortBuilder(PaymentBuilder, BankTransferCapabilities):

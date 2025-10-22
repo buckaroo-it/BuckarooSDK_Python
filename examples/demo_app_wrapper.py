@@ -42,7 +42,7 @@ def demo_with_app_wrapper():
         
         # Create iDEAL payment using factory pattern - auto-detected by 'issuer' field
         payment = app.payments.create({
-            "method": "ideal",
+            "method": "alipay",
             "amount": 25.50,
             "currency": "EUR", 
             "invoice": "QUICK-001",
@@ -52,10 +52,12 @@ def demo_with_app_wrapper():
             "return_url_error": "https://www.buckaroo.nl/error", 
             "return_url_reject": "https://www.buckaroo.nl/reject",
             "original_transaction_key": "TXN_123",
-            "refund_amount": 15.75
+            "parameters": { 
+                "usemobileview": True
+            }
         })
 
-        response = payment.pay_fast_checkout()
+        response = payment.pay()
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload

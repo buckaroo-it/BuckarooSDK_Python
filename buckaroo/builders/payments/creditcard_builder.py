@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from .payment_builder import PaymentBuilder
-from .capabilities import AuthorizeCapable
+from .capabilities.authorize_capable import AuthorizeCapable
 from ...models.payment_response import PaymentResponse
 
 class CreditcardBuilder(PaymentBuilder, AuthorizeCapable):

@@ -10,6 +10,29 @@ class PayconiqBuilder(PaymentBuilder, BankTransferCapabilities):
         """Get the service name for Payconiq payments."""
         return "payconiq"
     
+    def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
+        """Get the allowed service parameters for Payconiq payments based on action."""
+        
+        if action.lower() in ["pay", "payfastcheckout"]:
+            return {
+                "mobilenumber": {"type": str, "required": False, "description": "Mobile number for Payconiq"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+                "isrecurring": {"type": (str, bool), "required": False, "description": "Recurring payment flag"},
+            }
+        elif action.lower() == "instantrefund":
+            # Instant refund has different requirements
+            return {}
+        elif action.lower() in ["refund", "capture", "cancel"]:
+            # These actions typically don't require mobile number
+            return {}
+        else:
+            # Default to Pay action parameters
+            return {
+                "mobilenumber": {"type": str, "required": False, "description": "Mobile number for Payconiq"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+                "isrecurring": {"type": (str, bool), "required": False, "description": "Recurring payment flag"},
+            }
+    
     def mobile_number(self, mobile_number: str) -> 'PayconiqBuilder':
         """Set the mobile number for Payconiq."""
         return self.add_parameter("mobilenumber", mobile_number)
@@ -44,10 +67,10 @@ class PayconiqBuilder(PaymentBuilder, BankTransferCapabilities):
     # - pay(), refund(), capture(), cancel(), execute_action()
     
     # Optional: Create aliases with method names for consistency
-    def payFastCheckout(self) -> PaymentResponse:
+    def payFastCheckout(self, validate: bool = True) -> PaymentResponse:
         """Enable PayFast Checkout for Payconiq payments."""
-        return self.pay_fast_checkout()
+        return self.pay_fast_checkout(validate=validate)
     
-    def instantRefund(self) -> PaymentResponse:
+    def instantRefund(self, validate: bool = True) -> PaymentResponse:
         """Initiate an instant refund for Payconiq payments."""
-        return self.instant_refund()
+        return self.instant_refund(validate=validate)

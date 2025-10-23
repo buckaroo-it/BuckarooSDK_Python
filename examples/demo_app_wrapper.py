@@ -54,10 +54,14 @@ def demo_with_app_wrapper():
             "original_transaction_key": "TXN_123",
             "PaymentData": "Lorem",
             "CustomerCardName": "Ipsum",
-            "issuer": "ABNANL2A"
+            "issuer": "ABNANL2A",
+            "service_parameters": {
+                "SaveToken": "werew",
+                "joiwejoiwf": "joiwejro"
+            }
         })
 
-        response = payment.pay()
+        response = payment.pay(validate=True)  # validate=True is default
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload

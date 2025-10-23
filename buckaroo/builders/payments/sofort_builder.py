@@ -10,6 +10,29 @@ class SofortBuilder(PaymentBuilder, BankTransferCapabilities):
         """Get the service name for Sofort payments."""
         return "sofort"
     
+    def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
+        """Get the allowed service parameters for Sofort payments based on action."""
+        
+        if action.lower() in ["pay", "payfastcheckout"]:
+            return {
+                "countrycode": {"type": str, "required": False, "description": "Sofort country code"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+                "isrecurring": {"type": (str, bool), "required": False, "description": "Recurring payment flag"},
+            }
+        elif action.lower() == "instantrefund":
+            # Instant refund has different requirements
+            return {}
+        elif action.lower() in ["refund", "capture", "cancel"]:
+            # These actions typically don't require country code
+            return {}
+        else:
+            # Default to Pay action parameters
+            return {
+                "countrycode": {"type": str, "required": False, "description": "Sofort country code"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+                "isrecurring": {"type": (str, bool), "required": False, "description": "Recurring payment flag"},
+            }
+    
     def country_code(self, country_code: str) -> 'SofortBuilder':
         """Set the Sofort country code."""
         return self.add_parameter("countrycode", country_code)
@@ -44,10 +67,10 @@ class SofortBuilder(PaymentBuilder, BankTransferCapabilities):
     # - pay(), refund(), capture(), cancel(), execute_action()
     
     # Optional: Create aliases with method names for consistency
-    def payFastCheckout(self) -> PaymentResponse:
+    def payFastCheckout(self, validate: bool = True) -> PaymentResponse:
         """Enable PayFast Checkout for Sofort payments."""
-        return self.pay_fast_checkout()
+        return self.pay_fast_checkout(validate=validate)
     
-    def instantRefund(self) -> PaymentResponse:
+    def instantRefund(self, validate: bool = True) -> PaymentResponse:
         """Initiate an instant refund for Sofort payments."""
-        return self.instant_refund()
+        return self.instant_refund(validate=validate)

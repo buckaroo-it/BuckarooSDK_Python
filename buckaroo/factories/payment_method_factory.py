@@ -2,6 +2,7 @@ from typing import Dict, Type, Any
 
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
 from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
+from buckaroo.builders.payments.bancontact_builder import BancontactBuilder
 from buckaroo.builders.payments.creditcard_builder import CreditcardBuilder
 from ..builders.payments.payment_builder import PaymentBuilder
 from ..builders.payments.ideal_builder import IdealBuilder

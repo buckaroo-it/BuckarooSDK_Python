@@ -15,16 +15,19 @@ if TYPE_CHECKING:
 class AuthorizeCapable:
     """Mixin for payment methods that support authorization (Credit Card)."""
     
-    def authorize(self: 'PaymentBuilder') -> PaymentResponse:
+    def authorize(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
         """
         Authorize a payment without capturing it.
         
         Available for: Credit Card
         Not available for: iDEAL, Sofort, PayConiq (immediate transfer)
         
+        Args:
+            validate (bool): Whether to validate service parameters before building
+        
         Returns:
             PaymentResponse: The authorization response
         """
-        payment_request = self.build("Authorize")
+        payment_request = self.build("Authorize", validate=validate)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)

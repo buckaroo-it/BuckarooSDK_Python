@@ -16,17 +16,20 @@ if TYPE_CHECKING:
 class FastCheckoutCapable:
     """Mixin for payment methods that support fast checkout (iDEAL, Sofort, PayConiq)."""
     
-    def pay_fast_checkout(self: 'PaymentBuilder') -> PaymentResponse:
+    def pay_fast_checkout(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
         """
         Enable PayFast Checkout.
         
         Available for: iDEAL, Sofort, PayConiq
         Not available for: Credit Card, PayPal
         
+        Args:
+            validate (bool): Whether to validate service parameters before building
+        
         Returns:
             PaymentResponse: The fast checkout response
         """
-        payment_request = self.build("payFastCheckout")
+        payment_request = self.build("payFastCheckout", validate=validate)
         
         request_data = payment_request.to_dict()
 

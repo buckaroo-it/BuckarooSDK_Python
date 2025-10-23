@@ -11,6 +11,30 @@ class ApplePayBuilder(PaymentBuilder):
         """Get the service name for apple pay payments."""
         return "applepay"
     
+    def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
+        """Get the allowed service parameters for Apple Pay payments based on action."""
+        
+        if action.lower() in ["pay"]:
+            return {
+                "PaymentData": {"type": str, "required": True, "description": "Apple Pay payment data"},
+                "paymentdata": {"type": str, "required": True, "description": "Apple Pay payment data (lowercase)"},
+                "CustomerCardName": {"type": str, "required": False, "description": "Customer card name"},
+                "customercardname": {"type": str, "required": False, "description": "Customer card name (lowercase)"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+            }
+        elif action.lower() in ["refund", "capture", "cancel"]:
+            # These actions typically don't require payment data
+            return {}
+        else:
+            # Default to Pay action parameters
+            return {
+                "PaymentData": {"type": str, "required": True, "description": "Apple Pay payment data"},
+                "paymentdata": {"type": str, "required": True, "description": "Apple Pay payment data (lowercase)"},
+                "CustomerCardName": {"type": str, "required": False, "description": "Customer card name"},
+                "customercardname": {"type": str, "required": False, "description": "Customer card name (lowercase)"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+            }
+    
     def payment_data(self, value: str) -> 'ApplePayBuilder':
         """Set the payment data."""
         return self.add_parameter("PaymentData", value)

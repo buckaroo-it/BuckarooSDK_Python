@@ -11,6 +11,26 @@ class AlipayBuilder(PaymentBuilder):
         """Get the service name for Alipay payments."""
         return "Alipay"
     
+    def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
+        """Get the allowed service parameters for Alipay payments based on action."""
+        
+        if action.lower() in ["pay"]:
+            return {
+                "UseMobileView": {"type": (str, bool), "required": False, "description": "Use mobile view for Alipay"},
+                "usemobileview": {"type": (str, bool), "required": False, "description": "Use mobile view for Alipay (lowercase)"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+            }
+        elif action.lower() in ["refund", "capture", "cancel"]:
+            # These actions typically don't require mobile view
+            return {}
+        else:
+            # Default to Pay action parameters
+            return {
+                "UseMobileView": {"type": (str, bool), "required": False, "description": "Use mobile view for Alipay"},
+                "usemobileview": {"type": (str, bool), "required": False, "description": "Use mobile view for Alipay (lowercase)"},
+                "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
+            }
+    
     def use_mobile_view(self, value: bool) -> 'AlipayBuilder':
         """Set the mobile view preference."""
         return self.add_parameter("UseMobileView", value)

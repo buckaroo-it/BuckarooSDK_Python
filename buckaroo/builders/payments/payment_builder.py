@@ -78,9 +78,103 @@ class PaymentBuilder(ABC):
         """Add a custom parameter to the service."""
         # Convert value to string for API compatibility
         str_value = str(value).lower() if isinstance(value, bool) else str(value)
+
         parameter = Parameter(name=key, value=str_value)
         self._service_parameters.append(parameter)
         return self
+    
+    def _validate_service_parameter(self, key: str, value: Any, action: str = "Pay") -> None:
+        """
+        Validate a service parameter against allowed parameters for the specified action.
+        
+        Args:
+            key (str): Parameter name
+            value (Any): Parameter value
+            action (str): The action being performed
+            
+        Raises:
+            ValueError: If parameter is not allowed or invalid
+        """
+        allowed_params = self.get_allowed_service_parameters(action)
+        
+        if key not in allowed_params:
+            raise ValueError(f"Parameter '{key}' is not allowed for {self.get_service_name()} {action} action. "
+                           f"Allowed parameters: {list(allowed_params.keys())}")
+        
+        param_config = allowed_params[key]
+        
+        # Type validation if specified
+        if 'type' in param_config:
+            expected_type = param_config['type']
+            # Handle tuple of types (e.g., (str, bool))
+            if isinstance(expected_type, tuple):
+                type_valid = any(isinstance(value, t) for t in expected_type)
+                if not type_valid:
+                    # Allow string representations of booleans for bool types
+                    if bool in expected_type and isinstance(value, str):
+                        if value.lower() not in ['true', 'false']:
+                            type_names = [t.__name__ for t in expected_type]
+                            raise ValueError(f"Parameter '{key}' must be one of types {type_names} or 'true'/'false' string")
+                    else:
+                        type_names = [t.__name__ for t in expected_type]
+                        raise ValueError(f"Parameter '{key}' must be one of types {type_names}, got {type(value).__name__}")
+            else:
+                if not isinstance(value, expected_type):
+                    # Allow string representations of booleans
+                    if expected_type == bool and isinstance(value, str):
+                        if value.lower() not in ['true', 'false']:
+                            raise ValueError(f"Parameter '{key}' must be a boolean or 'true'/'false' string")
+                    else:
+                        raise ValueError(f"Parameter '{key}' must be of type {expected_type.__name__}, got {type(value).__name__}")
+    
+    def _normalize_parameter_name(self, param_name: str) -> str:
+        """Normalize parameter name to lowercase and remove underscores for matching."""
+        return param_name.lower().replace('_', '')
+    
+    def _validate_and_filter_service_parameters(self, action: str = "Pay") -> None:
+        """
+        Validate and filter service parameters just before building, removing invalid ones.
+        
+        Args:
+            action (str): The action being performed
+        """
+        if not self._service_parameters:
+            return
+            
+        allowed_params = self.get_allowed_service_parameters(action)
+        # Create normalized lookup for allowed parameters
+        normalized_allowed = {self._normalize_parameter_name(key): key for key in allowed_params.keys()}
+        
+        valid_parameters = []
+        invalid_params = []
+        
+        for param in self._service_parameters:
+            normalized_param_name = self._normalize_parameter_name(param.name)
+            
+            if normalized_param_name in normalized_allowed:
+                try:
+                    # Use the original allowed parameter name for validation
+                    allowed_param_name = normalized_allowed[normalized_param_name]
+                    
+                    # Re-create parameter value for validation
+                    param_value = param.value
+                    # Convert string representations back for validation
+                    if param.value.lower() in ['true', 'false']:
+                        param_value = param.value.lower() == 'true'
+                    
+                    self._validate_service_parameter(allowed_param_name, param_value, action)
+
+                    valid_parameters.append(param)
+                except ValueError as e:
+                    invalid_params.append(f"{param.name}: {str(e)}")
+            else:
+                invalid_params.append(f"{param.name}: not allowed for {self.get_service_name()} {action} action")
+        
+        if invalid_params:
+            print(f"Warning: Filtered out invalid service parameters for {action} action: {invalid_params}")
+        
+        # Replace with only valid parameters
+        self._service_parameters = valid_parameters
     
     def from_dict(self, data: Dict[str, Any]) -> 'PaymentBuilder':
         """
@@ -88,6 +182,7 @@ class PaymentBuilder(ABC):
         
         Args:
             data (Dict[str, Any]): Dictionary containing payment parameters
+            action (str): The action being performed (Pay, Authorize, Refund, etc.)
             
         Returns:
             PaymentBuilder: Self for method chaining
@@ -145,9 +240,10 @@ class PaymentBuilder(ABC):
         if 'service_parameters' in data:
             service_params = data['service_parameters']
             if isinstance(service_params, dict):
+                # Add parameters without validation (validation happens at build time)
                 for key, value in service_params.items():
                     self.add_parameter(key, value)
-        
+
         # Store the original payload for later use
         self._payload = data.copy()
         
@@ -156,6 +252,20 @@ class PaymentBuilder(ABC):
     @abstractmethod
     def get_service_name(self) -> str:
         """Get the service name for this payment method."""
+        pass
+    
+    @abstractmethod
+    def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
+        """
+        Get the allowed service parameters for this payment method and action.
+        
+        Args:
+            action (str): The action being performed (Pay, Authorize, Refund, etc.)
+        
+        Returns:
+            Dict[str, Any]: Dictionary where keys are parameter names and values are
+                          parameter metadata (type, required, etc.)
+        """
         pass
     
     def _validate_required_fields(self) -> None:
@@ -175,9 +285,18 @@ class PaymentBuilder(ABC):
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
     
-    def build(self, action = "Pay") -> PaymentRequest:
-        """Build the payment request."""
+    def build(self, action: str = "Pay", validate: bool = True) -> PaymentRequest:
+        """Build the payment request.
+        
+        Args:
+            action (str): The action to perform (Pay, Authorize, Refund, etc.)
+            validate (bool): Whether to validate and filter service parameters
+        """
         self._validate_required_fields()
+        
+        # Validate and filter service parameters if enabled
+        if validate:
+            self._validate_and_filter_service_parameters(action)
         
         # Create service with parameters
         service = Service(
@@ -205,13 +324,13 @@ class PaymentBuilder(ABC):
         )
         
         return payment_request
-    
-    def pay(self) -> PaymentResponse:
+
+    def pay(self, validate: bool = True) -> PaymentResponse:
         """
-        Execute the payment operation based on the configured operation type.
+        Execute the payment operation.
         
-        This method automatically detects the operation type from the payload
-        and executes the appropriate action (pay, refund, capture, cancel).
+        Args:
+            validate (bool): Whether to validate service parameters before building
         
         Returns:
             PaymentResponse: Structured payment response object
@@ -222,24 +341,22 @@ class PaymentBuilder(ABC):
             BuckarooApiError: If API returns an error
         """
         # Build the payment request
-        payment_request = self.build()
+        payment_request = self.build("Pay", validate=validate)
         
         # Convert to dictionary for API
         request_data = payment_request.to_dict()
+
         print(request_data)
         exit()
         return self._post_transaction(request_data)
     
     
-    def refund(self) -> PaymentResponse:
+    def refund(self, validate: bool = True) -> PaymentResponse:
         """
         Execute a refund transaction.
         
         Args:
-            original_transaction_key (str, optional): The transaction key of the original payment.
-                                                    If None, will try to get from payload.
-            amount (float, optional): Amount to refund. If None, will try to get from payload
-                                    or refund the full amount.
+            validate (bool): Whether to validate service parameters before building
         
         Returns:
             PaymentResponse: The refund response
@@ -256,7 +373,7 @@ class PaymentBuilder(ABC):
         refund_amount = self._payload.get('refund_amount')
         
         # Build refund request with original transaction reference
-        payment_request = self.build('Refund')
+        payment_request = self.build('Refund', validate=validate)
         
         # Convert to dictionary and modify for refund
         request_data = payment_request.to_dict()
@@ -276,7 +393,7 @@ class PaymentBuilder(ABC):
         
         return self._post_transaction(request_data)
     
-    def capture(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
+    def capture(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None, validate: bool = True) -> PaymentResponse:
         """
         Capture a previously authorized payment.
         
@@ -285,6 +402,7 @@ class PaymentBuilder(ABC):
                                                      If None, will try to get from payload.
             amount (float, optional): Amount to capture. If None, will try to get from payload
                                     or capture the full authorized amount.
+            validate (bool): Whether to validate service parameters before building
         
         Returns:
             PaymentResponse: The capture response
@@ -298,7 +416,7 @@ class PaymentBuilder(ABC):
         capture_amount = amount or self._payload.get('capture_amount')
         
         # Build capture request
-        payment_request = self.build()
+        payment_request = self.build('Capture', validate=validate)
         request_data = payment_request.to_dict()
         
         # Set capture-specific parameters
@@ -373,7 +491,7 @@ class PaymentBuilder(ABC):
         # Return structured response object
         return PaymentResponse(response.to_dict())
     
-    def execute_action(self, action: str) -> PaymentResponse:
+    def execute_action(self, action: str, validate: bool = True) -> PaymentResponse:
         """
         Execute a custom action for the payment method.
         
@@ -382,10 +500,11 @@ class PaymentBuilder(ABC):
         
         Args:
             action (str): The action to execute
+            validate (bool): Whether to validate service parameters before building
             
         Returns:
             PaymentResponse: The action response
         """
-        payment_request = self.build(action)
+        payment_request = self.build(action, validate=validate)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)

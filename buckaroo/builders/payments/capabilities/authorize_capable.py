@@ -31,3 +31,21 @@ class AuthorizeCapable:
         payment_request = self.build("Authorize", validate=validate)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)
+    
+    def authorizeEncrypted(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+        """
+        Authorize a payment without capturing it.
+        
+        Available for: Credit Card
+        Not available for: iDEAL, Sofort, PayConiq (immediate transfer)
+        
+        Args:
+            validate (bool): Whether to validate service parameters before building
+        
+        Returns:
+            PaymentResponse: The authorization response
+        """
+        payment_request = self.build("AuthorizeEncrypted", validate=validate)
+        request_data = payment_request.to_dict()
+        return self._post_transaction(request_data)
+    

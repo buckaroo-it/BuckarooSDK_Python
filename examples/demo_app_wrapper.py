@@ -59,11 +59,12 @@ def demo_with_app_wrapper():
             "service_parameters": {
                 "SaveToken": "werew",
                 "VoucherCode": "VOUCHER789",
-                "joiwejoiwf": "joiwejro"
+                "joiwejoiwf": "joiwejro",
+                "encryptedsecuritycode": "jowiejr"
             }
         })
 
-        response = payment.pay(validate=True)  # validate=True is default
+        response = payment.authorize(validate=True)  # validate=True is default
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload

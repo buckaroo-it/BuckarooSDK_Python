@@ -16,43 +16,19 @@ class BancontactBuilder(PaymentBuilder):
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """Get the allowed service parameters for Bancontact payments based on action."""
         
-        # Common parameters for all actions
-        common_params = {
-            "savetoken": {"type": str, "required": False, "description": "Save payment token for future use"},
-        }
-        
-        if action.lower() in ["pay"]:
+        if action.lower() in ["pay", "authenticate"]:
             return {
-                **common_params,
-                # Add any Pay-specific parameters here
+                "savetoken": {"type": str, "required": False, "description": "Save payment token for future use"},
             }
-        elif action.lower() in ["refund", "capture", "cancel"]:
+        
+        if action.lower() in ["payEncrypted", "completePayment"]:
+            return {
+                "encryptedCardData": {"type": str, "required": True, "description": "Encrypted card data for payment"},
+            }
+
+        
+        if action.lower() in ["refund", "capture", "cancel"]:
             # These actions typically don't require additional parameters
             return {}
-        else:
-            # Default to common parameters
-            return common_params
-    
-    def savetoken(self, savetoken: str) -> 'BancontactBuilder':
-        """Set the save token."""
-        return self.add_parameter("savetoken", savetoken)
-    
-    def from_dict(self, data: Dict[str, Any]) -> 'BancontactBuilder':
-        """
-        Populate the Bancontact builder from a dictionary of parameters.
-
-        Args:
-            data (Dict[str, Any]): Dictionary containing payment parameters
-            
-        Returns:
-            BancontactBuilder: The updated BancontactBuilder instance
-        """
-        super().from_dict(data)
-
-        # Handle SaveToken parameter (case-insensitive)
-        save_token = data.get("SaveToken") or data.get("savetoken")
-
-        if isinstance(save_token, str):
-            self.savetoken(save_token)
-
-        return self
+        
+        return {}

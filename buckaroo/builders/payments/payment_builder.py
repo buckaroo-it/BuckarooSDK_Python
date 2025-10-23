@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional, List, Union
 from ...models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
 from ...models.payment_response import PaymentResponse
 from ...http.client import BuckarooApiError
+from .service_parameter_validator import ServiceParameterValidator
 
 
 class PaymentBuilder(ABC):
@@ -23,6 +24,7 @@ class PaymentBuilder(ABC):
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
+        self._validator = ServiceParameterValidator(self)
     
     def currency(self, currency: str) -> 'PaymentBuilder':
         """Set the currency for the payment."""
@@ -83,53 +85,18 @@ class PaymentBuilder(ABC):
         self._service_parameters.append(parameter)
         return self
     
-    def _validate_service_parameter(self, key: str, value: Any, action: str = "Pay") -> None:
-        """
-        Validate a service parameter against allowed parameters for the specified action.
-        
-        Args:
-            key (str): Parameter name
-            value (Any): Parameter value
-            action (str): The action being performed
-            
-        Raises:
-            ValueError: If parameter is not allowed or invalid
-        """
-        allowed_params = self.get_allowed_service_parameters(action)
-        
-        if key not in allowed_params:
-            raise ValueError(f"Parameter '{key}' is not allowed for {self.get_service_name()} {action} action. "
-                           f"Allowed parameters: {list(allowed_params.keys())}")
-        
-        param_config = allowed_params[key]
-        
-        # Type validation if specified
-        if 'type' in param_config:
-            expected_type = param_config['type']
-            # Handle tuple of types (e.g., (str, bool))
-            if isinstance(expected_type, tuple):
-                type_valid = any(isinstance(value, t) for t in expected_type)
-                if not type_valid:
-                    # Allow string representations of booleans for bool types
-                    if bool in expected_type and isinstance(value, str):
-                        if value.lower() not in ['true', 'false']:
-                            type_names = [t.__name__ for t in expected_type]
-                            raise ValueError(f"Parameter '{key}' must be one of types {type_names} or 'true'/'false' string")
-                    else:
-                        type_names = [t.__name__ for t in expected_type]
-                        raise ValueError(f"Parameter '{key}' must be one of types {type_names}, got {type(value).__name__}")
-            else:
-                if not isinstance(value, expected_type):
-                    # Allow string representations of booleans
-                    if expected_type == bool and isinstance(value, str):
-                        if value.lower() not in ['true', 'false']:
-                            raise ValueError(f"Parameter '{key}' must be a boolean or 'true'/'false' string")
-                    else:
-                        raise ValueError(f"Parameter '{key}' must be of type {expected_type.__name__}, got {type(value).__name__}")
+    # Validation convenience methods
+    def is_parameter_allowed(self, param_name: str, action: str = "Pay") -> bool:
+        """Check if a parameter is allowed for the given action."""
+        return self._validator.is_parameter_allowed(param_name, action)
     
-    def _normalize_parameter_name(self, param_name: str) -> str:
-        """Normalize parameter name to lowercase and remove underscores for matching."""
-        return param_name.lower().replace('_', '')
+    def get_parameter_info(self, action: str = "Pay") -> Dict[str, Any]:
+        """Get information about allowed parameters for an action."""
+        return self._validator.get_parameter_info(action)
+    
+    def get_normalized_parameter_name(self, param_name: str, action: str = "Pay") -> str:
+        """Get the official parameter name that matches the input."""
+        return self._validator.get_normalized_parameter_name(param_name, action)
     
     def _validate_and_filter_service_parameters(self, action: str = "Pay") -> None:
         """
@@ -138,43 +105,9 @@ class PaymentBuilder(ABC):
         Args:
             action (str): The action being performed
         """
-        if not self._service_parameters:
-            return
-            
-        allowed_params = self.get_allowed_service_parameters(action)
-        # Create normalized lookup for allowed parameters
-        normalized_allowed = {self._normalize_parameter_name(key): key for key in allowed_params.keys()}
-        
-        valid_parameters = []
-        invalid_params = []
-        
-        for param in self._service_parameters:
-            normalized_param_name = self._normalize_parameter_name(param.name)
-            
-            if normalized_param_name in normalized_allowed:
-                try:
-                    # Use the original allowed parameter name for validation
-                    allowed_param_name = normalized_allowed[normalized_param_name]
-                    
-                    # Re-create parameter value for validation
-                    param_value = param.value
-                    # Convert string representations back for validation
-                    if param.value.lower() in ['true', 'false']:
-                        param_value = param.value.lower() == 'true'
-                    
-                    self._validate_service_parameter(allowed_param_name, param_value, action)
-
-                    valid_parameters.append(param)
-                except ValueError as e:
-                    invalid_params.append(f"{param.name}: {str(e)}")
-            else:
-                invalid_params.append(f"{param.name}: not allowed for {self.get_service_name()} {action} action")
-        
-        if invalid_params:
-            print(f"Warning: Filtered out invalid service parameters for {action} action: {invalid_params}")
-        
-        # Replace with only valid parameters
-        self._service_parameters = valid_parameters
+        self._service_parameters = self._validator.validate_and_filter_parameters(
+            self._service_parameters, action
+        )
     
     def from_dict(self, data: Dict[str, Any]) -> 'PaymentBuilder':
         """

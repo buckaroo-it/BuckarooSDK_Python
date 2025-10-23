@@ -3,7 +3,12 @@ from typing import Dict, Type, Any
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
 from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
 from buckaroo.builders.payments.bancontact_builder import BancontactBuilder
-from buckaroo.builders.payments.creditcard_builder import CreditcardBuilder
+from buckaroo.builders.payments.belfius_builder import BelfiusBuilder
+from buckaroo.builders.payments.bizum_builder import BizumBuilder
+from buckaroo.builders.payments.blik_builder import BlikBuilder
+from buckaroo.builders.payments.buckaroo_voucher_builder import BuckarooVoucherBuilder
+from buckaroo.builders.payments.click_to_pay_builder import ClickToPayBuilder
+from buckaroo.builders.payments.credit_card_builder import CreditcardBuilder
 from ..builders.payments.payment_builder import PaymentBuilder
 from ..builders.payments.ideal_builder import IdealBuilder
 from ..builders.payments.sofort_builder import SofortBuilder
@@ -17,8 +22,14 @@ class PaymentMethodFactory:
         "alipay": AlipayBuilder,
         "applepay": ApplePayBuilder,
         "bancontact": BancontactBuilder,
+        "bizum": BizumBuilder,
+        "belfius": BelfiusBuilder,
+        "blik": BlikBuilder,
+        "buckaroovoucher": BuckarooVoucherBuilder,
+        "credit_card": CreditcardBuilder,
+        "clicktopay": ClickToPayBuilder,
         "ideal": IdealBuilder,
-        "creditcard": CreditcardBuilder,
+        
         "sofort": SofortBuilder,
         "payconiq": PayconiqBuilder,
     }

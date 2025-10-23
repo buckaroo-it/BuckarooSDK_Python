@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional, List, Union
 from ...models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
 from ...models.payment_response import PaymentResponse
 from ...http.client import BuckarooApiError
+from ...exceptions._parameter_validation_error import ParameterValidationError, RequiredParameterMissingError
 from .service_parameter_validator import ServiceParameterValidator
 
 
@@ -98,15 +99,21 @@ class PaymentBuilder(ABC):
         """Get the official parameter name that matches the input."""
         return self._validator.get_normalized_parameter_name(param_name, action)
     
-    def _validate_and_filter_service_parameters(self, action: str = "Pay") -> None:
+    def _validate_and_filter_service_parameters(self, action: str = "Pay", strict: bool = False) -> None:
         """
-        Validate and filter service parameters just before building, removing invalid ones.
+        Validate and filter service parameters just before building.
         
         Args:
             action (str): The action being performed
+            strict (bool): If True, throws exceptions for missing required parameters.
+                          If False, filters invalid parameters and only warns.
+                          
+        Raises:
+            RequiredParameterMissingError: If required parameters are missing (when strict=True)
+            ParameterValidationError: If parameters are invalid (when strict=True)
         """
-        self._service_parameters = self._validator.validate_and_filter_parameters(
-            self._service_parameters, action
+        self._service_parameters = self._validator.validate_all_parameters(
+            self._service_parameters, action, strict=strict
         )
     
     def from_dict(self, data: Dict[str, Any]) -> 'PaymentBuilder':
@@ -218,18 +225,25 @@ class PaymentBuilder(ABC):
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
     
-    def build(self, action: str = "Pay", validate: bool = True) -> PaymentRequest:
+    def build(self, action: str = "Pay", validate: bool = True, strict_validation: bool = False) -> PaymentRequest:
         """Build the payment request.
         
         Args:
             action (str): The action to perform (Pay, Authorize, Refund, etc.)
             validate (bool): Whether to validate and filter service parameters
+            strict_validation (bool): If True, throws exceptions for missing required parameters.
+                                    If False, filters invalid parameters and only warns.
+                                    
+        Raises:
+            ValueError: If required payment fields are missing
+            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
+            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
         """
         self._validate_required_fields()
         
         # Validate and filter service parameters if enabled
         if validate:
-            self._validate_and_filter_service_parameters(action)
+            self._validate_and_filter_service_parameters(action, strict=strict_validation)
         
         # Create service with parameters
         service = Service(
@@ -258,23 +272,26 @@ class PaymentBuilder(ABC):
         
         return payment_request
 
-    def pay(self, validate: bool = True) -> PaymentResponse:
+    def pay(self, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
         """
         Execute the payment operation.
         
         Args:
             validate (bool): Whether to validate service parameters before building
+            strict_validation (bool): If True, throws exceptions for missing required parameters
         
         Returns:
             PaymentResponse: Structured payment response object
             
         Raises:
             ValueError: If required fields are missing
+            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
+            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
             AuthenticationError: If authentication fails
             BuckarooApiError: If API returns an error
         """
         # Build the payment request
-        payment_request = self.build("Pay", validate=validate)
+        payment_request = self.build("Pay", validate=validate, strict_validation=strict_validation)
         
         # Convert to dictionary for API
         request_data = payment_request.to_dict()
@@ -424,7 +441,7 @@ class PaymentBuilder(ABC):
         # Return structured response object
         return PaymentResponse(response.to_dict())
     
-    def execute_action(self, action: str, validate: bool = True) -> PaymentResponse:
+    def execute_action(self, action: str, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
         """
         Execute a custom action for the payment method.
         
@@ -434,10 +451,15 @@ class PaymentBuilder(ABC):
         Args:
             action (str): The action to execute
             validate (bool): Whether to validate service parameters before building
+            strict_validation (bool): If True, throws exceptions for missing required parameters
             
         Returns:
             PaymentResponse: The action response
+            
+        Raises:
+            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
+            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
         """
-        payment_request = self.build(action, validate=validate)
+        payment_request = self.build(action, validate=validate, strict_validation=strict_validation)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)

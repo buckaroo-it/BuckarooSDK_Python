@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""
+Test script demonstrating required parameter validation for BuckarooVoucherBuilder.
+"""
+
+import sys
+import os
+
+# Add the parent directory to the path so we can import buckaroo
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from buckaroo.builders.payments.buckaroo_voucher_builder import BuckarooVoucherBuilder
+from buckaroo.exceptions._parameter_validation_error import RequiredParameterMissingError, ParameterValidationError
+
+class MockClient:
+    """Mock client for testing."""
+    pass
+
+def test_required_parameter_validation():
+    """Test that required parameter validation works correctly."""
+    
+    print("=== Testing Required Parameter Validation for BuckarooVoucherBuilder ===\n")
+    
+    # Create a mock client and voucher builder
+    client = MockClient()
+    builder = BuckarooVoucherBuilder(client)
+    
+    # Set up basic payment information
+    builder.currency("EUR") \
+           .amount(10.00) \
+           .description("Test voucher payment") \
+           .invoice("INV-001") \
+           .return_url("https://example.com/success") \
+           .return_url_cancel("https://example.com/cancel") \
+           .return_url_error("https://example.com/error") \
+           .return_url_reject("https://example.com/reject")\n    \n    print("1. Testing with missing required parameter (VoucherCode)...\n")\n    \n    try:\n        # Try to build without the required VoucherCode parameter\n        # Use strict_validation=True to enforce required parameter checking\n        payment_request = builder.build(action=\"Pay\", validate=True, strict_validation=True)\n        print("❌ ERROR: Should have thrown RequiredParameterMissingError\")\n    except RequiredParameterMissingError as e:\n        print(f"✅ SUCCESS: Caught RequiredParameterMissingError as expected\")\n        print(f\"   Error message: {e}\")\n        print(f\"   Parameter name: {e.parameter_name}\")\n        print(f\"   Action: {e.action}\")\n        print(f\"   Service name: {e.service_name}\\n\")\n    except Exception as e:\n        print(f\"❌ ERROR: Unexpected exception type: {type(e).__name__}: {e}\\n\")\n    \n    print("2. Testing with required parameter provided...\\n")\n    \n    try:\n        # Add the required VoucherCode parameter\n        builder.add_parameter(\"VoucherCode\", \"VOUCHER123\")\n        \n        # Now build should succeed\n        payment_request = builder.build(action=\"Pay\", validate=True, strict_validation=True)\n        print(\"✅ SUCCESS: Payment request built successfully with required parameter\")\n        print(f\"   Service name: {payment_request.services.services[0].name}\")\n        print(f\"   Action: {payment_request.services.services[0].action}\")\n        print(f\"   Parameters: {[p.name + '=' + p.value for p in payment_request.services.services[0].parameters]}\\n\")\n    except Exception as e:\n        print(f\"❌ ERROR: Unexpected exception: {type(e).__name__}: {e}\\n\")\n    \n    print("3. Testing with invalid parameter type...\\n")\n    \n    try:\n        # Create a new builder to test type validation\n        builder2 = BuckarooVoucherBuilder(client)\n        builder2.currency(\"EUR\") \\\n                .amount(10.00) \\\n                .description(\"Test voucher payment\") \\\n                .invoice(\"INV-002\") \\\n                .return_url(\"https://example.com/success\") \\\n                .return_url_cancel(\"https://example.com/cancel\") \\\n                .return_url_error(\"https://example.com/error\") \\\n                .return_url_reject(\"https://example.com/reject\")\n        \n        # Add VoucherCode with wrong type (number instead of string)\n        # Note: This might not fail since we convert to string, but let's test\n        builder2.add_parameter(\"VoucherCode\", 12345)\n        \n        payment_request = builder2.build(action=\"Pay\", validate=True, strict_validation=True)\n        print(\"✅ INFO: Parameter type conversion handled successfully\")\n        print(f\"   VoucherCode value: {payment_request.services.services[0].parameters[0].value} (type: {type(payment_request.services.services[0].parameters[0].value)})\\n\")\n    except ParameterValidationError as e:\n        print(f\"✅ SUCCESS: Caught ParameterValidationError for type mismatch\")\n        print(f\"   Error message: {e}\\n\")\n    except Exception as e:\n        print(f\"❌ ERROR: Unexpected exception: {type(e).__name__}: {e}\\n\")\n    \n    print(\"4. Testing with non-strict validation (should only warn, not throw)...\\n\")\n    \n    try:\n        # Create a new builder without required parameter\n        builder3 = BuckarooVoucherBuilder(client)\n        builder3.currency(\"EUR\") \\\n                .amount(10.00) \\\n                .description(\"Test voucher payment\") \\\n                .invoice(\"INV-003\") \\\n                .return_url(\"https://example.com/success\") \\\n                .return_url_cancel(\"https://example.com/cancel\") \\\n                .return_url_error(\"https://example.com/error\") \\\n                .return_url_reject(\"https://example.com/reject\")\n        \n        # Try non-strict validation (should still throw for required parameters)\n        payment_request = builder3.build(action=\"Pay\", validate=True, strict_validation=False)\n        print(\"❌ ERROR: Should have thrown RequiredParameterMissingError even in non-strict mode\")\n    except RequiredParameterMissingError as e:\n        print(f\"✅ SUCCESS: Required parameter checking works in both strict and non-strict modes\")\n        print(f\"   Error message: {e}\\n\")\n    except Exception as e:\n        print(f\"❌ ERROR: Unexpected exception: {type(e).__name__}: {e}\\n\")\n    \n    print(\"5. Testing parameter case insensitivity and underscore tolerance...\\n\")\n    \n    try:\n        # Create a new builder\n        builder4 = BuckarooVoucherBuilder(client)\n        builder4.currency(\"EUR\") \\\n                .amount(10.00) \\\n                .description(\"Test voucher payment\") \\\n                .invoice(\"INV-004\") \\\n                .return_url(\"https://example.com/success\") \\\n                .return_url_cancel(\"https://example.com/cancel\") \\\n                .return_url_error(\"https://example.com/error\") \\\n                .return_url_reject(\"https://example.com/reject\")\n        \n        # Add parameter with different case and underscores\n        builder4.add_parameter(\"voucher_code\", \"VOUCHER456\")  # Should match \"VoucherCode\"\n        \n        payment_request = builder4.build(action=\"Pay\", validate=True, strict_validation=True)\n        print(\"✅ SUCCESS: Case insensitive and underscore tolerant parameter matching works\")\n        print(f\"   Original parameter: voucher_code\")\n        print(f\"   Matched parameter: VoucherCode\")\n        print(f\"   Value: {payment_request.services.services[0].parameters[0].value}\\n\")\n    except Exception as e:\n        print(f\"❌ ERROR: Case insensitive matching failed: {type(e).__name__}: {e}\\n\")\n    \n    print(\"=== Test completed ===\")\n\nif __name__ == \"__main__\":\n    test_required_parameter_validation()

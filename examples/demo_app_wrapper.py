@@ -42,7 +42,8 @@ def demo_with_app_wrapper():
         
         # Create iDEAL payment using factory pattern - auto-detected by 'issuer' field
         payment = app.payments.create({
-            "method": "bancontact",
+            "method": "credit_card",  # Payment method
+            "brand": "visa",        # Card brand
             "amount": 25.50,
             "currency": "EUR", 
             "invoice": "QUICK-001",
@@ -57,6 +58,7 @@ def demo_with_app_wrapper():
             "issuer": "ABNANL2A",
             "service_parameters": {
                 "SaveToken": "werew",
+                "VoucherCode": "VOUCHER789",
                 "joiwejoiwf": "joiwejro"
             }
         })

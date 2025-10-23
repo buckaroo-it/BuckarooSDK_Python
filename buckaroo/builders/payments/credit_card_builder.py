@@ -6,10 +6,12 @@ from ...models.payment_response import PaymentResponse
 class CreditcardBuilder(PaymentBuilder, AuthorizeCapable):
     """Builder for Credit Card payments with authorization capabilities."""
     
+    _serviceName = "creditcard"
+    
     def get_service_name(self) -> str:
         """Get the service name for Creditcard payments."""
-        return "creditcard"
-    
+        return self._serviceName
+
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """Get the allowed service parameters for Credit Card payments based on action."""
         

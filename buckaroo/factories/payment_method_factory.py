@@ -1,4 +1,5 @@
 from typing import Dict, Type, Any
+import logging
 
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
 from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
@@ -9,6 +10,7 @@ from buckaroo.builders.payments.blik_builder import BlikBuilder
 from buckaroo.builders.payments.buckaroo_voucher_builder import BuckarooVoucherBuilder
 from buckaroo.builders.payments.click_to_pay_builder import ClickToPayBuilder
 from buckaroo.builders.payments.credit_card_builder import CreditcardBuilder
+from buckaroo.builders.payments.default_builder import DefaultBuilder
 from ..builders.payments.payment_builder import PaymentBuilder
 from ..builders.payments.ideal_builder import IdealBuilder
 from ..builders.payments.sofort_builder import SofortBuilder
@@ -28,8 +30,8 @@ class PaymentMethodFactory:
         "buckaroovoucher": BuckarooVoucherBuilder,
         "credit_card": CreditcardBuilder,
         "clicktopay": ClickToPayBuilder,
+        "default": DefaultBuilder,
         "ideal": IdealBuilder,
-        
         "sofort": SofortBuilder,
         "payconiq": PayconiqBuilder,
     }
@@ -53,10 +55,13 @@ class PaymentMethodFactory:
         
         if method not in cls._payment_methods:
             available_methods = ", ".join(cls._payment_methods.keys())
-            raise ValueError(
+            logging.warning(
                 f"Unsupported payment method: {method}. "
-                f"Available methods: {available_methods}"
+                f"Available methods: {available_methods}. "
+                f"Using DefaultBuilder as fallback."
             )
+            # Use DefaultBuilder as fallback
+            return DefaultBuilder(client)
         
         builder_class = cls._payment_methods[method]
         return builder_class(client)
@@ -137,7 +142,9 @@ class PaymentMethodFactory:
                     return service_mapping[service_name]
             
         # Default fallback - could be configurable
-        raise ValueError(
+        logging.warning(
             "Cannot determine payment method from payload. "
-            "Please include 'method' or specify service in Services.ServiceList."
+            "Please include 'method' or specify service in Services.ServiceList. "
+            "Using 'default' as fallback method."
         )
+        return 'default'

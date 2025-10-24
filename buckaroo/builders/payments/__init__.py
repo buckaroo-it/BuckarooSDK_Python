@@ -5,7 +5,7 @@ This package contains all payment method builders and their capabilities.
 """
 
 from .payment_builder import PaymentBuilder
-from .capabilities.authorize_capable import AuthorizeCapable
+from .capabilities.authorize_capture_capable import AuthorizeCaptureCapable
 from .capabilities.instant_refund_capable import InstantRefundCapable
 from .capabilities.fast_checkout_capable import FastCheckoutCapable
 from .capabilities.bank_transfer_capabilities import BankTransferCapabilities
@@ -16,7 +16,7 @@ from .payconiq_builder import PayconiqBuilder
 
 __all__ = [
     'PaymentBuilder',
-    'AuthorizeCapable',
+    'AuthorizeCaptureCapable',
     'InstantRefundCapable',
     'FastCheckoutCapable', 
     'BankTransferCapabilities',

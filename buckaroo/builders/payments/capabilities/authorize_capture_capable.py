@@ -12,7 +12,7 @@ from ....models.payment_response import PaymentResponse
 if TYPE_CHECKING:
     from ..payment_builder import PaymentBuilder
 
-class AuthorizeCapable:
+class AuthorizeCaptureCapable:
     """Mixin for payment methods that support authorization (Credit Card)."""
     
     def authorize(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
@@ -46,6 +46,21 @@ class AuthorizeCapable:
             PaymentResponse: The authorization response
         """
         payment_request = self.build("AuthorizeEncrypted", validate=validate)
+        request_data = payment_request.to_dict()
+        return self._post_transaction(request_data)
+    
+    def capture(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+        """
+        Capture a previously authorized payment.
+        
+        Args:
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The capture response
+        """
+
+        payment_request = self.build("Capture", validate=validate)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)
     

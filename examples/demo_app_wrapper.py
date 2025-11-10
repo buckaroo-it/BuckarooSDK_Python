@@ -42,7 +42,8 @@ def demo_with_app_wrapper():
         
         # Create iDEAL payment using factory pattern - auto-detected by 'issuer' field
         payment = app.payments.create({
-            "method": "onbekend",  # Payment method
+            "method": "in3",  # Payment method
+            "giftcard_name": "Boekenbon",  # Giftcard name
             "brand": "visa",        # Card brand
             "amount": 25.50,
             "currency": "EUR", 
@@ -57,14 +58,22 @@ def demo_with_app_wrapper():
             "CustomerCardName": "Ipsum",
             "issuer": "ABNANL2A",
             "service_parameters": {
-                "SaveToken": "werew",
-                "VoucherCode": "VOUCHER789",
-                "joiwejoiwf": "joiwejro",
-                "encryptedsecuritycode": "jowiejr"
+                "articles": [
+                    {
+                        "description": "Product 1",
+                        "quantity": 1,
+                        "price": 10.00
+                    },
+                    {
+                        "description": "Product 2",
+                        "quantity": 3,
+                        "price": 5.50
+                    }
+                ]
             }
         })
 
-        response = payment.payRecurrent(validate=True)  # validate=True is default
+        response = payment.pay(validate=True)  # validate=True is default
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload

@@ -11,6 +11,11 @@ from buckaroo.builders.payments.buckaroo_voucher_builder import BuckarooVoucherB
 from buckaroo.builders.payments.click_to_pay_builder import ClickToPayBuilder
 from buckaroo.builders.payments.credit_card_builder import CreditcardBuilder
 from buckaroo.builders.payments.default_builder import DefaultBuilder
+from buckaroo.builders.payments.eps_builder import EpsBuilder
+from buckaroo.builders.payments.giftcards_builder import GiftcardsBuilder
+from buckaroo.builders.payments.google_pay_builder import GooglePayBuilder
+from buckaroo.builders.payments.in3_builder import In3Builder
+from buckaroo.builders.payments.knaken_builder import KnakenBuilder
 from ..builders.payments.payment_builder import PaymentBuilder
 from ..builders.payments.ideal_builder import IdealBuilder
 from ..builders.payments.sofort_builder import SofortBuilder
@@ -28,10 +33,17 @@ class PaymentMethodFactory:
         "belfius": BelfiusBuilder,
         "blik": BlikBuilder,
         "buckaroovoucher": BuckarooVoucherBuilder,
-        "credit_card": CreditcardBuilder,
         "clicktopay": ClickToPayBuilder,
-        "default": DefaultBuilder,
+        "credit_card": CreditcardBuilder,
+        "eps": EpsBuilder,
+        "giftcards": GiftcardsBuilder,
+        "googlepay": GooglePayBuilder,
         "ideal": IdealBuilder,
+        "in3": In3Builder,
+        "knaken": KnakenBuilder,
+
+        "default": DefaultBuilder,
+        
         "sofort": SofortBuilder,
         "payconiq": PayconiqBuilder,
     }

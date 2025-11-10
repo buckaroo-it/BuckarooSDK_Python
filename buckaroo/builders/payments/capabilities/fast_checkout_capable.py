@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class FastCheckoutCapable:
     """Mixin for payment methods that support fast checkout (iDEAL, Sofort, PayConiq)."""
     
-    def pay_fast_checkout(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+    def payFastCheckout(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
         """
         Enable PayFast Checkout.
         

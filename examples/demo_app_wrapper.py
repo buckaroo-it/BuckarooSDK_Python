@@ -53,21 +53,42 @@ def demo_with_app_wrapper():
             "return_url_cancel": "https://www.buckaroo.nl/cancel",
             "return_url_error": "https://www.buckaroo.nl/error", 
             "return_url_reject": "https://www.buckaroo.nl/reject",
-            "original_transaction_key": "TXN_123",
-            "PaymentData": "Lorem",
-            "CustomerCardName": "Ipsum",
-            "issuer": "ABNANL2A",
+            # "original_transaction_key": "TXN_123",
+            # "PaymentData": "Lorem",
+            # "CustomerCardName": "Ipsum",
             "service_parameters": {
-                "articles": [
+                # "issuer": "ABNANL2A",
+                "billingCustomer": {
+                    "category": "B2C",
+                    "customerNumber": "CUST-001",
+                    "lastName": "Doe",
+                    "email": "customer@example.com",
+                    "phone": "0612345678",
+                    "street": "Main Street",
+                    "streetNumber": "12",
+                    "city": "Amsterdam",
+                    "postalCode": "1234AB",
+                    "countryCode": "NL"
+                },
+                "shippingCustomer": {
+                    "street": "Main Street",
+                    "streetNumber": "12",
+                    "city": "Amsterdam",
+                    "postalCode": "1234AB",
+                    "countryCode": "NL"
+                },
+                "article": [
                     {
+                        "category": "Books",
                         "description": "Product 1",
                         "quantity": 1,
-                        "price": 10.00
+                        "grossUnitPrice": 10.00
                     },
                     {
+                        "category": "Toy Cars",
                         "description": "Product 2",
                         "quantity": 3,
-                        "price": 5.50
+                        "grossUnitPrice": 5.50
                     }
                 ]
             }

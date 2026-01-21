@@ -3,7 +3,6 @@ from typing import Dict, Any
 from ..factories.payment_method_factory import PaymentMethodFactory
 from ..builders.payments.payment_builder import PaymentBuilder
 
-
 class PaymentService(object):
     """Service for handling payment operations."""
     
@@ -58,7 +57,7 @@ class PaymentService(object):
             ... }).description("Updated description").execute()
         """
         builder = self._factory.create_payment_builder(method, self._client)
-        
+
         # If parameters are provided, populate the builder
         if parameters:
             builder.from_dict(parameters)

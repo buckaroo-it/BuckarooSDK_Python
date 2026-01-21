@@ -13,7 +13,9 @@ class In3Builder(PaymentBuilder):
         
         if action.lower() in ["pay"]:
             return {
-                "articles": {"type": dict, "required": True, "description": "IN3 articles"},
+                "billingCustomer": {"type": list, "required": True, "description": "Billing customer information"},
+                "shippingCustomer": {"type": list, "required": True, "description": "Shipping customer information"},
+                "article": {"type": list, "required": True, "description": "IN3 articles"},
             }
 
         return {}

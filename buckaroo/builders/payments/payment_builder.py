@@ -77,12 +77,43 @@ class PaymentBuilder(ABC):
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
         return self
     
-    def add_parameter(self, key: str, value: Any) -> 'PaymentBuilder':
-        """Add a custom parameter to the service."""
+    def add_parameter(self, key: str, value: Any, group_type: str = "", group_id: str = "") -> 'PaymentBuilder':
+        """Add a custom parameter to the service.
+        
+        Args:
+            key: Parameter name
+            value: Parameter value (will be converted to string unless it's a list/dict)
+            group_type: Optional group type for grouped parameters
+            group_id: Optional group ID for grouped parameters
+        """
+        # Handle list of dictionaries (e.g., articles)
+        if isinstance(value, list):
+            for index, item in enumerate(value):
+                if isinstance(item, dict):
+                    # Each item in the list becomes a group
+                    for item_key, item_value in item.items():
+
+                        str_value = str(item_value).lower() if isinstance(item_value, bool) else str(item_value)
+                        parameter = Parameter(
+                            name=item_key.capitalize(),
+                            value=str_value,
+                            group_type=key.capitalize(),  # e.g., "articles"
+                            group_id=str(index + 1)  # 1-based index
+                        )
+                        self._service_parameters.append(parameter)
+            return self
+        
+        # Handle regular parameters
         # Convert value to string for API compatibility
         str_value = str(value).lower() if isinstance(value, bool) else str(value)
 
-        parameter = Parameter(name=key, value=str_value)
+        parameter = Parameter(
+            name=key.capitalize(), 
+            value=str_value, 
+            group_type=group_type.capitalize(), 
+            group_id=group_id
+        )
+
         self._service_parameters.append(parameter)
         return self
     
@@ -179,11 +210,14 @@ class PaymentBuilder(ABC):
                 
         if 'service_parameters' in data:
             service_params = data['service_parameters']
-            if isinstance(service_params, dict):
-                # Add parameters without validation (validation happens at build time)
-                for key, value in service_params.items():
+ 
+            for key, value in service_params.items():
+                if isinstance(value, dict): 
+                    for sub_key, sub_value in value.items():
+                        self.add_parameter(sub_key, sub_value, key)
+                else:
                     self.add_parameter(key, value)
-
+        
         # Store the original payload for later use
         self._payload = data.copy()
         
@@ -296,8 +330,6 @@ class PaymentBuilder(ABC):
         # Convert to dictionary for API
         request_data = payment_request.to_dict()
 
-        print(request_data)
-        exit()
         return self._post_transaction(request_data)
     
     

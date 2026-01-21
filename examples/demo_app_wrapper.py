@@ -40,9 +40,9 @@ def demo_with_app_wrapper():
         # Logger is already available, no need to initialize
         app.log_info("Quick setup demo started")
         
-        # Create iDEAL payment using factory pattern - auto-detected by 'issuer' field
         payment = app.payments.create({
-            "method": "in3",  # Payment method
+            "method": "paypal",  # Payment method
+            "voucher_name": "MonizzeGiftVoucher",
             "giftcard_name": "Boekenbon",  # Giftcard name
             "brand": "visa",        # Card brand
             "amount": 25.50,
@@ -57,10 +57,23 @@ def demo_with_app_wrapper():
             # "PaymentData": "Lorem",
             # "CustomerCardName": "Ipsum",
             "service_parameters": {
-                # "issuer": "ABNANL2A",
+                "amount": 25.50,
+                "amountIsChangeable": False,
+                "purchaseId": "ORDER1002",
+                "description": "Order #1001 payment",
+                "isOneOff": True,
+                "expiration": "2026-12-31",
+                "imageSize": "300",
+                "Consumeremail": "customer@example.com",
+                "customerfirstname": "John",
+                "customerlastname": "Doe",
+                "customeraccountname": "John Doe",
+                "customeriban": "NL91ABNA0417164300",
+                "customerCountryCode": "NL",
                 "billingCustomer": {
-                    "category": "B2C",
+                    "category": "Person",
                     "customerNumber": "CUST-001",
+                    "firstName": "John",
                     "lastName": "Doe",
                     "email": "customer@example.com",
                     "phone": "0612345678",
@@ -68,33 +81,92 @@ def demo_with_app_wrapper():
                     "streetNumber": "12",
                     "city": "Amsterdam",
                     "postalCode": "1234AB",
-                    "countryCode": "NL"
+                    "country": "NL"
                 },
                 "shippingCustomer": {
+                    "firstName": "John",
+                    "lastName": "Doe",
                     "street": "Main Street",
                     "streetNumber": "12",
                     "city": "Amsterdam",
                     "postalCode": "1234AB",
-                    "countryCode": "NL"
+                    "country": "NL"
                 },
                 "article": [
                     {
-                        "category": "Books",
-                        "description": "Product 1",
-                        "quantity": 1,
-                        "grossUnitPrice": 10.00
+                        "articleID": "12345",
+                        "articleLabel": "Product 1",
+                        "articleUnitPrice": 10.00
                     },
                     {
-                        "category": "Toy Cars",
-                        "description": "Product 2",
-                        "quantity": 3,
-                        "grossUnitPrice": 5.50
+                        "articleID": "67890",
+                        "articleLabel": "Product 2",
+                        "articleUnitPrice": 5.50
                     }
                 ]
             }
         })
 
+        # Create In3 payment using factory pattern - auto-detected by 'issuer' field
+        # payment = app.payments.create({
+        #     "method": "przelewy24",  # Payment method
+        #     "giftcard_name": "Boekenbon",  # Giftcard name
+        #     "brand": "visa",        # Card brand
+        #     "amount": 25.50,
+        #     "currency": "EUR", 
+        #     "invoice": "QUICK-001",
+        #     "description": "Quick setup demo payment",
+        #     "return_url": "https://www.buckaroo.nl",
+        #     "return_url_cancel": "https://www.buckaroo.nl/cancel",
+        #     "return_url_error": "https://www.buckaroo.nl/error", 
+        #     "return_url_reject": "https://www.buckaroo.nl/reject",
+        #     # "original_transaction_key": "TXN_123",
+        #     # "PaymentData": "Lorem",
+        #     # "CustomerCardName": "Ipsum",
+        #     "service_parameters": {
+        #         # "issuer": "ABNANL2A",
+        #         "billingCustomer": {
+        #             "category": "B2C",
+        #             "customerNumber": "CUST-001",
+        #             "lastName": "Doe",
+        #             "email": "customer@example.com",
+        #             "phone": "0612345678",
+        #             "street": "Main Street",
+        #             "streetNumber": "12",
+        #             "city": "Amsterdam",
+        #             "postalCode": "1234AB",
+        #             "countryCode": "NL"
+        #         },
+        #         "shippingCustomer": {
+        #             "street": "Main Street",
+        #             "streetNumber": "12",
+        #             "city": "Amsterdam",
+        #             "postalCode": "1234AB",
+        #             "countryCode": "NL"
+        #         },
+        #         "article": [
+        #             {
+        #                 "category": "Books",
+        #                 "description": "Product 1",
+        #                 "quantity": 1,
+        #                 "grossUnitPrice": 10.00
+        #             },
+        #             {
+        #                 "category": "Toy Cars",
+        #                 "description": "Product 2",
+        #                 "quantity": 3,
+        #                 "grossUnitPrice": 5.50
+        #             }
+        #         ]
+        #     }
+        # })
+
         response = payment.pay(validate=True)  # validate=True is default
+
+
+        # app.solutions.create({
+
+        # })
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload

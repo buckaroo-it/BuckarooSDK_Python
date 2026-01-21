@@ -7,8 +7,8 @@ from ...exceptions._parameter_validation_error import ParameterValidationError, 
 from .service_parameter_validator import ServiceParameterValidator
 
 
-class PaymentBuilder(ABC):
-    """Abstract base class for payment builders."""
+class SolutionBuilder(ABC):
+    """Abstract base class for solution builders."""
     
     def __init__(self, client):
         """Initialize with client instance."""
@@ -27,57 +27,57 @@ class PaymentBuilder(ABC):
         self._payload: Dict[str, Any] = {}  # Store original payload
         self._validator = ServiceParameterValidator(self)
     
-    def currency(self, currency: str) -> 'PaymentBuilder':
+    def currency(self, currency: str) -> 'SolutionBuilder':
         """Set the currency for the payment."""
         self._currency = currency
         return self
     
-    def amount(self, amount: float) -> 'PaymentBuilder':
+    def amount(self, amount: float) -> 'SolutionBuilder':
         """Set the amount for the payment."""
         self._amount_debit = amount
         return self
     
-    def description(self, description: str) -> 'PaymentBuilder':
+    def description(self, description: str) -> 'SolutionBuilder':
         """Set the description for the payment."""
         self._description = description
         return self
     
-    def invoice(self, invoice: str) -> 'PaymentBuilder':
+    def invoice(self, invoice: str) -> 'SolutionBuilder':
         """Set the invoice number for the payment."""
         self._invoice = invoice
         return self
     
-    def return_url(self, url: str) -> 'PaymentBuilder':
+    def return_url(self, url: str) -> 'SolutionBuilder':
         """Set the return URL for successful payment."""
         self._return_url = url
         return self
     
-    def return_url_cancel(self, url: str) -> 'PaymentBuilder':
+    def return_url_cancel(self, url: str) -> 'SolutionBuilder':
         """Set the return URL for cancelled payment."""
         self._return_url_cancel = url
         return self
     
-    def return_url_error(self, url: str) -> 'PaymentBuilder':
+    def return_url_error(self, url: str) -> 'SolutionBuilder':
         """Set the return URL for payment error."""
         self._return_url_error = url
         return self
     
-    def return_url_reject(self, url: str) -> 'PaymentBuilder':
+    def return_url_reject(self, url: str) -> 'SolutionBuilder':
         """Set the return URL for rejected payment."""
         self._return_url_reject = url
         return self
     
-    def continue_on_incomplete(self, continue_incomplete: str) -> 'PaymentBuilder':
+    def continue_on_incomplete(self, continue_incomplete: str) -> 'SolutionBuilder':
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
         return self
     
-    def client_ip(self, ip_address: str, ip_type: int = 0) -> 'PaymentBuilder':
+    def client_ip(self, ip_address: str, ip_type: int = 0) -> 'SolutionBuilder':
         """Set the client IP information."""
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
         return self
     
-    def add_parameter(self, key: str, value: Any, group_type: str = "", group_id: str = "") -> 'PaymentBuilder':
+    def add_parameter(self, key: str, value: Any, group_type: str = "", group_id: str = "") -> 'SolutionBuilder':
         """Add a custom parameter to the service.
         
         Args:
@@ -147,7 +147,7 @@ class PaymentBuilder(ABC):
             self._service_parameters, action, strict=strict
         )
     
-    def from_dict(self, data: Dict[str, Any]) -> 'PaymentBuilder':
+    def from_dict(self, data: Dict[str, Any]) -> 'SolutionBuilder':
         """
         Populate the builder from a dictionary of parameters.
         
@@ -156,7 +156,7 @@ class PaymentBuilder(ABC):
             action (str): The action being performed (Pay, Authorize, Refund, etc.)
             
         Returns:
-            PaymentBuilder: Self for method chaining
+            SolutionBuilder: Self for method chaining
             
         Supported keys:
             - currency: Payment currency (e.g., 'EUR', 'USD')
@@ -244,7 +244,6 @@ class PaymentBuilder(ABC):
     
     def _validate_required_fields(self) -> None:
         """Validate that all required fields are set."""
-
         required_fields = {
             'currency': self._currency,
             'amount_debit': self._amount_debit,
@@ -255,17 +254,6 @@ class PaymentBuilder(ABC):
             'return_url_error': self._return_url_error,
             'return_url_reject': self._return_url_reject,
         }
-
-        if self._payload.get('method') == 'idealqr':
-            required_fields = {
-                'currency': self._currency,
-                'description': self._description,
-                'return_url': self._return_url,
-                'return_url_cancel': self._return_url_cancel,
-                'return_url_error': self._return_url_error,
-                'return_url_reject': self._return_url_reject,
-            }
-
         
         missing_fields = [field for field, value in required_fields.items() if value is None]
         if missing_fields:
@@ -472,19 +460,6 @@ class PaymentBuilder(ABC):
         
         return self.refund(original_transaction_key, refund_amount)
 
-    def _post_data_request(self, request_data: Dict[str, Any]) -> PaymentResponse:
-        """Helper method to post data request and handle response."""
-        # Send to Buckaroo API
-        response = self._client.http_client.post('/json/DataRequest', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-        
-        # Return structured response object
-        return PaymentResponse(response.to_dict())
-    
     def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Helper method to post transaction and handle response."""
         # Send to Buckaroo API

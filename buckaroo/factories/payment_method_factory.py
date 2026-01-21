@@ -14,12 +14,27 @@ from buckaroo.builders.payments.default_builder import DefaultBuilder
 from buckaroo.builders.payments.eps_builder import EpsBuilder
 from buckaroo.builders.payments.giftcards_builder import GiftcardsBuilder
 from buckaroo.builders.payments.google_pay_builder import GooglePayBuilder
+from buckaroo.builders.payments.ideal_qr_builder import IdealQrBuilder
 from buckaroo.builders.payments.in3_builder import In3Builder
+from buckaroo.builders.payments.kbc_builder import KBCBuilder
 from buckaroo.builders.payments.knaken_builder import KnakenBuilder
-from ..builders.payments.payment_builder import PaymentBuilder
-from ..builders.payments.ideal_builder import IdealBuilder
-from ..builders.payments.sofort_builder import SofortBuilder
-from ..builders.payments.payconiq_builder import PayconiqBuilder
+from buckaroo.builders.payments.przelewy24_builder import Przelewy24Builder
+from buckaroo.builders.payments.riverty_builder import RivertyBuilder
+from buckaroo.builders.payments.sepadirectdebit_builder import SepaDirectDebitBuilder
+from buckaroo.builders.payments.swish_builder import SwishBuilder
+from buckaroo.builders.payments.transfer_builder import TransferBuilder
+from buckaroo.builders.payments.trustly_builder import TrustlyBuilder
+from buckaroo.builders.payments.twint_builder import TwintBuilder
+from buckaroo.builders.payments.wechatpay_builder import WeChatPayBuilder
+from buckaroo.builders.payments.wero_builder import WeroBuilder
+from buckaroo.builders.payments.payment_builder import PaymentBuilder
+from buckaroo.builders.payments.ideal_builder import IdealBuilder
+from buckaroo.builders.payments.sofort_builder import SofortBuilder
+from buckaroo.builders.payments.payconiq_builder import PayconiqBuilder
+from buckaroo.builders.payments.voucher_builder import VoucherBuilder
+from buckaroo.builders.payments.multibanco_builder import MultibancoBuilder
+from buckaroo.builders.payments.mbway_builder import MBWayBuilder
+from buckaroo.builders.payments.paypal_builder import PaypalBuilder
 
 class PaymentMethodFactory:
     """Factory for creating payment method builders."""
@@ -29,23 +44,36 @@ class PaymentMethodFactory:
         "alipay": AlipayBuilder,
         "applepay": ApplePayBuilder,
         "bancontact": BancontactBuilder,
-        "bizum": BizumBuilder,
         "belfius": BelfiusBuilder,
+        "bizum": BizumBuilder,
         "blik": BlikBuilder,
         "buckaroovoucher": BuckarooVoucherBuilder,
         "clicktopay": ClickToPayBuilder,
         "credit_card": CreditcardBuilder,
+        "default": DefaultBuilder,
         "eps": EpsBuilder,
         "giftcards": GiftcardsBuilder,
         "googlepay": GooglePayBuilder,
         "ideal": IdealBuilder,
+        "idealqr": IdealQrBuilder,
         "in3": In3Builder,
+        "kbc": KBCBuilder,
         "knaken": KnakenBuilder,
-
-        "default": DefaultBuilder,
-        
-        "sofort": SofortBuilder,
+        "multibanco": MultibancoBuilder,
+        "mbway": MBWayBuilder,
         "payconiq": PayconiqBuilder,
+        "paypal": PaypalBuilder,
+        "przelewy24": Przelewy24Builder,
+        "riverty": RivertyBuilder,
+        "sepadirectdebit": SepaDirectDebitBuilder,
+        "sofort": SofortBuilder,
+        "swish": SwishBuilder,
+        "transfer": TransferBuilder,
+        "trustly": TrustlyBuilder,
+        "twint": TwintBuilder,
+        "voucher": VoucherBuilder,
+        "wechatpay": WeChatPayBuilder,
+        "wero": WeroBuilder,
     }
     
     @classmethod

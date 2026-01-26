@@ -4,6 +4,25 @@ from .payment_builder import PaymentBuilder
 class IdealQrBuilder(PaymentBuilder):
     """Builder for iDEAL QR payments with bank transfer capabilities."""
     
+    @property
+    def required_fields(self) -> Dict[str, Any]:
+        """
+        Get the required fields for this payment method.
+        Can be overridden by specific payment builders to customize required fields.
+        
+        Returns:
+            Dict[str, Any]: Dictionary mapping field names to their current values
+        """
+        return {
+            'currency': self._currency,
+            'description': self._description,
+            'invoice': self._invoice,
+            'return_url': self._return_url,
+            'return_url_cancel': self._return_url_cancel,
+            'return_url_error': self._return_url_error,
+            'return_url_reject': self._return_url_reject,
+        }
+    
     def get_service_name(self) -> str:
         """Get the service name for iDEAL QR payments."""
         return "IdealQr"

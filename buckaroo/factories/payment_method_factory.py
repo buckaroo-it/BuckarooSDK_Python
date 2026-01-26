@@ -1,6 +1,7 @@
 from typing import Dict, Type, Any
 import logging
 
+from .builder_factory import BuilderFactory
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
 from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
 from buckaroo.builders.payments.bancontact_builder import BancontactBuilder
@@ -12,11 +13,14 @@ from buckaroo.builders.payments.click_to_pay_builder import ClickToPayBuilder
 from buckaroo.builders.payments.credit_card_builder import CreditcardBuilder
 from buckaroo.builders.payments.default_builder import DefaultBuilder
 from buckaroo.builders.payments.eps_builder import EpsBuilder
+from buckaroo.builders.payments.external_payment_builder import ExternalPaymentBuilder
 from buckaroo.builders.payments.giftcards_builder import GiftcardsBuilder
 from buckaroo.builders.payments.google_pay_builder import GooglePayBuilder
 from buckaroo.builders.payments.ideal_qr_builder import IdealQrBuilder
 from buckaroo.builders.payments.in3_builder import In3Builder
 from buckaroo.builders.payments.kbc_builder import KBCBuilder
+from buckaroo.builders.payments.klarna_builder import KlarnaBuilder
+from buckaroo.builders.payments.klarnakp_builder import KlarnaKPBuilder
 from buckaroo.builders.payments.knaken_builder import KnakenBuilder
 from buckaroo.builders.payments.przelewy24_builder import Przelewy24Builder
 from buckaroo.builders.payments.riverty_builder import RivertyBuilder
@@ -35,8 +39,9 @@ from buckaroo.builders.payments.voucher_builder import VoucherBuilder
 from buckaroo.builders.payments.multibanco_builder import MultibancoBuilder
 from buckaroo.builders.payments.mbway_builder import MBWayBuilder
 from buckaroo.builders.payments.paypal_builder import PaypalBuilder
+from buckaroo.builders.payments.paybybank_builder import PayByBankBuilder
 
-class PaymentMethodFactory:
+class PaymentMethodFactory(BuilderFactory):
     """Factory for creating payment method builders."""
     
     # Registry of available payment methods
@@ -51,6 +56,7 @@ class PaymentMethodFactory:
         "clicktopay": ClickToPayBuilder,
         "credit_card": CreditcardBuilder,
         "default": DefaultBuilder,
+        "externalPayment": ExternalPaymentBuilder,
         "eps": EpsBuilder,
         "giftcards": GiftcardsBuilder,
         "googlepay": GooglePayBuilder,
@@ -59,10 +65,13 @@ class PaymentMethodFactory:
         "in3": In3Builder,
         "kbc": KBCBuilder,
         "knaken": KnakenBuilder,
+        "klarna": KlarnaBuilder,
+        "klarnakp": KlarnaKPBuilder,
         "multibanco": MultibancoBuilder,
         "mbway": MBWayBuilder,
         "payconiq": PayconiqBuilder,
         "paypal": PaypalBuilder,
+        "paybybank": PayByBankBuilder,
         "przelewy24": Przelewy24Builder,
         "riverty": RivertyBuilder,
         "sepadirectdebit": SepaDirectDebitBuilder,
@@ -77,7 +86,7 @@ class PaymentMethodFactory:
     }
     
     @classmethod
-    def create_payment_builder(cls, method: str, client) -> PaymentBuilder:
+    def create_builder(cls, method: str, client) -> PaymentBuilder:
         """
         Create a payment builder for the specified method.
         
@@ -107,7 +116,7 @@ class PaymentMethodFactory:
         return builder_class(client)
     
     @classmethod
-    def register_payment_method(cls, method: str, builder_class: Type[PaymentBuilder]) -> None:
+    def register_method(cls, method: str, builder_class: Type[PaymentBuilder]) -> None:
         """
         Register a new payment method builder.
         
@@ -141,7 +150,7 @@ class PaymentMethodFactory:
         return method.lower() in cls._payment_methods
     
     @classmethod
-    def detect_payment_method_from_payload(cls, payload: Dict) -> str:
+    def detect_method_from_payload(cls, payload: Dict) -> str:
         """
         Detect the payment method from payload parameters.
         

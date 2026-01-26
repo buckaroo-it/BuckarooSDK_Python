@@ -4,8 +4,8 @@ Service parameter validation for payment builders.
 
 from typing import Dict, Any, List
 from abc import ABC, abstractmethod
-from ...models.payment_request import Parameter
-from ...exceptions._parameter_validation_error import ParameterValidationError, RequiredParameterMissingError
+from buckaroo.models.payment_request import Parameter
+from buckaroo.exceptions._parameter_validation_error import ParameterValidationError, RequiredParameterMissingError
 
 
 class ServiceParameterValidator:

@@ -1,11 +1,11 @@
 
 from typing import Dict, Any
-from ..factories.payment_method_factory import PaymentMethodFactory
+from ..factories.solution_method_factory import SolutionMethodFactory
 from ..builders.payments.payment_builder import PaymentBuilder
 
 
 class SolutionService(object):
-    """Service for handling payment operations."""
+    """Service for handling solution operations."""
     
     def __init__(self, client):
         """
@@ -15,9 +15,9 @@ class SolutionService(object):
             client: The Buckaroo client instance
         """
         self._client = client
-        self._factory = PaymentMethodFactory()
+        self._factory = SolutionMethodFactory()
     
-    def create_payment(self, method: str, parameters: dict = None) -> PaymentBuilder:
+    def create_solution(self, method: str, parameters: dict = None) -> PaymentBuilder:
         """
         Create a payment builder for the specified method.
         
@@ -52,12 +52,12 @@ class SolutionService(object):
             ... }).execute()
             
             >>> # Combining both approaches
-            >>> payment = client.payments.create_payment("ideal", {
+            >>> payment = client.solution.create_solution("ideal", {
             ...     'currency': 'EUR',
             ...     'amount': 6.0
             ... }).description("Updated description").execute()
         """
-        builder = self._factory.create_payment_builder(method, self._client)
+        builder = self._factory.create_builder(method, self._client)
         
         # If parameters are provided, populate the builder
         if parameters:
@@ -128,7 +128,7 @@ class SolutionService(object):
             >>> refund_response = payment.refund('TXN_123', 10.00)
         """
         # Detect payment method from payload
-        method = self._factory.detect_payment_method_from_payload(payload)
+        method = self._factory.detect_method_from_payload(payload)
 
         # Create payment using the detected method
-        return self.create_payment(method, payload)
+        return self.create_solution(method, payload)

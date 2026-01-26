@@ -56,7 +56,7 @@ class PaymentService(object):
             ...     'amount': 6.0
             ... }).description("Updated description").execute()
         """
-        builder = self._factory.create_payment_builder(method, self._client)
+        builder = self._factory.create_builder(method, self._client)
 
         # If parameters are provided, populate the builder
         if parameters:
@@ -127,7 +127,7 @@ class PaymentService(object):
             >>> refund_response = payment.refund('TXN_123', 10.00)
         """
         # Detect payment method from payload
-        method = self._factory.detect_payment_method_from_payload(payload)
+        method = self._factory.detect_method_from_payload(payload)
 
         # Create payment using the detected method
         return self.create_payment(method, payload)

@@ -1,62 +1,81 @@
-from typing import Dict, Any
-from ..base_builder import BaseBuilder
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional, List
+from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
+from ..models.payment_response import PaymentResponse
+from ..services.service_parameter_validator import ServiceParameterValidator
 
 
-class PaymentBuilder(BaseBuilder):
-    """Abstract base class for payment builders."""
-    pass
+class BaseBuilder(ABC):
+    """Abstract base class for all builders (payments and solutions)."""
     
-    def currency(self, currency: str) -> 'PaymentBuilder':
+    def __init__(self, client):
+        """Initialize with client instance."""
+        self._client = client
+        self._currency: Optional[str] = None
+        self._amount_debit: Optional[float] = None
+        self._description: Optional[str] = None
+        self._invoice: Optional[str] = None
+        self._return_url: Optional[str] = None
+        self._return_url_cancel: Optional[str] = None
+        self._return_url_error: Optional[str] = None
+        self._return_url_reject: Optional[str] = None
+        self._continue_on_incomplete: str = "1"
+        self._client_ip: Optional[ClientIP] = None
+        self._service_parameters: List[Parameter] = []
+        self._payload: Dict[str, Any] = {}  # Store original payload
+        self._validator = ServiceParameterValidator(self)
+    
+    def currency(self, currency: str) -> 'BaseBuilder':
         """Set the currency for the payment."""
         self._currency = currency
         return self
     
-    def amount(self, amount: float) -> 'PaymentBuilder':
+    def amount(self, amount: float) -> 'BaseBuilder':
         """Set the amount for the payment."""
         self._amount_debit = amount
         return self
     
-    def description(self, description: str) -> 'PaymentBuilder':
+    def description(self, description: str) -> 'BaseBuilder':
         """Set the description for the payment."""
         self._description = description
         return self
     
-    def invoice(self, invoice: str) -> 'PaymentBuilder':
+    def invoice(self, invoice: str) -> 'BaseBuilder':
         """Set the invoice number for the payment."""
         self._invoice = invoice
         return self
     
-    def return_url(self, url: str) -> 'PaymentBuilder':
+    def return_url(self, url: str) -> 'BaseBuilder':
         """Set the return URL for successful payment."""
         self._return_url = url
         return self
     
-    def return_url_cancel(self, url: str) -> 'PaymentBuilder':
+    def return_url_cancel(self, url: str) -> 'BaseBuilder':
         """Set the return URL for cancelled payment."""
         self._return_url_cancel = url
         return self
     
-    def return_url_error(self, url: str) -> 'PaymentBuilder':
+    def return_url_error(self, url: str) -> 'BaseBuilder':
         """Set the return URL for payment error."""
         self._return_url_error = url
         return self
     
-    def return_url_reject(self, url: str) -> 'PaymentBuilder':
+    def return_url_reject(self, url: str) -> 'BaseBuilder':
         """Set the return URL for rejected payment."""
         self._return_url_reject = url
         return self
     
-    def continue_on_incomplete(self, continue_incomplete: str) -> 'PaymentBuilder':
+    def continue_on_incomplete(self, continue_incomplete: str) -> 'BaseBuilder':
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
         return self
     
-    def client_ip(self, ip_address: str, ip_type: int = 0) -> 'PaymentBuilder':
+    def client_ip(self, ip_address: str, ip_type: int = 0) -> 'BaseBuilder':
         """Set the client IP information."""
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
         return self
     
-    def add_parameter(self, key: str, value: Any, group_type: str = "", group_id: str = "") -> 'PaymentBuilder':
+    def add_parameter(self, key: str, value: Any, group_type: str = "", group_id: str = "") -> 'BaseBuilder':
         """Add a custom parameter to the service.
         
         Args:
@@ -71,7 +90,6 @@ class PaymentBuilder(BaseBuilder):
                 if isinstance(item, dict):
                     # Each item in the list becomes a group
                     for item_key, item_value in item.items():
-
                         str_value = str(item_value).lower() if isinstance(item_value, bool) else str(item_value)
                         parameter = Parameter(
                             name=item_key.capitalize(),
@@ -126,16 +144,15 @@ class PaymentBuilder(BaseBuilder):
             self._service_parameters, action, strict=strict
         )
     
-    def from_dict(self, data: Dict[str, Any]) -> 'PaymentBuilder':
+    def from_dict(self, data: Dict[str, Any]) -> 'BaseBuilder':
         """
         Populate the builder from a dictionary of parameters.
         
         Args:
             data (Dict[str, Any]): Dictionary containing payment parameters
-            action (str): The action being performed (Pay, Authorize, Refund, etc.)
             
         Returns:
-            PaymentBuilder: Self for method chaining
+            BaseBuilder: Self for method chaining
             
         Supported keys:
             - currency: Payment currency (e.g., 'EUR', 'USD')
@@ -202,6 +219,24 @@ class PaymentBuilder(BaseBuilder):
         
         return self
     
+    @abstractmethod
+    def get_service_name(self) -> str:
+        """Get the service name for this payment method."""
+        pass
+    
+    @abstractmethod
+    def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
+        """
+        Get the allowed service parameters for this payment method and action.
+        
+        Args:
+            action (str): The action being performed (Pay, Authorize, Refund, etc.)
+        
+        Returns:
+            Dict[str, Any]: Dictionary where keys are parameter names and values are
+                          parameter metadata (type, required, etc.)
+        """
+        pass
     
     def required_fields(self, action: str = "Pay") -> Dict[str, Any]:
         """
@@ -307,7 +342,6 @@ class PaymentBuilder(BaseBuilder):
         request_data = payment_request.to_dict()
 
         return self._post_transaction(request_data)
-    
     
     def refund(self, validate: bool = True) -> PaymentResponse:
         """

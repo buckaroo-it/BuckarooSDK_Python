@@ -40,72 +40,78 @@ def demo_with_app_wrapper():
         # Logger is already available, no need to initialize
         app.log_info("Quick setup demo started")
         
-        payment = app.payments.create({
-            "method": "paypal",  # Payment method
-            "voucher_name": "MonizzeGiftVoucher",
-            "giftcard_name": "Boekenbon",  # Giftcard name
-            "brand": "visa",        # Card brand
-            "amount": 25.50,
-            "currency": "EUR", 
-            "invoice": "QUICK-001",
-            "description": "Quick setup demo payment",
-            "return_url": "https://www.buckaroo.nl",
-            "return_url_cancel": "https://www.buckaroo.nl/cancel",
-            "return_url_error": "https://www.buckaroo.nl/error", 
-            "return_url_reject": "https://www.buckaroo.nl/reject",
-            # "original_transaction_key": "TXN_123",
-            # "PaymentData": "Lorem",
-            # "CustomerCardName": "Ipsum",
-            "service_parameters": {
-                "amount": 25.50,
-                "amountIsChangeable": False,
-                "purchaseId": "ORDER1002",
-                "description": "Order #1001 payment",
-                "isOneOff": True,
-                "expiration": "2026-12-31",
-                "imageSize": "300",
-                "Consumeremail": "customer@example.com",
-                "customerfirstname": "John",
-                "customerlastname": "Doe",
-                "customeraccountname": "John Doe",
-                "customeriban": "NL91ABNA0417164300",
-                "customerCountryCode": "NL",
-                "billingCustomer": {
-                    "category": "Person",
-                    "customerNumber": "CUST-001",
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "email": "customer@example.com",
-                    "phone": "0612345678",
-                    "street": "Main Street",
-                    "streetNumber": "12",
-                    "city": "Amsterdam",
-                    "postalCode": "1234AB",
-                    "country": "NL"
-                },
-                "shippingCustomer": {
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "street": "Main Street",
-                    "streetNumber": "12",
-                    "city": "Amsterdam",
-                    "postalCode": "1234AB",
-                    "country": "NL"
-                },
-                "article": [
-                    {
-                        "articleID": "12345",
-                        "articleLabel": "Product 1",
-                        "articleUnitPrice": 10.00
-                    },
-                    {
-                        "articleID": "67890",
-                        "articleLabel": "Product 2",
-                        "articleUnitPrice": 5.50
-                    }
-                ]
-            }
-        })
+        # payment = app.payments.create({
+        #     "method": "klarnakp",  # Payment method
+        #     # "voucher_name": "MonizzeGiftVoucher",
+        #     # "giftcard_name": "Boekenbon",  # Giftcard name
+        #     # "brand": "visa",        # Card brand
+        #     # "amount": 25.50,
+        #     "currency": "EUR", 
+        #     "invoice": "QUICK-001",
+        #     # "description": "Quick setup demo payment",
+        #     # "return_url": "https://www.buckaroo.nl",
+        #     # "return_url_cancel": "https://www.buckaroo.nl/cancel",
+        #     # "return_url_error": "https://www.buckaroo.nl/error", 
+        #     # "return_url_reject": "https://www.buckaroo.nl/reject",
+        #     # "original_transaction_key": "TXN_123",
+        #     # "PaymentData": "Lorem",
+        #     # "CustomerCardName": "Ipsum",
+        #     "originalTransactionKey": "d91f5f42-f011-4611-9575-77bb0446d7d2",
+        #     "service_parameters": {
+        #         "originalTransactionKey": "d91f5f42-f011-4611-9575-77bb0446d7d2",
+        #         # "issuer": "ABNANL2A",
+        #         # "amountIsChangeable": False,
+        #         # "purchaseId": "ORDER1002",
+        #         # "description": "Order #1001 payment",
+        #         # "isOneOff": True,
+        #         # "expiration": "2026-12-31",
+        #         # "imageSize": "300",
+        #         # "Consumeremail": "customer@example.com",
+        #         # "customerfirstname": "John",
+        #         # "customerlastname": "Doe",
+        #         # "customeraccountname": "John Doe",
+        #         # "customeriban": "NL91ABNA0417164300",
+        #         # "customerCountryCode": "NL",
+        #         # "billingCustomer": {
+        #         #     "category": "Person",
+        #         #     "gender": "male",
+        #         #     "firstName": "John",
+        #         #     "lastName": "Doe",
+        #         #     "email": "customer@example.com",
+        #         #     "phone": "0612345678",
+        #         #     "street": "Main Street",
+        #         #     "streetNumber": "12",
+        #         #     "city": "Amsterdam",
+        #         #     "postalCode": "1234AB",
+        #         #     "country": "NL"
+        #         # },
+        #         # "shippingCustomer": {
+        #         #     "firstName": "John",
+        #         #     "lastName": "Doe",
+        #         #     "street": "Main Street",
+        #         #     "email": "customer@example.com",
+        #         #     "streetNumber": "12",
+        #         #     "city": "Amsterdam",
+        #         #     "postalCode": "1234AB",
+        #         #     "country": "NL"
+        #         # },
+        #         # "operatingCountry": "NL",
+        #         "article": [
+        #             {
+        #                 "articleNumber": "12345",
+        #                 "articleTitle": "Product 1",
+        #                 "articleType": "Article",
+        #                 "articlePrice": 10.00
+        #             },
+        #             {
+        #                 "articleNumber": "67890",
+        #                 "articleTitle": "Product 2",
+        #                 "articleType": "Article",
+        #                 "articlePrice": 5.50
+        #             }
+        #         ]
+        #     }
+        # })
 
         # Create In3 payment using factory pattern - auto-detected by 'issuer' field
         # payment = app.payments.create({
@@ -161,12 +167,15 @@ def demo_with_app_wrapper():
         #     }
         # })
 
-        response = payment.pay(validate=True)  # validate=True is default
+        # response = payment.refund(validate=True)  # validate=True is default
 
 
-        # app.solutions.create({
+        solution = app.solutions.create({
+            "method": "subscription",  # Payment method
+        })
 
-        # })
+        response = solution.createSubscription(validate=True)
+
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
         # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload
@@ -174,19 +183,19 @@ def demo_with_app_wrapper():
         # Or override payload values with parameters
         # response = payment.refund("DIFFERENT_TXN_123", 10.00)  # Override with specific values
         
-        print(f"✅ Payment builder created: {type(payment).__name__}")
-        print("   Methods can use payload values or parameters:")
-        print("   - payment.execute() for new payment")
-        print("   - payment.refund() uses payload 'original_transaction_key' and 'refund_amount'") 
-        print("   - payment.refund('TXN_KEY', amount) to override payload values")
-        print("   - payment.capture() uses payload 'authorization_key' and 'capture_amount'")
-        print("   - payment.cancel() uses payload 'cancel_key' or 'original_transaction_key'")
+        # print(f"✅ Payment builder created: {type(payment).__name__}")
+        # print("   Methods can use payload values or parameters:")
+        # print("   - payment.execute() for new payment")
+        # print("   - payment.refund() uses payload 'original_transaction_key' and 'refund_amount'") 
+        # print("   - payment.refund('TXN_KEY', amount) to override payload values")
+        # print("   - payment.capture() uses payload 'authorization_key' and 'capture_amount'")
+        # print("   - payment.cancel() uses payload 'cancel_key' or 'original_transaction_key'")
         
-        # Show payload values that would be used
-        print(f"\n   Payload values available:")
-        print(f"   - original_transaction_key: {payment._payload.get('original_transaction_key')}")
-        print(f"   - refund_amount: {payment._payload.get('refund_amount')}")
-        print(f"   - issuer: {payment._payload.get('issuer')}")
+        # # Show payload values that would be used
+        # print(f"\n   Payload values available:")
+        # print(f"   - original_transaction_key: {payment._payload.get('original_transaction_key')}")
+        # print(f"   - refund_amount: {payment._payload.get('refund_amount')}")
+        # print(f"   - issuer: {payment._payload.get('issuer')}")
         
         # # Show additional payload examples
         # print("\n   Additional payload examples:")

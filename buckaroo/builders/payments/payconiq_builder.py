@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Dict, Any
 from .payment_builder import PaymentBuilder
 from .capabilities.bank_transfer_capabilities import BankTransferCapabilities

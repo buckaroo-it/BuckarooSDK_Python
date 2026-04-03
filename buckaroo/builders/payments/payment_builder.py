@@ -1,5 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from ..base_builder import BaseBuilder
+from ...models.payment_request import ClientIP, Parameter, PaymentRequest, Service, ServiceList
+from ...models.payment_response import PaymentResponse
 
 
 class PaymentBuilder(BaseBuilder):
@@ -177,7 +179,12 @@ class PaymentBuilder(BaseBuilder):
             
         if 'continue_on_incomplete' in data:
             self.continue_on_incomplete(data['continue_on_incomplete'])
-            
+
+        if 'push_url' in data:
+            self.push_url(data['push_url'])
+        if 'push_url_failure' in data:
+            self.push_url_failure(data['push_url_failure'])
+
         if 'client_ip' in data:
             client_ip_data = data['client_ip']
             if isinstance(client_ip_data, str):
@@ -276,6 +283,8 @@ class PaymentBuilder(BaseBuilder):
             return_url_error=self._return_url_error,
             return_url_reject=self._return_url_reject,
             continue_on_incomplete=self._continue_on_incomplete,
+            push_url=self._push_url,
+            push_url_failure=self._push_url_failure,
             client_ip=self._client_ip,
             services=service_list
         )

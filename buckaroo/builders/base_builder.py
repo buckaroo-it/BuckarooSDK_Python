@@ -20,6 +20,8 @@ class BaseBuilder(ABC):
         self._return_url_error: Optional[str] = None
         self._return_url_reject: Optional[str] = None
         self._continue_on_incomplete: str = "1"
+        self._push_url: Optional[str] = None
+        self._push_url_failure: Optional[str] = None
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
@@ -70,6 +72,16 @@ class BaseBuilder(ABC):
         self._continue_on_incomplete = continue_incomplete
         return self
     
+    def push_url(self, url: str) -> 'BaseBuilder':
+        """Set the Push (webhook) URL."""
+        self._push_url = url
+        return self
+
+    def push_url_failure(self, url: str) -> 'BaseBuilder':
+        """Set the Push URL for failure notifications."""
+        self._push_url_failure = url
+        return self
+
     def client_ip(self, ip_address: str, ip_type: int = 0) -> 'BaseBuilder':
         """Set the client IP information."""
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
@@ -194,7 +206,12 @@ class BaseBuilder(ABC):
             
         if 'continue_on_incomplete' in data:
             self.continue_on_incomplete(data['continue_on_incomplete'])
-            
+
+        if 'push_url' in data:
+            self.push_url(data['push_url'])
+        if 'push_url_failure' in data:
+            self.push_url_failure(data['push_url_failure'])
+
         if 'client_ip' in data:
             client_ip_data = data['client_ip']
             if isinstance(client_ip_data, str):
@@ -311,6 +328,8 @@ class BaseBuilder(ABC):
             return_url_error=self._return_url_error,
             return_url_reject=self._return_url_reject,
             continue_on_incomplete=self._continue_on_incomplete,
+            push_url=self._push_url,
+            push_url_failure=self._push_url_failure,
             client_ip=self._client_ip,
             services=service_list
         )

@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 """
 Payment capability mixins for specific payment features.

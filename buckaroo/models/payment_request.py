@@ -83,6 +83,8 @@ class PaymentRequest:
     return_url_error: str
     return_url_reject: str
     continue_on_incomplete: str = "1"
+    push_url: Optional[str] = None
+    push_url_failure: Optional[str] = None
     client_ip: Optional[ClientIP] = None
     services: Optional[ServiceList] = None
     
@@ -104,7 +106,12 @@ class PaymentRequest:
             "ReturnURLReject": self.return_url_reject,
             "ContinueOnIncomplete": self.continue_on_incomplete,
         }
-        
+
+        if self.push_url:
+            request_dict["PushURL"] = self.push_url
+        if self.push_url_failure:
+            request_dict["PushURLFailure"] = self.push_url_failure
+
         if self.client_ip:
             request_dict["ClientIP"] = self.client_ip.to_dict()
             

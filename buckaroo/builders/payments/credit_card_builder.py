@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Dict, Any
 
 from buckaroo.builders.payments.capabilities.encrypted_pay_capable import EncryptedPayCapable

@@ -19,6 +19,7 @@ from buckaroo.builders.payments.google_pay_builder import GooglePayBuilder
 from buckaroo.builders.payments.ideal_qr_builder import IdealQrBuilder
 from buckaroo.builders.payments.in3_builder import In3Builder
 from buckaroo.builders.payments.kbc_builder import KBCBuilder
+from buckaroo.builders.payments.billink_builder import BillinkBuilder
 from buckaroo.builders.payments.klarna_builder import KlarnaBuilder
 from buckaroo.builders.payments.klarnakp_builder import KlarnaKPBuilder
 from buckaroo.builders.payments.knaken_builder import KnakenBuilder
@@ -51,6 +52,7 @@ class PaymentMethodFactory(BuilderFactory):
         "bancontact": BancontactBuilder,
         "belfius": BelfiusBuilder,
         "bizum": BizumBuilder,
+        "billink": BillinkBuilder,
         "blik": BlikBuilder,
         "buckaroovoucher": BuckarooVoucherBuilder,
         "clicktopay": ClickToPayBuilder,
@@ -176,19 +178,6 @@ class PaymentMethodFactory(BuilderFactory):
                 service_name = service.get('Name', '').lower()
                 if service_name in cls._payment_methods:
                     return service_name
-                
-                # Map known service names to payment methods
-                service_mapping = {
-                    'alipay': 'alipay',
-                    'applepay': 'applepay',
-                    'ideal': 'ideal', 
-                    'creditcard': 'creditcard',
-                    'sofort': 'sofort',
-                    'payconiq': 'payconiq'
-                }
-                
-                if service_name in service_mapping:
-                    return service_mapping[service_name]
             
         # Default fallback - could be configurable
         logging.warning(

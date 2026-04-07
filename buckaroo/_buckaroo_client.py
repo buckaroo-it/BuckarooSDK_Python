@@ -110,6 +110,21 @@ class BuckarooClient(object):
         """
         return self.config.api_endpoint
     
+    def confirm_credential(self) -> bool:
+        """
+        Verify that the configured store key and secret key are valid.
+        
+        Calls the Transaction Specification endpoint which requires HMAC authentication.
+        
+        Returns:
+            bool: True if credentials are valid, False otherwise.
+        """
+        try:
+            response = self.http_client.get('/json/Transaction/Specification/ideal')
+            return response.success
+        except Exception:
+            return False
+    
     def get_config_info(self) -> dict:
         """
         Get configuration information.

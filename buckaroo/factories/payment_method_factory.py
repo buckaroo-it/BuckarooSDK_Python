@@ -56,7 +56,7 @@ class PaymentMethodFactory(BuilderFactory):
         "blik": BlikBuilder,
         "buckaroovoucher": BuckarooVoucherBuilder,
         "clicktopay": ClickToPayBuilder,
-        "credit_card": CreditcardBuilder,
+        "creditcard": CreditcardBuilder,
         "default": DefaultBuilder,
         "externalPayment": ExternalPaymentBuilder,
         "eps": EpsBuilder,

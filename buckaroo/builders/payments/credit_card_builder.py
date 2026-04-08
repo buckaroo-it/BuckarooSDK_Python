@@ -36,6 +36,12 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
                 "sessionid": {"type": str, "required": True, "description": "Session ID token from Hosted Fields submitSession()"},
             }
 
+        if action.lower() == "authorizewithtoken":
+            # Hosted Fields inline authorize: token from submitSession()
+            return {
+                "sessionid": {"type": str, "required": True, "description": "Session ID token from Hosted Fields submitSession()"},
+            }
+
         return {}
     
     def payWithSecurityCode(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
@@ -63,6 +69,20 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
         The response may include a RequiredAction for 3DS authentication.
         """
         payment_request = self.build("PayWithToken", validate=validate)
+        request_data = payment_request.to_dict()
+        return self._post_transaction(request_data)
+
+    def authorizeWithToken(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+        """
+        Authorize a payment using a Hosted Fields session token.
+
+        The SessionId parameter must be set via add_parameter('SessionId', token)
+        before calling this method. The token comes from the Hosted Fields
+        submitSession() call on the client side.
+
+        The response may include a RequiredAction for 3DS authentication.
+        """
+        payment_request = self.build("AuthorizeWithToken", validate=validate)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)
 

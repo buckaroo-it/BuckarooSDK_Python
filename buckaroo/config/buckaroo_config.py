@@ -215,40 +215,34 @@ class DefaultConfig(BuckarooConfig):
 
 
 class TestConfig(BuckarooConfig):
-    """
-    Configuration optimized for testing.
-    
-    This configuration uses test environment with more aggressive timeouts
-    and retries for faster test execution.
-    """
-    
-    def __init__(self):
-        super().__init__(
-            environment=Environment.TEST,
+    """Test preset: short timeouts, no logging. Environment locked to TEST."""
+
+    def __init__(self, **overrides):
+        defaults = dict(
             timeout=10,
             retry_attempts=1,
             retry_delay=0.5,
-            logging_enabled=False
+            logging_enabled=False,
         )
+        defaults.update(overrides)
+        defaults["environment"] = Environment.TEST
+        super().__init__(**defaults)
 
 
 class ProductionConfig(BuckarooConfig):
-    """
-    Configuration optimized for production use.
-    
-    This configuration uses live environment with conservative timeouts
-    and retry settings for production reliability.
-    """
-    
-    def __init__(self):
-        super().__init__(
-            environment=Environment.LIVE,
+    """Production preset: conservative timeouts, logging on. Environment locked to LIVE."""
+
+    def __init__(self, **overrides):
+        defaults = dict(
             timeout=60,
             retry_attempts=5,
             retry_delay=2.0,
             logging_enabled=True,
-            verify_ssl=True
+            verify_ssl=True,
         )
+        defaults.update(overrides)
+        defaults["environment"] = Environment.LIVE
+        super().__init__(**defaults)
 
 
 class ConfigBuilder:

@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy requirements and install Python packages
-COPY requirements.txt .
+COPY requirements.txt requirements-dev.txt ./
 
-RUN pip install --root-user-action=ignore -r requirements.txt
+RUN pip install --root-user-action=ignore -r requirements-dev.txt
 
 CMD ["tail", "-f", "/dev/null"]

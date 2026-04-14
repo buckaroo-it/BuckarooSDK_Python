@@ -55,8 +55,31 @@ class Service:
             elif isinstance(self.parameters, dict):
                 # Simple key-value format (for methods like ideal, creditcard)
                 service_dict.update(self.parameters)
-                
+
         return service_dict
+
+    def add_parameter(self, parameter: Union[Dict[str, Any], Parameter]) -> "Service":
+        """Append a Parameter or coerced dict; rejects dict-form parameters."""
+        if isinstance(self.parameters, dict):
+            raise TypeError(
+                "Service uses simple key-value parameters; "
+                "add_parameter requires list form"
+            )
+        if isinstance(parameter, dict):
+            parameter = Parameter(
+                name=parameter.get("Name", parameter.get("name", "")),
+                value=parameter.get("Value", parameter.get("value", "")),
+                group_type=parameter.get(
+                    "GroupType", parameter.get("group_type", "")
+                ),
+                group_id=parameter.get(
+                    "GroupID", parameter.get("group_id", "")
+                ),
+            )
+        if self.parameters is None:
+            self.parameters = []
+        self.parameters.append(parameter)
+        return self
 
 
 @dataclass
@@ -69,6 +92,11 @@ class ServiceList:
         return {
             "ServiceList": [service.to_dict() for service in self.services]
         }
+
+    def add(self, service: Service) -> "ServiceList":
+        """Append a service; returns self for chaining."""
+        self.services.append(service)
+        return self
 
 
 @dataclass

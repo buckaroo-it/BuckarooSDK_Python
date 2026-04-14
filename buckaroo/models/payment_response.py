@@ -7,6 +7,44 @@ This module provides response objects for payment transactions.
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from datetime import datetime
+from enum import IntEnum
+
+
+class BuckarooStatusCode(IntEnum):
+    """Canonical Buckaroo transaction status codes."""
+    SUCCESS = 190
+    FAILED = 490
+    VALIDATION_FAILURE = 491
+    TECHNICAL_FAILURE = 492
+    REJECTED = 690
+    REJECTED_BY_USER = 691
+    REJECTED_TECHNICAL = 692
+    PENDING_INPUT = 790
+    PENDING_PROCESSING = 791
+    PENDING_CONSUMER = 792
+    AWAITING_TRANSFER = 793
+    CANCELLED_BY_USER = 890
+    CANCELLED_BY_MERCHANT = 891
+
+
+_PENDING_CODES = frozenset({
+    BuckarooStatusCode.PENDING_INPUT,
+    BuckarooStatusCode.PENDING_PROCESSING,
+    BuckarooStatusCode.PENDING_CONSUMER,
+    BuckarooStatusCode.AWAITING_TRANSFER,
+})
+_CANCELLED_CODES = frozenset({
+    BuckarooStatusCode.CANCELLED_BY_USER,
+    BuckarooStatusCode.CANCELLED_BY_MERCHANT,
+})
+_FAILED_CODES = frozenset({
+    BuckarooStatusCode.FAILED,
+    BuckarooStatusCode.VALIDATION_FAILURE,
+    BuckarooStatusCode.TECHNICAL_FAILURE,
+    BuckarooStatusCode.REJECTED,
+    BuckarooStatusCode.REJECTED_BY_USER,
+    BuckarooStatusCode.REJECTED_TECHNICAL,
+})
 
 
 @dataclass
@@ -210,9 +248,7 @@ class PaymentResponse:
     def is_pending(self) -> bool:
         """Check if the payment is pending."""
         if self.status and self.status.code:
-            # Common pending status codes
-            pending_codes = [790, 791, 792, 793]
-            return self.status.code.code in pending_codes
+            return self.status.code.code in _PENDING_CODES
         return False
     
     def is_successful(self) -> bool:
@@ -222,17 +258,13 @@ class PaymentResponse:
     def is_cancelled(self) -> bool:
         """Check if the payment was cancelled."""
         if self.status and self.status.code:
-            # Common cancelled status codes
-            cancelled_codes = [890, 891]
-            return self.status.code.code in cancelled_codes
+            return self.status.code.code in _CANCELLED_CODES
         return False
     
     def is_failed(self) -> bool:
         """Check if the payment failed."""
         if self.status and self.status.code:
-            # Common failed status codes
-            failed_codes = [490, 491, 492, 690, 691, 692]
-            return self.status.code.code in failed_codes
+            return self.status.code.code in _FAILED_CODES
         return False
     
     def requires_action(self) -> bool:
@@ -240,7 +272,9 @@ class PaymentResponse:
         return self.required_action is not None
     
     def get_redirect_url(self) -> Optional[str]:
-        """Get the redirect URL if available."""
+        """Get the redirect URL from the required action, if any."""
+        if self.required_action is not None:
+            return self.required_action.redirect_url
         return self.redirect_url
     
     def get_transaction_id(self) -> Optional[str]:

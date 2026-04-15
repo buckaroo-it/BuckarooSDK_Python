@@ -61,26 +61,10 @@ def base_builder():
     )
 
 
-# ── 1. Pay — bank pre-selected ────────────────────────────────────────────────
 
-def example_pay_with_issuer():
-    """
-    Customer has already chosen their bank (e.g. from a bank picker on your
-    checkout page).  Pass the issuer code so Buckaroo skips its own picker and
-    redirects straight to the bank.
-    """
-    response = (
-        base_builder()
-        .add_parameter("issuer", "INGBNL2A")
-        .pay()
-    )
-    print_response("Pay — pre-selected bank (ING)", response)
-    return response
+# ── 1. Pay (Buckaroo shows bank picker) ───────────────────────────
 
-
-# ── 2. Pay — no issuer (Buckaroo shows bank picker) ───────────────────────────
-
-def example_pay_no_issuer():
+def example_pay():
     """
     Omit the issuer.  Buckaroo redirects the customer to its own bank-selection
     page.  Simpler integration, slightly more friction for the customer.
@@ -90,7 +74,7 @@ def example_pay_no_issuer():
     return response
 
 
-# ── 3. Full refund ────────────────────────────────────────────────────────────
+# ── 2. Full refund ────────────────────────────────────────────────────────────
 
 def example_full_refund(original_transaction_key: str):
     """
@@ -103,7 +87,7 @@ def example_full_refund(original_transaction_key: str):
     return response
 
 
-# ── 4. Partial refund ─────────────────────────────────────────────────────────
+# ── 3. Partial refund ─────────────────────────────────────────────────────────
 
 def example_partial_refund(original_transaction_key: str):
     """Refund only part of the original amount."""
@@ -113,7 +97,7 @@ def example_partial_refund(original_transaction_key: str):
     return response
 
 
-# ── 5. Instant refund ─────────────────────────────────────────────────────────
+# ── 4. Instant refund ─────────────────────────────────────────────────────────
 
 def example_instant_refund():
     """
@@ -132,8 +116,8 @@ if __name__ == "__main__":
     print("=" * 55)
 
     # Run the pay examples
-    pay_response = example_pay_with_issuer()
-    example_pay_no_issuer()
+    pay_response = example_pay()
+    example_pay()
 
     # Use the transaction key from the first payment for follow-up examples.
     # In a real application you would store this key after receiving the push

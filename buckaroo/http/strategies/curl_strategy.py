@@ -200,21 +200,20 @@ class CurlStrategy(HttpStrategy):
         
         if header_section:
             lines = header_section.split('\n')
-            if lines:
-                # First line contains status
-                status_line = lines[0].strip()
-                if 'HTTP/' in status_line:
-                    try:
-                        status_code = int(status_line.split()[1])
-                    except (IndexError, ValueError):
-                        status_code = result.returncode if result.returncode != 0 else 500
-                
-                # Parse headers
-                for line in lines[1:]:
-                    line = line.strip()
-                    if ':' in line:
-                        key, value = line.split(':', 1)
-                        headers[key.strip()] = value.strip()
+            # First line contains status
+            status_line = lines[0].strip()
+            if 'HTTP/' in status_line:
+                try:
+                    status_code = int(status_line.split()[1])
+                except (IndexError, ValueError):
+                    status_code = result.returncode if result.returncode != 0 else 500
+
+            # Parse headers
+            for line in lines[1:]:
+                line = line.strip()
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    headers[key.strip()] = value.strip()
         else:
             # No headers section, use return code
             status_code = result.returncode if result.returncode != 0 else 200

@@ -45,8 +45,7 @@ class HttpStrategy(ABC):
         Args:
             **kwargs: Configuration parameters specific to the implementation
         """
-        pass
-    
+
     @abstractmethod
     def request(
         self,
@@ -74,8 +73,7 @@ class HttpStrategy(ABC):
         Raises:
             Exception: If the request fails
         """
-        pass
-    
+
     @abstractmethod
     def is_available(self) -> bool:
         """
@@ -84,8 +82,7 @@ class HttpStrategy(ABC):
         Returns:
             bool: True if the strategy can be used
         """
-        pass
-    
+
     @abstractmethod
     def get_name(self) -> str:
         """
@@ -94,4 +91,3 @@ class HttpStrategy(ABC):
         Returns:
             str: Strategy name
         """
-        pass

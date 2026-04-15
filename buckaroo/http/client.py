@@ -151,37 +151,40 @@ class BuckarooHttpClient:
         
         # Generate authentication headers
         auth_headers = self._generate_hmac_signature(method, url, content)
-        
+
         try:
-            # Make the request using strategy
             http_response = self.http_strategy.request(
                 method=method,
                 url=url,
                 headers=auth_headers,
                 data=content if content else None,
                 timeout=self.config.timeout,
-                verify_ssl=self.config.verify_ssl
+                verify_ssl=self.config.verify_ssl,
             )
-            
-            # Create Buckaroo response object
-            buckaroo_response = BuckarooResponse(http_response)
-            
-            # Handle authentication errors
-            if http_response.status_code == 401:
-                raise AuthenticationError("Authentication failed - check your store key and secret key")
-            elif http_response.status_code == 403:
-                raise AuthenticationError("Access forbidden - check your API permissions")
-            
-            return buckaroo_response
-            
+        except (AuthenticationError, BuckarooApiError):
+            raise
         except Exception as e:
-            # Convert strategy exceptions to BuckarooApiError
-            if "timeout" in str(e).lower():
-                raise BuckarooApiError(str(e))
-            elif "connection" in str(e).lower():
-                raise BuckarooApiError(str(e))
-            else:
-                raise BuckarooApiError(f"Request failed: {str(e)}")
+            raise BuckarooApiError(f"Request failed: {e}") from e
+
+        if http_response.status_code == 401:
+            raise AuthenticationError(
+                "Authentication failed - check your store key and secret key"
+            )
+        if http_response.status_code == 403:
+            raise AuthenticationError(
+                "Access forbidden - check your API permissions"
+            )
+
+        if not (200 <= http_response.status_code < 300):
+            response = BuckarooResponse.__new__(BuckarooResponse)
+            response._response = http_response
+            response._data = {}
+            raise BuckarooApiError(
+                f"Buckaroo API returned status {http_response.status_code}",
+                response,
+            )
+
+        return BuckarooResponse(http_response)
 
 
 class BuckarooResponse:
@@ -193,14 +196,19 @@ class BuckarooResponse:
         self._parse_response()
     
     def _parse_response(self):
-        """Parse the response content."""
+        """Parse the response content. Raises BuckarooApiError on malformed JSON."""
+        text = self._response.text
+        if not text or not text.strip():
+            self._data = {}
+            return
         try:
-            if self._response.text:
-                self._data = json.loads(self._response.text)
-            else:
-                self._data = {}
-        except json.JSONDecodeError:
-            self._data = {"raw_content": self._response.text}
+            self._data = json.loads(text)
+        except json.JSONDecodeError as e:
+            self._data = {}
+            raise BuckarooApiError(
+                f"Failed to parse Buckaroo response JSON: {e}",
+                self,
+            ) from e
     
     @property
     def status_code(self) -> int:
@@ -336,27 +344,21 @@ class BuckarooResponse:
             "success": self.success,
             "data": self.data,
             "headers": self.headers,
-            # "is_successful_payment": self.is_successful_payment(),
-            # "payment_key": self.get_payment_key(),
-            # "transaction_key": self.get_transaction_key(),
-            # "buckaroo_status_code": self.get_status_code(),
-            # "buckaroo_status_message": self.get_status_message(),
-            # "redirect_url": self.get_redirect_url()
         }
 
 
 class BuckarooApiError(Exception):
     """Exception raised for Buckaroo API errors."""
-    
+
     def __init__(self, message: str, response: Optional[BuckarooResponse] = None):
         super().__init__(message)
         self.response = response
-    
+
     @property
     def status_code(self) -> Optional[int]:
         """Get the HTTP status code if available."""
         return self.response.status_code if self.response else None
-    
+
     @property
     def error_data(self) -> Dict[str, Any]:
         """Get the error data if available."""

@@ -66,8 +66,9 @@ class BuckarooLoggingObserver:
         self.config = config or LogConfig()
         self.logger = self._setup_logger()
         self._sensitive_fields = {
-            'secret_key', 'password', 'token', 'authorization', 'cvv', 
-            'cardnumber', 'card_number', 'iban', 'account_number'
+            'secret_key', 'password', 'token', 'authorization', 'cvv',
+            'cardnumber', 'card_number', 'iban', 'account_number',
+            'cvc', 'bic', 'pan', 'expirydate', 'encryptedcarddata',
         }
     
     def _setup_logger(self) -> logging.Logger:

@@ -239,21 +239,21 @@ class BaseBuilder(ABC):
     @abstractmethod
     def get_service_name(self) -> str:
         """Get the service name for this payment method."""
-        pass
-    
+        raise NotImplementedError
+
     @abstractmethod
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """
         Get the allowed service parameters for this payment method and action.
-        
+
         Args:
             action (str): The action being performed (Pay, Authorize, Refund, etc.)
-        
+
         Returns:
             Dict[str, Any]: Dictionary where keys are parameter names and values are
                           parameter metadata (type, required, etc.)
         """
-        pass
+        raise NotImplementedError
     
     def required_fields(self, action: str = "Pay") -> Dict[str, Any]:
         """
@@ -376,10 +376,10 @@ class BaseBuilder(ABC):
             ValueError: If required fields are missing
         """
         # Get original_transaction_key from parameter or payload
-        txn_key = self._payload.get('originalTransactionKey')
+        txn_key = self._payload.get('original_transaction_key')
         if not txn_key:
             raise ValueError("Original transaction key is required for refunds (provide as parameter or in payload)")
-        
+
         # Get amount from parameter or payload
         refund_amount = self._payload.get('refund_amount')
         
@@ -422,7 +422,7 @@ class BaseBuilder(ABC):
         auth_key = original_transaction_key or self._payload.get('authorization_key') or self._payload.get('original_transaction_key')
         if not auth_key:
             raise ValueError("Authorization key is required for captures (provide as parameter or in payload)")
-        
+
         # Get capture amount from parameter or payload
         capture_amount = amount or self._payload.get('capture_amount')
         
@@ -482,12 +482,27 @@ class BaseBuilder(ABC):
         Raises:
             ValueError: If amount is not provided or invalid
         """
-        # Get amount from parameter or payload
         refund_amount = amount or self._payload.get('refund_amount') or self._payload.get('partial_refund_amount')
         if not refund_amount or refund_amount <= 0:
             raise ValueError("Partial refund amount must be greater than 0 (provide as parameter or in payload)")
-        
-        return self.refund(original_transaction_key, refund_amount)
+
+        _MISSING = object()
+        prev_key = self._payload.get('original_transaction_key', _MISSING)
+        prev_amount = self._payload.get('refund_amount', _MISSING)
+        try:
+            if original_transaction_key:
+                self._payload['original_transaction_key'] = original_transaction_key
+            self._payload['refund_amount'] = refund_amount
+            return self.refund()
+        finally:
+            if prev_key is _MISSING:
+                self._payload.pop('original_transaction_key', None)
+            else:
+                self._payload['original_transaction_key'] = prev_key
+            if prev_amount is _MISSING:
+                self._payload.pop('refund_amount', None)
+            else:
+                self._payload['refund_amount'] = prev_amount
 
     def _post_data_request(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Helper method to post data request and handle response."""

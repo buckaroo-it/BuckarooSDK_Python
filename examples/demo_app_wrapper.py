@@ -56,9 +56,9 @@ def demo_with_app_wrapper():
         #     # "original_transaction_key": "TXN_123",
         #     # "PaymentData": "Lorem",
         #     # "CustomerCardName": "Ipsum",
-        #     "originalTransactionKey": "d91f5f42-f011-4611-9575-77bb0446d7d2",
+        #     "original_transaction_key": "d91f5f42-f011-4611-9575-77bb0446d7d2",
         #     "service_parameters": {
-        #         "originalTransactionKey": "d91f5f42-f011-4611-9575-77bb0446d7d2",
+        #         "original_transaction_key": "d91f5f42-f011-4611-9575-77bb0446d7d2",
         #         # "issuer": "ABNANL2A",
         #         # "amountIsChangeable": False,
         #         # "purchaseId": "ORDER1002",
@@ -178,7 +178,7 @@ def demo_with_app_wrapper():
 
         print(response.to_dict())
         # Execute refund - values from payload (no parameters needed)
-        # response = payment.refund()  # Uses original_transaction_key and refund_amount from payload
+        # response = payment.refund()  # Uses originalTransactionKey and refundAmount from payload
         # print(response)
         # Or override payload values with parameters
         # response = payment.refund("DIFFERENT_TXN_123", 10.00)  # Override with specific values
@@ -186,15 +186,15 @@ def demo_with_app_wrapper():
         # print(f"✅ Payment builder created: {type(payment).__name__}")
         # print("   Methods can use payload values or parameters:")
         # print("   - payment.execute() for new payment")
-        # print("   - payment.refund() uses payload 'original_transaction_key' and 'refund_amount'") 
+        # print("   - payment.refund() uses payload 'original_transaction_key' and 'refund_amount'")
         # print("   - payment.refund('TXN_KEY', amount) to override payload values")
         # print("   - payment.capture() uses payload 'authorization_key' and 'capture_amount'")
         # print("   - payment.cancel() uses payload 'cancel_key' or 'original_transaction_key'")
         
         # # Show payload values that would be used
         # print(f"\n   Payload values available:")
-        # print(f"   - original_transaction_key: {payment._payload.get('original_transaction_key')}")
-        # print(f"   - refund_amount: {payment._payload.get('refund_amount')}")
+        # print(f"   - originalTransactionKey: {payment._payload.get('original_transaction_key')}")
+        # print(f"   - refundAmount: {payment._payload.get('refund_amount')}")
         # print(f"   - issuer: {payment._payload.get('issuer')}")
         
         # # Show additional payload examples
@@ -214,7 +214,7 @@ def demo_with_app_wrapper():
         #     "capture_amount": 75.00,           # Partial capture amount
         #     "card_number": "1234567890123456"  # Credit card payment
         # })
-        # print("   Created capture payment with authorization_key and capture_amount")
+        # print("   Created capture payment with authorizationKey and captureAmount")
         # print(f"   - Authorization key: {capture_payment._payload.get('authorization_key')}")
         # print(f"   - Capture amount: {capture_payment._payload.get('capture_amount')}")
         # # capture_payment.capture()  # Would use AUTH_456 and 75.00 from payload
@@ -232,7 +232,7 @@ def demo_with_app_wrapper():
         #     "cancel_key": "PENDING_789",       # For cancel operations
         #     "issuer": "ABNANL2A"
         # })
-        # print("   Created cancel payment with cancel_key")
+        # print("   Created cancel payment with cancelKey")
         # print(f"   - Cancel key: {cancel_payment._payload.get('cancel_key')}")
         # # cancel_payment.cancel()  # Would use PENDING_789 from payload
         

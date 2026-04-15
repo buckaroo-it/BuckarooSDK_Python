@@ -81,7 +81,7 @@ class AuthorizeCaptureCapable:
     def capture(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
         """
         Capture a previously authorized payment.
-        
+
         Args:
             validate (bool): Whether to validate service parameters before building
 

@@ -5,12 +5,10 @@ from .payment_builder import PaymentBuilder
 class IdealQrBuilder(PaymentBuilder):
     """Builder for iDEAL QR payments with bank transfer capabilities."""
     
-    @property
-    def required_fields(self) -> Dict[str, Any]:
+    def required_fields(self, action: str = "Pay") -> Dict[str, Any]:
         """
         Get the required fields for this payment method.
-        Can be overridden by specific payment builders to customize required fields.
-        
+
         Returns:
             Dict[str, Any]: Dictionary mapping field names to their current values
         """

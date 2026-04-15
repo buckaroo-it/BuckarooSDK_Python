@@ -27,6 +27,7 @@ from buckaroo.http.client import BuckarooApiError
 from buckaroo.http.client import BuckarooHttpClient
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
+from tests.support.recording_mock import RecordingMock
 
 
 # ---------------------------------------------------------------------------
@@ -512,32 +513,11 @@ def _make_client_with_mock(mock: MockBuckaroo) -> BuckarooHttpClient:
     return client
 
 
-class _RecordingMock(MockBuckaroo):
-    """MockBuckaroo that records the last request it received."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.calls: list[dict] = []
-
-    def request(self, method, url, headers=None, data=None, timeout=None, verify_ssl=True):
-        self.calls.append(
-            {
-                "method": method,
-                "url": url,
-                "headers": dict(headers) if headers else {},
-                "data": data,
-                "timeout": timeout,
-                "verify_ssl": verify_ssl,
-            }
-        )
-        return super().request(method, url, headers, data, timeout, verify_ssl)
-
-
 class TestResponseParsing:
     """`_parse_response` semantics through the public client surface."""
 
     def test_valid_json_2xx_returns_parsed_dict(self):
-        mock = _RecordingMock()
+        mock = RecordingMock()
         mock.queue(BuckarooMockRequest.json("POST", "*/json/Transaction*", {"Key": "abc"}))
         client = _make_client_with_mock(mock)
 
@@ -691,7 +671,7 @@ class TestRequestOrchestration:
     """post/get delegate to the strategy with the right URL, method, headers."""
 
     def test_post_passes_authorization_header_to_strategy(self):
-        mock = _RecordingMock()
+        mock = RecordingMock()
         mock.queue(BuckarooMockRequest.json("POST", "*/json/Transaction*", {}))
         client = _make_client_with_mock(mock)
 
@@ -704,7 +684,7 @@ class TestRequestOrchestration:
         assert call["headers"]["Authorization"].startswith("hmac ")
 
     def test_get_passes_authorization_header_to_strategy(self):
-        mock = _RecordingMock()
+        mock = RecordingMock()
         mock.queue(BuckarooMockRequest.json("GET", "*/json/Transaction*", {}))
         client = _make_client_with_mock(mock)
 
@@ -716,7 +696,7 @@ class TestRequestOrchestration:
         assert "Authorization" in call["headers"]
 
     def test_endpoint_without_leading_slash_is_normalised(self):
-        mock = _RecordingMock()
+        mock = RecordingMock()
         mock.queue(BuckarooMockRequest.json("POST", "*/json/Transaction", {}))
         client = _make_client_with_mock(mock)
 
@@ -727,7 +707,7 @@ class TestRequestOrchestration:
         assert "//json" not in url.split("://", 1)[1]
 
     def test_endpoint_with_leading_slash_does_not_double_up(self):
-        mock = _RecordingMock()
+        mock = RecordingMock()
         mock.queue(BuckarooMockRequest.json("POST", "*/json/Transaction", {}))
         client = _make_client_with_mock(mock)
 
@@ -737,7 +717,7 @@ class TestRequestOrchestration:
         assert url == "https://testcheckout.buckaroo.nl/json/Transaction"
 
     def test_get_passes_params_in_query_string_with_no_body(self):
-        mock = _RecordingMock()
+        mock = RecordingMock()
         mock.queue(BuckarooMockRequest.json("GET", "*/json/Spec*", {}))
         client = _make_client_with_mock(mock)
 

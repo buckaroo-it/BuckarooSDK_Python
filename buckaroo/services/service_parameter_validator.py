@@ -2,23 +2,28 @@
 Service parameter validation for payment builders.
 """
 
-from typing import Dict, Any, List
-from abc import ABC, abstractmethod
+import logging
+from typing import Callable, Dict, Any, List
 from buckaroo.models.payment_request import Parameter
 from buckaroo.exceptions._parameter_validation_error import ParameterValidationError, RequiredParameterMissingError
 
 
 class ServiceParameterValidator:
     """Handles validation and filtering of service parameters for payment methods."""
-    
-    def __init__(self, payment_builder):
+
+    def __init__(
+        self,
+        get_allowed_params: Callable[[str], Dict[str, Any]],
+        get_service_name: Callable[[], str],
+    ):
         """
-        Initialize validator with payment builder reference.
-        
         Args:
-            payment_builder: The payment builder instance to validate for
+            get_allowed_params: Callable that returns the allowed parameters dict
+                for a given action string.
+            get_service_name: Callable that returns the service name string.
         """
-        self.payment_builder = payment_builder
+        self._get_allowed_params = get_allowed_params
+        self._get_service_name = get_service_name
     
     def normalize_parameter_name(self, param_name: str) -> str:
         """Normalize parameter name to lowercase and remove underscores for matching.
@@ -64,7 +69,7 @@ class ServiceParameterValidator:
                             f"Parameter '{key}' must be one of types {type_names} or 'true'/'false' string",
                             parameter_name=key,
                             expected_type=str(type_names),
-                            service_name=self.payment_builder.get_service_name()
+                            service_name=self._get_service_name()
                         )
                 else:
                     type_names = [t.__name__ for t in expected_type]
@@ -72,7 +77,7 @@ class ServiceParameterValidator:
                         f"Parameter '{key}' must be one of types {type_names}, got {type(value).__name__}",
                         parameter_name=key,
                         expected_type=str(type_names),
-                        service_name=self.payment_builder.get_service_name()
+                        service_name=self._get_service_name()
                     )
         else:
             if not isinstance(value, expected_type):
@@ -83,14 +88,14 @@ class ServiceParameterValidator:
                             f"Parameter '{key}' must be a boolean or 'true'/'false' string",
                             parameter_name=key,
                             expected_type=expected_type.__name__,
-                            service_name=self.payment_builder.get_service_name()
+                            service_name=self._get_service_name()
                         )
                 else:
                     raise ParameterValidationError(
                         f"Parameter '{key}' must be of type {expected_type.__name__}, got {type(value).__name__}",
                         parameter_name=key,
                         expected_type=expected_type.__name__,
-                        service_name=self.payment_builder.get_service_name()
+                        service_name=self._get_service_name()
                     )
     
     def validate_single_parameter(self, key: str, value: Any, action: str = "Pay") -> None:
@@ -105,15 +110,15 @@ class ServiceParameterValidator:
         Raises:
             ParameterValidationError: If parameter is not allowed or invalid
         """
-        allowed_params = self.payment_builder.get_allowed_service_parameters(action)
+        allowed_params = self._get_allowed_params(action)
 
         if key not in allowed_params:
             raise ParameterValidationError(
-                f"Parameter '{key}' is not allowed for {self.payment_builder.get_service_name()} {action} action. "
+                f"Parameter '{key}' is not allowed for {self._get_service_name()} {action} action. "
                 f"Allowed parameters: {list(allowed_params.keys())}",
                 parameter_name=key,
                 action=action,
-                service_name=self.payment_builder.get_service_name()
+                service_name=self._get_service_name()
             )
 
         param_config = allowed_params[key]
@@ -144,7 +149,7 @@ class ServiceParameterValidator:
         Raises:
             RequiredParameterMissingError: If any required parameter is missing
         """
-        allowed_params = self.payment_builder.get_allowed_service_parameters(action)
+        allowed_params = self._get_allowed_params(action)
         
         # Create a normalized lookup for provided parameters
         # Include both regular parameters and group_types
@@ -175,14 +180,14 @@ class ServiceParameterValidator:
                 raise RequiredParameterMissingError(
                     parameter_name=missing_required[0],
                     action=action,
-                    service_name=self.payment_builder.get_service_name()
+                    service_name=self._get_service_name()
                 )
             else:
                 # Multiple missing parameters
                 raise ParameterValidationError(
-                    f"Required parameters missing for {self.payment_builder.get_service_name()} {action} action: {', '.join(missing_required)}",
+                    f"Required parameters missing for {self._get_service_name()} {action} action: {', '.join(missing_required)}",
                     action=action,
-                    service_name=self.payment_builder.get_service_name()
+                    service_name=self._get_service_name()
                 )
     
     def validate_and_filter_parameters(self, parameters: List[Parameter], action: str = "Pay") -> List[Parameter]:
@@ -199,7 +204,7 @@ class ServiceParameterValidator:
         if not parameters:
             return []
             
-        allowed_params = self.payment_builder.get_allowed_service_parameters(action)
+        allowed_params = self._get_allowed_params(action)
 
         # Create normalized lookup for allowed parameters
         normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
@@ -215,7 +220,7 @@ class ServiceParameterValidator:
                     # Grouped parameter is valid - no need to validate individual fields
                     valid_parameters.append(param)
                 else:
-                    invalid_params.append(f"{param.name} (group: {param.group_type}): group not allowed for {self.payment_builder.get_service_name()} {action} action")
+                    invalid_params.append(f"{param.name} (group: {param.group_type}): group not allowed for {self._get_service_name()} {action} action")
             else:
                 # Regular parameter - validate including source check
                 normalized_param_name = self.normalize_parameter_name(param.name)
@@ -243,10 +248,10 @@ class ServiceParameterValidator:
                     except ParameterValidationError as e:
                         invalid_params.append(f"{param.name}: {str(e)}")
                 else:
-                    invalid_params.append(f"{param.name}: not allowed for {self.payment_builder.get_service_name()} {action} action")
+                    invalid_params.append(f"{param.name}: not allowed for {self._get_service_name()} {action} action")
         
         if invalid_params:
-            print(f"Warning: Filtered out invalid service parameters for {action} action: {invalid_params}")
+            logging.warning("Filtered out invalid service parameters for %s action: %s", action, invalid_params)
         
         return valid_parameters
     
@@ -273,7 +278,7 @@ class ServiceParameterValidator:
             # Then validate each parameter individually - strict mode throws exceptions
             for param in parameters:
                 normalized_param_name = self.normalize_parameter_name(param.name)
-                allowed_params = self.payment_builder.get_allowed_service_parameters(action)
+                allowed_params = self._get_allowed_params(action)
                 normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
                 
                 if normalized_param_name in normalized_allowed:
@@ -282,10 +287,10 @@ class ServiceParameterValidator:
                     self.validate_single_parameter(allowed_param_name, param_value, action)
                 else:
                     raise ParameterValidationError(
-                        f"Parameter '{param.name}' is not allowed for {self.payment_builder.get_service_name()} {action} action",
+                        f"Parameter '{param.name}' is not allowed for {self._get_service_name()} {action} action",
                         parameter_name=param.name,
                         action=action,
-                        service_name=self.payment_builder.get_service_name()
+                        service_name=self._get_service_name()
                     )
             
             return parameters
@@ -305,7 +310,7 @@ class ServiceParameterValidator:
         Returns:
             Dict[str, Any]: Parameter information including types and requirements
         """
-        return self.payment_builder.get_allowed_service_parameters(action)
+        return self._get_allowed_params(action)
     
     def is_parameter_allowed(self, param_name: str, action: str = "Pay") -> bool:
         """
@@ -318,7 +323,7 @@ class ServiceParameterValidator:
         Returns:
             bool: True if parameter is allowed, False otherwise
         """
-        allowed_params = self.payment_builder.get_allowed_service_parameters(action)
+        allowed_params = self._get_allowed_params(action)
         normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
         normalized_param = self.normalize_parameter_name(param_name)
         
@@ -335,7 +340,7 @@ class ServiceParameterValidator:
         Returns:
             str: Official parameter name, or empty string if not found
         """
-        allowed_params = self.payment_builder.get_allowed_service_parameters(action)
+        allowed_params = self._get_allowed_params(action)
         normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
         normalized_param = self.normalize_parameter_name(param_name)
         

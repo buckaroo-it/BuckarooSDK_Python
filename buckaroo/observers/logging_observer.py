@@ -66,8 +66,9 @@ class BuckarooLoggingObserver:
         self.config = config or LogConfig()
         self.logger = self._setup_logger()
         self._sensitive_fields = {
-            'secret_key', 'password', 'token', 'authorization', 'cvv', 
-            'cardnumber', 'card_number', 'iban', 'account_number'
+            'secret_key', 'password', 'token', 'authorization', 'cvv',
+            'cardnumber', 'card_number', 'iban', 'account_number',
+            'store_key', 'x-buckaroo-store-key',
         }
     
     def _setup_logger(self) -> logging.Logger:
@@ -465,7 +466,7 @@ def create_logger_from_env() -> BuckarooLoggingObserver:
     dest_str = os.getenv("BUCKAROO_LOG_DESTINATION", "both").lower()
     destination = LogDestination(dest_str) if dest_str in [d.value for d in LogDestination] else LogDestination.BOTH
     
-    log_file = os.getenv("BUCKAROO_LOG_FILE", "buckaroo_sdk.log")
+    log_file = os.path.basename(os.getenv("BUCKAROO_LOG_FILE", "buckaroo_sdk.log"))
     mask_sensitive = os.getenv("BUCKAROO_LOG_MASK_SENSITIVE", "true").lower() == "true"
     
     config = LogConfig(

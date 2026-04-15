@@ -5,7 +5,6 @@ This module provides an HTTP strategy implementation using system curl command.
 """
 
 import subprocess
-import json as json_module
 import shutil
 from typing import Dict, Any, Optional, List
 from .http_strategy import HttpStrategy, HttpResponse
@@ -20,26 +19,10 @@ class CurlStrategy(HttpStrategy):
     """
     
     def __init__(self):
-        self._timeout = 30
-        self._verify_ssl = True
-        self._retry_attempts = 3
-        self._default_headers = {}
-        
+        super().__init__()
+
     def configure(self, **kwargs) -> None:
-        """
-        Configure the curl strategy settings.
-        
-        Args:
-            **kwargs: Configuration parameters
-                - timeout: Request timeout in seconds
-                - verify_ssl: Whether to verify SSL certificates
-                - retry_attempts: Number of retry attempts
-                - default_headers: Default headers to include
-        """
-        self._timeout = kwargs.get('timeout', 30)
-        self._verify_ssl = kwargs.get('verify_ssl', True)
-        self._retry_attempts = kwargs.get('retry_attempts', 3)
-        self._default_headers = kwargs.get('default_headers', {})
+        super().configure(**kwargs)
     
     def request(
         self,
@@ -103,9 +86,6 @@ class CurlStrategy(HttpStrategy):
                 last_exception = Exception(f"Request failed: {str(e)}")
                 if attempt == self._retry_attempts - 1:
                     raise last_exception
-        
-        # This should never be reached, but just in case
-        raise last_exception or Exception("Request failed after all retry attempts")
     
     def _build_curl_command(
         self,

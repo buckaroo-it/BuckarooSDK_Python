@@ -7,6 +7,36 @@ This module provides response objects for payment transactions.
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from datetime import datetime
+from .payment_request import Parameter
+
+
+# Named constants for Buckaroo transaction status codes
+class BuckarooStatusCode:
+    """Named constants for Buckaroo transaction status codes."""
+    # Success
+    SUCCESS = 190
+
+    # Pending
+    PENDING_INPUT = 790
+    PENDING_PROCESSING = 791
+    AWAITING_CONSUMER = 792
+    ON_HOLD = 793
+
+    # Failed
+    PAYMENT_FAILED = 490
+    VALIDATION_FAILED = 491
+    TECHNICAL_ERROR = 492
+    REJECTED = 690
+    CANCELLED_BY_MERCHANT = 691
+    CANCELLED_BY_CONSUMER = 692
+
+    # Cancelled
+    CANCELLED = 890
+    CANCELLED_BY_CONSUMER_LATE = 891
+
+    PENDING_CODES = {PENDING_INPUT, PENDING_PROCESSING, AWAITING_CONSUMER, ON_HOLD}
+    FAILED_CODES = {PAYMENT_FAILED, VALIDATION_FAILED, TECHNICAL_ERROR, REJECTED, CANCELLED_BY_MERCHANT, CANCELLED_BY_CONSUMER}
+    CANCELLED_CODES = {CANCELLED, CANCELLED_BY_CONSUMER_LATE}
 
 
 @dataclass
@@ -14,33 +44,20 @@ class StatusCode:
     """Represents a Buckaroo status code."""
     code: int
     description: str
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'StatusCode':
         """Create StatusCode from dictionary."""
         if data is None:
             data = {}
-        
-        # Handle nested Code structure: {"Code": 490, "Description": "Failed"}
-        if isinstance(data, dict) and "Code" in data and "Description" in data:
+        if isinstance(data, int):
+            return cls(code=data, description='')
+        if isinstance(data, dict):
             return cls(
                 code=data.get('Code', 0),
                 description=data.get('Description', '')
             )
-        # Handle simple structure: {"Code": 490} or just integer
-        elif isinstance(data, dict):
-            return cls(
-                code=data.get('Code', 0),
-                description=data.get('Description', '')
-            )
-        # Handle direct integer
-        elif isinstance(data, int):
-            return cls(
-                code=data,
-                description=''
-            )
-        else:
-            return cls(code=0, description='')
+        return cls(code=0, description='')
 
 
 @dataclass
@@ -91,21 +108,8 @@ class RequiredAction:
         )
 
 
-@dataclass
-class ServiceParameter:
-    """Represents a service parameter."""
-    name: str
-    value: Any
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ServiceParameter':
-        """Create ServiceParameter from dictionary."""
-        if data is None:
-            data = {}
-        return cls(
-            name=data.get('Name', ''),
-            value=data.get('Value')
-        )
+# Backward-compatible alias: ServiceParameter was the old name for Parameter in responses
+ServiceParameter = Parameter
 
 
 @dataclass
@@ -113,18 +117,18 @@ class Service:
     """Represents a payment service."""
     name: str
     action: Optional[str]
-    parameters: List[ServiceParameter]
-    
+    parameters: List[Parameter]
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Service':
         """Create Service from dictionary."""
         if data is None:
             data = {}
-        
+
         parameters = []
         if 'Parameters' in data and data['Parameters']:
-            parameters = [ServiceParameter.from_dict(param) for param in data['Parameters']]
-        
+            parameters = [Parameter.from_dict(param) for param in data['Parameters']]
+
         return cls(
             name=data.get('Name', ''),
             action=data.get('Action'),
@@ -210,29 +214,23 @@ class PaymentResponse:
     def is_pending(self) -> bool:
         """Check if the payment is pending."""
         if self.status and self.status.code:
-            # Common pending status codes
-            pending_codes = [790, 791, 792, 793]
-            return self.status.code.code in pending_codes
+            return self.status.code.code in BuckarooStatusCode.PENDING_CODES
         return False
-    
+
     def is_successful(self) -> bool:
         """Check if the payment was successful."""
         return self.is_successful_payment
-    
+
     def is_cancelled(self) -> bool:
         """Check if the payment was cancelled."""
         if self.status and self.status.code:
-            # Common cancelled status codes
-            cancelled_codes = [890, 891]
-            return self.status.code.code in cancelled_codes
+            return self.status.code.code in BuckarooStatusCode.CANCELLED_CODES
         return False
-    
+
     def is_failed(self) -> bool:
         """Check if the payment failed."""
         if self.status and self.status.code:
-            # Common failed status codes
-            failed_codes = [490, 491, 492, 690, 691, 692]
-            return self.status.code.code in failed_codes
+            return self.status.code.code in BuckarooStatusCode.FAILED_CODES
         return False
     
     def requires_action(self) -> bool:

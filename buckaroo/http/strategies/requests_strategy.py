@@ -33,28 +33,16 @@ class RequestsStrategy(HttpStrategy):
     """
     
     def __init__(self):
+        super().__init__()
         self.session = None
-        self._retry_attempts = 3
-        self._retry_delay = 1.0
-        
+
     def configure(self, **kwargs) -> None:
-        """
-        Configure the requests session with retry logic and adapters.
-        
-        Args:
-            **kwargs: Configuration parameters
-                - retry_attempts: Number of retry attempts
-                - retry_delay: Delay between retries
-                - default_headers: Default headers to set
-        """
         if not REQUESTS_AVAILABLE:
             raise ImportError(
                 "The 'requests' library is required for RequestsStrategy. "
                 "Please install it with: pip install requests"
             )
-        
-        self._retry_attempts = kwargs.get('retry_attempts', 3)
-        self._retry_delay = kwargs.get('retry_delay', 1.0)
+        super().configure(**kwargs)
         
         # Create session
         self.session = requests.Session()

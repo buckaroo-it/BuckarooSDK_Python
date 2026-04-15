@@ -5,6 +5,7 @@ This module provides configuration classes for the Buckaroo SDK, allowing
 customization of API endpoints, timeouts, retry logic, and other settings.
 """
 
+import warnings
 from typing import Optional, Dict, Any
 from dataclasses import dataclass
 from enum import Enum
@@ -205,15 +206,6 @@ class BuckarooConfig:
         return self.from_dict(config_dict)
 
 
-class DefaultConfig(BuckarooConfig):
-    """
-    Default configuration for Buckaroo SDK.
-    
-    This class provides sensible defaults for most use cases.
-    """
-    pass
-
-
 class TestConfig(BuckarooConfig):
     """
     Configuration optimized for testing.
@@ -320,6 +312,12 @@ class ConfigBuilder:
     
     def disable_ssl_verification(self) -> 'ConfigBuilder':
         """Disable SSL verification (not recommended for production)."""
+        warnings.warn(
+            "SSL verification is disabled. This exposes the connection to "
+            "man-in-the-middle attacks and must never be used in production.",
+            SecurityWarning,
+            stacklevel=2,
+        )
         self._config_dict["verify_ssl"] = False
         return self
     

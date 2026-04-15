@@ -14,19 +14,18 @@ from .services.solution_service import SolutionService
 
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.observers import (
-    BuckarooLoggingObserver, 
-    create_logger, 
+    BuckarooLoggingObserver,
+    create_logger,
     create_logger_from_env,
-    LogLevel, 
+    LogLevel,
     LogDestination,
     LogConfig
 )
-from buckaroo.config.buckaroo_config import BuckarooConfig
 from buckaroo.exceptions._authentication_error import AuthenticationError
 
 
 @dataclass
-class BuckarooConfig:
+class BuckarooAppConfig:
     """Configuration for Buckaroo Application."""
     # API Configuration
     store_key: Optional[str] = None
@@ -45,7 +44,7 @@ class BuckarooConfig:
     retry_attempts: int = 3
     
     @classmethod
-    def from_env(cls) -> 'BuckarooConfig':
+    def from_env(cls) -> 'BuckarooAppConfig':
         """Create configuration from environment variables."""
         # Get log level from env
         log_level_str = os.getenv("BUCKAROO_LOG_LEVEL", "INFO").upper()
@@ -62,7 +61,7 @@ class BuckarooConfig:
             mode=os.getenv("BUCKAROO_MODE", "test"),
             log_level=log_level,
             log_destination=log_destination,
-            log_file=os.getenv("BUCKAROO_LOG_FILE", "buckaroo_app.log"),
+            log_file=os.path.basename(os.getenv("BUCKAROO_LOG_FILE", "buckaroo_app.log")),
             mask_sensitive_data=os.getenv("BUCKAROO_LOG_MASK_SENSITIVE", "true").lower() == "true",
             timeout=int(os.getenv("BUCKAROO_TIMEOUT", "30")),
             retry_attempts=int(os.getenv("BUCKAROO_RETRY_ATTEMPTS", "3"))
@@ -82,14 +81,14 @@ class Buckaroo:
         >>> response = app.execute_payment(payment)
     """
     
-    def __init__(self, config: Optional[BuckarooConfig] = None):
+    def __init__(self, config: Optional[BuckarooAppConfig] = None):
         """
         Initialize Buckaroo Application.
         
         Args:
             config: Application configuration. If None, uses environment variables.
         """
-        self.config = config or BuckarooConfig.from_env()
+        self.config = config or BuckarooAppConfig.from_env()
         self.logger: Optional[BuckarooLoggingObserver] = None
         self.client: Optional[BuckarooClient] = None
         
@@ -100,7 +99,7 @@ class Buckaroo:
     @classmethod
     def from_env(cls) -> 'Buckaroo':
         """Create Buckaroo app from environment variables."""
-        return cls(BuckarooConfig.from_env())
+        return cls(BuckarooAppConfig.from_env())
     
     @classmethod
     def quick_setup(cls, store_key: str, secret_key: str, mode: str = "test", 
@@ -117,7 +116,7 @@ class Buckaroo:
         Returns:
             Configured Buckaroo app
         """
-        config = BuckarooConfig(
+        config = BuckarooAppConfig(
             store_key=store_key,
             secret_key=secret_key,
             mode=mode,

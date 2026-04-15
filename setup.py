@@ -1,4 +1,5 @@
 import os
+import re
 from codecs import open
 from setuptools import setup, find_packages
 
@@ -7,18 +8,20 @@ ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 long_description = open(os.path.join(ROOT_DIR, "README.md"), encoding="utf-8").read()
 
-version_contents = {}
 with open(os.path.join(ROOT_DIR, "buckaroo", "_version.py"), encoding="utf-8") as f:
-    exec(f.read(), version_contents)
+    version_match = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', f.read(), re.MULTILINE)
+if not version_match:
+    raise RuntimeError("Cannot find VERSION in buckaroo/_version.py")
+version_contents = {"VERSION": version_match.group(1)}
     
 setup(
     name="buckaroo-sdk-python",
     version=version_contents["VERSION"],
     description="Python bindings for the Buckaroo API",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown",
     author="Buckaroo",
-    author_email="wecare@buckaroon.nl",
+    author_email="wecare@buckaroo.nl",
     url="https://github.com/buckaroo-it/BuckarooSDK_Python",
     license="MIT",
     keywords="buckaroo api payments",
@@ -26,17 +29,14 @@ setup(
     package_data={"buckaroo": ["data/ca-certificates.crt", "py.typed"]},
     zip_safe=False,
     install_requires=[
-        'typing_extensions <= 4.2.0, > 3.7.2; python_version < "3.7"',
-        # The best typing support comes from 4.5.0+ but we can support down to
-        # 3.7.2 without throwing exceptions.
-        'typing_extensions >= 4.5.0; python_version >= "3.7"',
-        'requests >= 2.20; python_version >= "3.0"',
+        'typing_extensions >= 4.5.0',
+        'requests >= 2.20',
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     project_urls={
         "Bug Tracker": "https://github.com/buckaroo-it/BuckarooSDK_Python/issues",
         "Changes": "https://github.com/buckaroo-it/BuckarooSDK_Python//blob/master/CHANGELOG.md",
-        "Documentation": "https://stripe.com/docs/api/?lang=python",
+        "Documentation": "https://docs.buckaroo.io/",
         "Source Code": "https://github.com/buckaroo-it/BuckarooSDK_Python/",
     },
     classifiers=[
@@ -47,8 +47,6 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",

@@ -16,19 +16,6 @@ if TYPE_CHECKING:
 class EncryptedPayCapable:
     """Mixin for payment methods that support encryption (Credit Card)."""
 
-    def payEncrypted(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
-        """
-        Process a payment with encryption.
-
-        Available for: Credit Card
-        Not available for: iDEAL, Sofort, PayConiq (immediate transfer)
-
-        Args:
-            validate (bool): Whether to validate service parameters before building
-
-        Returns:
-            PaymentResponse: The payment response
-        """
-        payment_request = self.build("PayEncrypted", validate=validate)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
+    def pay_encrypted(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+        """Process a payment using encrypted card data (Credit Card only)."""
+        return self.execute_action("PayEncrypted", validate=validate)

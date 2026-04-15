@@ -1,3 +1,8 @@
-requests>=2.20.0
-urllib3>=1.25.0
+# Runtime dependencies — kept in sync with install_requires in setup.py
+requests>=2.20
 typing_extensions>=4.5.0
+
+# Development / CI dependencies
+flake8
+mypy
+types-requests

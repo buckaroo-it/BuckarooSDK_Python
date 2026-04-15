@@ -1,16 +1,30 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
 from ..models.payment_response import PaymentResponse
 from ..services.service_parameter_validator import ServiceParameterValidator
+from ..services.transaction_service import TransactionExecutor, ITransactionExecutor
+from ..exceptions._parameter_validation_error import ParameterValidationError, RequiredParameterMissingError
 
 
 class BaseBuilder(ABC):
     """Abstract base class for all builders (payments and solutions)."""
-    
-    def __init__(self, client):
-        """Initialize with client instance."""
+
+    def __init__(self, client, executor: Optional[ITransactionExecutor] = None):
+        """Initialize with client instance.
+
+        Args:
+            client: BuckarooClient instance.
+            executor: Optional transaction executor. If omitted a ``TransactionExecutor``
+                      is created automatically. Pass a mock here in unit tests to avoid
+                      real HTTP calls.
+        """
         self._client = client
+        self._executor: ITransactionExecutor = executor if executor is not None else TransactionExecutor(client)
         self._currency: Optional[str] = None
         self._amount_debit: Optional[float] = None
         self._description: Optional[str] = None
@@ -25,69 +39,72 @@ class BaseBuilder(ABC):
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
-        self._validator = ServiceParameterValidator(self)
+        self._validator = ServiceParameterValidator(
+            self.get_allowed_service_parameters,
+            self.get_service_name,
+        )
     
-    def currency(self, currency: str) -> 'BaseBuilder':
+    def currency(self, currency: str) -> Self:
         """Set the currency for the payment."""
         self._currency = currency
         return self
     
-    def amount(self, amount: float) -> 'BaseBuilder':
+    def amount(self, amount: float) -> Self:
         """Set the amount for the payment."""
         self._amount_debit = amount
         return self
     
-    def description(self, description: str) -> 'BaseBuilder':
+    def description(self, description: str) -> Self:
         """Set the description for the payment."""
         self._description = description
         return self
     
-    def invoice(self, invoice: str) -> 'BaseBuilder':
+    def invoice(self, invoice: str) -> Self:
         """Set the invoice number for the payment."""
         self._invoice = invoice
         return self
     
-    def return_url(self, url: str) -> 'BaseBuilder':
+    def return_url(self, url: str) -> Self:
         """Set the return URL for successful payment."""
         self._return_url = url
         return self
     
-    def return_url_cancel(self, url: str) -> 'BaseBuilder':
+    def return_url_cancel(self, url: str) -> Self:
         """Set the return URL for cancelled payment."""
         self._return_url_cancel = url
         return self
     
-    def return_url_error(self, url: str) -> 'BaseBuilder':
+    def return_url_error(self, url: str) -> Self:
         """Set the return URL for payment error."""
         self._return_url_error = url
         return self
     
-    def return_url_reject(self, url: str) -> 'BaseBuilder':
+    def return_url_reject(self, url: str) -> Self:
         """Set the return URL for rejected payment."""
         self._return_url_reject = url
         return self
     
-    def continue_on_incomplete(self, continue_incomplete: str) -> 'BaseBuilder':
+    def continue_on_incomplete(self, continue_incomplete: str) -> Self:
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
         return self
     
-    def push_url(self, url: str) -> 'BaseBuilder':
+    def push_url(self, url: str) -> Self:
         """Set the Push (webhook) URL."""
         self._push_url = url
         return self
 
-    def push_url_failure(self, url: str) -> 'BaseBuilder':
+    def push_url_failure(self, url: str) -> Self:
         """Set the Push URL for failure notifications."""
         self._push_url_failure = url
         return self
 
-    def client_ip(self, ip_address: str, ip_type: int = 0) -> 'BaseBuilder':
+    def client_ip(self, ip_address: str, ip_type: int = 0) -> Self:
         """Set the client IP information."""
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
         return self
     
-    def add_parameter(self, key: str, value: Any, group_type: str = "", group_id: str = "") -> 'BaseBuilder':
+    def add_parameter(self, key: str, value: Any, group_type: Optional[str] = None, group_id: Optional[str] = None) -> Self:
         """Add a custom parameter to the service.
         
         Args:
@@ -117,10 +134,10 @@ class BaseBuilder(ABC):
         str_value = str(value).lower() if isinstance(value, bool) else str(value)
 
         parameter = Parameter(
-            name=key.capitalize(), 
-            value=str_value, 
-            group_type=group_type.capitalize(), 
-            group_id=group_id
+            name=key.capitalize(),
+            value=str_value,
+            group_type=group_type.capitalize() if group_type else None,
+            group_id=group_id,
         )
 
         self._service_parameters.append(parameter)
@@ -156,7 +173,7 @@ class BaseBuilder(ABC):
             self._service_parameters, action, strict=strict
         )
     
-    def from_dict(self, data: Dict[str, Any]) -> 'BaseBuilder':
+    def from_dict(self, data: Dict[str, Any]) -> Self:
         """
         Populate the builder from a dictionary of parameters.
         
@@ -284,8 +301,12 @@ class BaseBuilder(ABC):
             action (str): The action being performed (Pay, Authorize, Refund, Capture, etc.)
         """
         missing_fields = [field for field, value in self.required_fields(action).items() if value is None]
-        if missing_fields:
-            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+        if len(missing_fields) == 1:
+            raise RequiredParameterMissingError(missing_fields[0], action=action)
+        elif missing_fields:
+            raise ParameterValidationError(
+                f"Missing required fields: {', '.join(missing_fields)}", action=action
+            )
     
     def build(self, action: str = "Pay", validate: bool = True, strict_validation: bool = False) -> PaymentRequest:
         """Build the payment request.
@@ -336,204 +357,10 @@ class BaseBuilder(ABC):
         
         return payment_request
 
-    def pay(self, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
-        """
-        Execute the payment operation.
-        
-        Args:
-            validate (bool): Whether to validate service parameters before building
-            strict_validation (bool): If True, throws exceptions for missing required parameters
-        
-        Returns:
-            PaymentResponse: Structured payment response object
-            
-        Raises:
-            ValueError: If required fields are missing
-            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
-            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
-            AuthenticationError: If authentication fails
-            BuckarooApiError: If API returns an error
-        """
-        # Build the payment request
-        payment_request = self.build("Pay", validate=validate, strict_validation=strict_validation)
-        
-        # Convert to dictionary for API
-        request_data = payment_request.to_dict()
-
-        return self._post_transaction(request_data)
-    
-    def refund(self, validate: bool = True) -> PaymentResponse:
-        """
-        Execute a refund transaction.
-        
-        Args:
-            validate (bool): Whether to validate service parameters before building
-        
-        Returns:
-            PaymentResponse: The refund response
-            
-        Raises:
-            ValueError: If required fields are missing
-        """
-        # Get original_transaction_key from parameter or payload
-        txn_key = self._payload.get('originalTransactionKey')
-        if not txn_key:
-            raise ValueError("Original transaction key is required for refunds (provide as parameter or in payload)")
-        
-        # Get amount from parameter or payload
-        refund_amount = self._payload.get('refund_amount')
-        
-        # Build refund request with original transaction reference
-        payment_request = self.build('Refund', validate=validate)
-        
-        # Convert to dictionary and modify for refund
-        request_data = payment_request.to_dict()
-        request_data['OriginalTransactionKey'] = txn_key
-        
-        # Set refund amount if specified, otherwise use original amount
-        if refund_amount is not None:
-            request_data['AmountCredit'] = refund_amount
-            # Remove debit amount for refunds
-            if 'AmountDebit' in request_data:
-                del request_data['AmountDebit']
-        else:
-            # Full refund - swap debit to credit
-            if 'AmountDebit' in request_data:
-                request_data['AmountCredit'] = request_data['AmountDebit']
-                del request_data['AmountDebit']
-        
-        return self._post_transaction(request_data)
-    
-    def capture(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None, validate: bool = True) -> PaymentResponse:
-        """
-        Capture a previously authorized payment.
-        
-        Args:
-            original_transaction_key (str, optional): The transaction key of the authorization.
-                                                     If None, will try to get from payload.
-            amount (float, optional): Amount to capture. If None, will try to get from payload
-                                    or capture the full authorized amount.
-            validate (bool): Whether to validate service parameters before building
-        
-        Returns:
-            PaymentResponse: The capture response
-        """
-        # Get authorization key from parameter or payload
-        auth_key = original_transaction_key or self._payload.get('authorization_key') or self._payload.get('original_transaction_key')
-        if not auth_key:
-            raise ValueError("Authorization key is required for captures (provide as parameter or in payload)")
-        
-        # Get capture amount from parameter or payload
-        capture_amount = amount or self._payload.get('capture_amount')
-        
-        # Build capture request
-        payment_request = self.build('Capture', validate=validate)
-        request_data = payment_request.to_dict()
-        
-        # Set capture-specific parameters
-        request_data['OriginalTransactionKey'] = auth_key
-        
-        # Set capture amount if specified
-        if capture_amount is not None:
-            request_data['AmountDebit'] = capture_amount
-        
-        return self._post_transaction(request_data)
-    
-    def cancel(self, original_transaction_key: Optional[str] = None) -> PaymentResponse:
-        """
-        Cancel a pending or authorized transaction.
-        
-        Args:
-            original_transaction_key (str, optional): The transaction key to cancel.
-                                                     If None, will try to get from payload.
-        
-        Returns:
-            PaymentResponse: The cancellation response
-        """
-        # Get transaction key from parameter or payload
-        txn_key = original_transaction_key or self._payload.get('cancel_key') or self._payload.get('original_transaction_key')
-        if not txn_key:
-            raise ValueError("Transaction key is required for cancellations (provide as parameter or in payload)")
-        
-        # Build cancel request
-        payment_request = self.build()
-        request_data = payment_request.to_dict()
-        
-        # Set cancellation parameters
-        request_data['OriginalTransactionKey'] = txn_key
-        # Remove amounts for cancellation
-        request_data.pop('AmountDebit', None)
-        request_data.pop('AmountCredit', None)
-        
-        return self._post_transaction(request_data)
-    
-    def partial_refund(self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None) -> PaymentResponse:
-        """
-        Execute a partial refund transaction.
-        
-        Args:
-            original_transaction_key (str, optional): The transaction key of the original payment.
-                                                     If None, will try to get from payload.
-            amount (float, optional): Amount to refund. If None, will try to get from payload.
-        
-        Returns:
-            PaymentResponse: The partial refund response
-            
-        Raises:
-            ValueError: If amount is not provided or invalid
-        """
-        # Get amount from parameter or payload
-        refund_amount = amount or self._payload.get('refund_amount') or self._payload.get('partial_refund_amount')
-        if not refund_amount or refund_amount <= 0:
-            raise ValueError("Partial refund amount must be greater than 0 (provide as parameter or in payload)")
-        
-        return self.refund(original_transaction_key, refund_amount)
-
     def _post_data_request(self, request_data: Dict[str, Any]) -> PaymentResponse:
-        """Helper method to post data request and handle response."""
-        # Send to Buckaroo API
-        response = self._client.http_client.post('/json/DataRequest', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-        
-        # Return structured response object
-        return PaymentResponse(response.to_dict())
-    
+        """Post a data request to the Buckaroo API."""
+        return self._executor.post_data_request(request_data)
+
     def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
-        """Helper method to post transaction and handle response."""
-        # Send to Buckaroo API
-        response = self._client.http_client.post('/json/transaction', request_data)
-        
-        # Check if response is valid and convert to dict
-        if response is None:
-            # Return a PaymentResponse with empty data for None responses
-            return PaymentResponse({})
-        
-        # Return structured response object
-        return PaymentResponse(response.to_dict())
-    
-    def execute_action(self, action: str, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
-        """
-        Execute a custom action for the payment method.
-        
-        This is a generic method that can be used for any action supported
-        by the payment method (instantRefund, payFastCheckout, etc.).
-        
-        Args:
-            action (str): The action to execute
-            validate (bool): Whether to validate service parameters before building
-            strict_validation (bool): If True, throws exceptions for missing required parameters
-            
-        Returns:
-            PaymentResponse: The action response
-            
-        Raises:
-            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
-            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
-        """
-        payment_request = self.build(action, validate=validate, strict_validation=strict_validation)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
+        """Post a transaction to the Buckaroo API."""
+        return self._executor.post_transaction(request_data)

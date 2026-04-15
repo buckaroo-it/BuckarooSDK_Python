@@ -16,20 +16,7 @@ if TYPE_CHECKING:
 
 class InstantRefundCapable:
     """Mixin for payment methods that support instant refunds (iDEAL, Sofort, PayConiq)."""
-    
-    def instantRefund(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
-        """
-        Initiate an instant refund.
-        
-        Available for: iDEAL, Sofort, PayConiq
-        Not available for: Credit Card, PayPal (use regular refund instead)
-        
-        Args:
-            validate (bool): Whether to validate service parameters before building
-        
-        Returns:
-            PaymentResponse: The instant refund response
-        """
-        payment_request = self.build("instantRefund", validate=validate)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
+
+    def instant_refund(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+        """Initiate an instant refund (iDEAL, Sofort, PayConiq only)."""
+        return self.execute_action("instantRefund", validate=validate)

@@ -18,9 +18,7 @@ class SubscriptionBuilder(SolutionBuilder):
         return {}
     
 
-    def createSubscription(self: 'SolutionBuilder', validate: bool = True) -> Any:
+    def create_subscription(self, validate: bool = True) -> Any:
         """Create a subscription."""
         payload = self.build("CreateSubscription", validate=validate)
-        request_data = payload.to_dict()
-        
-        return self._post_data_request(request_data)
+        return self._post_data_request(payload.to_dict())

@@ -45,6 +45,11 @@ def test_get_allowed_service_parameters_pay_is_case_insensitive(client):
     )
 
 
+def test_get_allowed_service_parameters_create_subscription_returns_empty(client):
+    builder = SubscriptionBuilder(client)
+    assert builder.get_allowed_service_parameters("CreateSubscription") == {}
+
+
 @pytest.mark.parametrize("action", ["Refund", "Capture", "Authorize", "UnknownAction"])
 def test_get_allowed_service_parameters_non_pay_returns_empty(client, action):
     assert SubscriptionBuilder(client).get_allowed_service_parameters(action) == {}

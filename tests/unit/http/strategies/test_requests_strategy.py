@@ -305,6 +305,7 @@ class TestRequestExceptionMapping:
 
         assert str(excinfo.value) == "Request timeout after 7 seconds"
 
+    @pytest.mark.xfail(reason="timeout=None should not interpolate literal None")
     def test_timeout_none_interpolates_literal_none_in_message(self):
         strategy = RequestsStrategy()
         strategy.session = MagicMock()
@@ -315,7 +316,7 @@ class TestRequestExceptionMapping:
         with pytest.raises(Exception) as excinfo:
             strategy.request("GET", "https://example.com", timeout=None)
 
-        assert str(excinfo.value) == "Request timeout after None seconds"
+        assert str(excinfo.value) == "Request timeout"
 
     def test_connection_error_is_wrapped_with_fixed_message(self):
         strategy = RequestsStrategy()

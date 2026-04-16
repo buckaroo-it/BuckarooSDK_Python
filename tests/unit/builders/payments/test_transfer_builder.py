@@ -93,6 +93,14 @@ def test_get_allowed_service_parameters_pay_snapshot(builder: TransferBuilder) -
     assert spec["customeremail"]["required"] is True
     assert "customerfirstname" in spec
     assert "customerlastname" in spec
+    assert "customergender" in spec
+    assert spec["customergender"]["required"] is False
+    assert "sendmail" in spec
+    assert spec["sendmail"]["required"] is False
+    assert "dateDue" in spec
+    assert spec["dateDue"]["required"] is False
+    assert "customerCountry" in spec
+    assert spec["customerCountry"]["required"] is False
 
 
 def test_get_allowed_service_parameters_unsupported_action_returns_empty(

@@ -70,7 +70,7 @@ def test_get_allowed_service_parameters_pay_snapshot(client):
         "article": {
             "type": list,
             "required": True,
-            "description": "Riverty articles",
+            "description": "Klarna articles",
         },
     }
 

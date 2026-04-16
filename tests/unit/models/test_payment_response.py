@@ -325,6 +325,19 @@ def test_success_code_matches_no_predicate():
     assert resp.is_failed() is False
 
 
+def test_is_successful_with_190_status_and_success_flag():
+    resp = PaymentResponse({
+        "is_successful_payment": True,
+        "data": {
+            "Status": {"Code": {"Code": 190, "Description": "Success"}},
+        },
+    })
+    assert resp.is_successful() is True
+    assert resp.is_pending() is False
+    assert resp.is_cancelled() is False
+    assert resp.is_failed() is False
+
+
 def test_predicates_false_when_no_status():
     resp = PaymentResponse({})
     assert resp.is_pending() is False

@@ -388,22 +388,22 @@ class TestHmacUrlScheme:
         body = ""
         ts = "1700000000"
 
+        # Generate once to obtain a real nonce from the client.
         h_http = client._generate_hmac_signature("POST", "http://example.com/api", body, ts)
-        h_https = client._generate_hmac_signature("POST", "https://example.com/api", body, ts)
-        _, sig_http, nonce_http, _ = _parse_auth(h_http["Authorization"])
-        _, sig_https, nonce_https, _ = _parse_auth(h_https["Authorization"])
+        _, sig_http, nonce, _ = _parse_auth(h_http["Authorization"])
 
-        # Same path on http vs https → identical signature when re-derived with the same nonce.
+        # Re-derive both http and https with the SAME nonce; they must match
+        # because protocol stripping makes the signed URL identical.
         rederived_http = _recompute_signature(
             "test_store_key", "test_secret_key", "POST",
-            "http://example.com/api", body, ts, nonce_http,
+            "http://example.com/api", body, ts, nonce,
         )
         rederived_https = _recompute_signature(
             "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", body, ts, nonce_https,
+            "https://example.com/api", body, ts, nonce,
         )
         assert sig_http == rederived_http
-        assert sig_https == rederived_https
+        assert rederived_http == rederived_https
 
     def test_url_without_scheme_signs_verbatim(self):
         client = _make_client()

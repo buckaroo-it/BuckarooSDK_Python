@@ -103,12 +103,10 @@ def test_get_allowed_service_parameters_non_pay_actions_return_empty(
         InstantRefundCapable,
     ],
 )
-def test_builder_does_not_mix_in_capability(
-    builder: BillinkBuilder, capability: type
-) -> None:
+def test_builder_does_not_mix_in_capability(capability: type) -> None:
     # Billink ships no capability mixins — pin the MRO so a future mixin
     # addition lands with a visible test change.
-    assert not isinstance(builder, capability)
+    assert not issubclass(BillinkBuilder, capability)
 
 
 def test_inherited_payment_actions_are_callable(builder: BillinkBuilder) -> None:

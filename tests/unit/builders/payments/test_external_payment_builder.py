@@ -145,6 +145,8 @@ def test_pay_round_trips_through_mock_buckaroo(
     )
 
     assert isinstance(response, PaymentResponse)
+    assert response.key == "EXT-TXN-1"
+    assert response.status.code.code == 190
     mock_strategy.assert_all_consumed()
 
 
@@ -183,4 +185,6 @@ def test_refund_round_trips_through_mock_buckaroo(
     ).refund()
 
     assert isinstance(response, PaymentResponse)
+    assert response.key == "EXT-REFUND-1"
+    assert response.status.code.code == 190
     mock_strategy.assert_all_consumed()

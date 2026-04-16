@@ -15,7 +15,7 @@ class KlarnaBuilder(PaymentBuilder):
             return {
                 "billingCustomer": {"type": list, "required": True, "description": "Billing customer information"},
                 "shippingCustomer": {"type": list, "required": True, "description": "Shipping customer information"},
-                "article": {"type": list, "required": True, "description": "Riverty articles"},
+                "article": {"type": list, "required": True, "description": "Klarna articles"},
             }
 
         return {}

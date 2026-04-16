@@ -504,6 +504,11 @@ _BUILDERS_WITH_PAY_RULES = [
     IdealQrBuilder,
 ]
 
+# Subset: only builders whose Pay spec has at least one required field.
+_BUILDERS_WITH_REQUIRED_PAY_PARAMS = [
+    KlarnaBuilder,
+]
+
 
 @pytest.mark.parametrize("builder_cls", _BUILDERS_WITH_PAY_RULES)
 def test_every_allowed_param_name_roundtrips_through_is_parameter_allowed(builder_cls):
@@ -513,7 +518,7 @@ def test_every_allowed_param_name_roundtrips_through_is_parameter_allowed(builde
         assert validator.is_parameter_allowed(name, action="Pay") is True
 
 
-@pytest.mark.parametrize("builder_cls", _BUILDERS_WITH_PAY_RULES)
+@pytest.mark.parametrize("builder_cls", _BUILDERS_WITH_REQUIRED_PAY_PARAMS)
 def test_every_required_param_missing_triggers_required_error(builder_cls):
     validator = _validator_for(builder_cls)
     required = {
@@ -521,10 +526,7 @@ def test_every_required_param_missing_triggers_required_error(builder_cls):
         for name, cfg in validator.get_parameter_info("Pay").items()
         if cfg.get("required")
     }
-    if not required:
-        pytest.skip(f"{builder_cls.__name__} has no required Pay params")
+    assert required, f"{builder_cls.__name__} should have required Pay params"
 
-    # Providing no params must raise *something* ParameterValidationError-ish
-    # when required keys exist.
     with pytest.raises(ParameterValidationError):
         validator.validate_required_parameters([], action="Pay")

@@ -77,6 +77,14 @@ class TestGetServiceName:
         builder.from_dict({"brand": "Visa"})
         assert builder.get_service_name() == "Visa"
 
+    def test_brand_from_dict_propagates_to_built_request(self, client):
+        builder = CreditcardBuilder(client)
+        populate_required_fields(builder, amount=10.00)
+        builder.from_dict({"brand": "Visa"})
+        request = builder.build("Pay", validate=False)
+        service = request.services.services[0]
+        assert service.name == "Visa"
+
 
 # ---------------------------------------------------------------------------
 # get_allowed_service_parameters — full action matrix

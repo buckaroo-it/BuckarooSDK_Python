@@ -124,6 +124,10 @@ class TestGetAllowedServiceParameters:
             },
         }
 
+    def test_extend_reservation_matches_pay_result(self, client):
+        builder = KlarnaKPBuilder(client)
+        assert builder.get_allowed_service_parameters("ExtendReservation") == builder.get_allowed_service_parameters("Pay")
+
     def test_update_reservation_returns_reservation_number_and_article_spec(self, client):
         assert KlarnaKPBuilder(client).get_allowed_service_parameters(
             "UpdateReservation"

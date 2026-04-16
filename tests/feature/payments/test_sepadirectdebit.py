@@ -24,3 +24,5 @@ class TestSepadirectdebitFeature:
             },
         }).pay()
         assert response.is_pending()
+        assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]

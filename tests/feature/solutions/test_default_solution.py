@@ -59,6 +59,7 @@ class TestDefaultSolutionFeature:
             "return_url_reject": "https://example.com/reject",
         }).refund()
         assert response.status.code.code == 190
+        assert response.key == response_body["Key"]
 
     def test_default_solution_not_in_factory_registry(self):
         """DefaultBuilder is a fallback, not a registered solution method."""

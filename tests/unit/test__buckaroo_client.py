@@ -25,6 +25,7 @@ from buckaroo.config.buckaroo_config import (
 from buckaroo.exceptions._authentication_error import AuthenticationError
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
+from buckaroo.http.strategies.requests_strategy import RequestsStrategy
 from tests.support.recording_mock import RecordingMock
 
 
@@ -121,6 +122,7 @@ def test_api_endpoint_reflects_live_config():
 def test_http_strategy_argument_is_accepted_and_stored():
     client = BuckarooClient("store", "secret", http_strategy="requests")
     assert client.http_strategy == "requests"
+    assert isinstance(client.http_client.http_strategy, RequestsStrategy)
 
 
 # ---------------------------------------------------------------------------
@@ -263,26 +265,17 @@ def test_confirm_credential_returns_false_on_transport_exception():
 # get_config_info
 
 
-@pytest.mark.parametrize(
-    "sensitive_field",
-    [
-        "secret_key",
-        "secretKey",
-        "store_key",
-        "storeKey",
-        "password",
-        "api_key",
-        "apiKey",
-        "token",
-        "Authorization",
-    ],
-)
-def test_get_config_info_excludes_sensitive_fields(sensitive_field):
+def test_get_config_info_returns_only_expected_keys():
     client = BuckarooClient("store", "super-secret-value")
     info = client.get_config_info()
-    assert sensitive_field not in info
-    # Defensive: no value in the returned dict should leak the secret.
-    assert "super-secret-value" not in repr(info)
+    assert set(info.keys()) == {
+        "environment",
+        "api_endpoint",
+        "timeout",
+        "retry_attempts",
+        "api_version",
+        "logging_enabled",
+    }
 
 
 def test_get_config_info_exposes_safe_config_fields():

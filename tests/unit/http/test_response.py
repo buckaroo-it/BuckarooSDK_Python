@@ -124,7 +124,7 @@ class TestIsSuccessfulPayment:
 
         assert response.is_successful_payment() is True
 
-    def test_false_when_status_code_missing_from_status(self):
+    def test_true_when_status_code_missing_from_status(self):
         response = BuckarooResponse(make_response(text='{"Status": {"Other": 1}}'))
 
         # Status present but no "Code" key — falls through to self.success.
@@ -137,13 +137,13 @@ class TestIsSuccessfulPayment:
 
         assert response.is_successful_payment() is False
 
-    def test_false_when_status_is_falsy(self):
+    def test_true_when_status_is_falsy(self):
         # Status present but falsy — skips the Buckaroo-code branch.
         response = BuckarooResponse(make_response(text='{"Status": null}'))
 
         assert response.is_successful_payment() is True
 
-    def test_false_when_data_is_empty_but_http_ok(self):
+    def test_true_when_data_is_empty_but_http_ok(self):
         # No _data at all -> falls through to self.success.
         response = BuckarooResponse(make_response(text=""))
 

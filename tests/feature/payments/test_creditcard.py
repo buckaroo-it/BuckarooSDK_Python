@@ -101,6 +101,7 @@ class TestCreditcardFeature:
         response = builder.payEncrypted()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
 
     def test_creditcard_pay_with_security_code(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("creditcard", "PayWithSecurityCode")
@@ -117,6 +118,7 @@ class TestCreditcardFeature:
         response = builder.payWithSecurityCode()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
 
     def test_creditcard_pay_with_token(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("creditcard", "PayWithToken")
@@ -133,6 +135,7 @@ class TestCreditcardFeature:
         response = builder.payWithToken()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
 
     def test_creditcard_pay_recurrent(self, buckaroo, mock_strategy):
         response_body = TestHelpers.success_response({
@@ -167,6 +170,7 @@ class TestCreditcardFeature:
         response = builder.authorizeEncrypted()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
 
     def test_creditcard_authorize_with_token(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("creditcard", "AuthorizeWithToken")
@@ -183,3 +187,4 @@ class TestCreditcardFeature:
         response = builder.authorizeWithToken()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]

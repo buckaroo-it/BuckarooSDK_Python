@@ -34,23 +34,15 @@ class KlarnaKPBuilder(PaymentBuilder):
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """Get the allowed service parameters for Klarna KP payments based on action."""
         
-        if action.lower() in ["pay", "cancelreservation"]:
-            return {
-                "reservationNumber": {"type": str, "required": True, "description": "Klarna KP reservation number"},
-            }
-        
-        if action.lower() == "reserve":
-            return {
-                # "reservationNumber": {"type": str, "required": True, "description": "Klarna KP reservation number"},
-                # "billingCustomer": {"type": list, "required": True, "description": "Billing customer information"},
-                # "shippingCustomer": {"type": list, "required": True, "description": "Shipping customer information"},
-                "operatingCountry": {"type": str, "required": True, "description": "Operating country code"},
-                "article": {"type": list, "required": True, "description": "Klarna KP articles"},
-            }
-
         if action.lower() in ["pay", "cancelreservation", "extendreservation"]:
             return {
                 "reservationNumber": {"type": str, "required": True, "description": "Klarna KP reservation number"},
+            }
+
+        if action.lower() == "reserve":
+            return {
+                "operatingCountry": {"type": str, "required": True, "description": "Operating country code"},
+                "article": {"type": list, "required": True, "description": "Klarna KP articles"},
             }
         
         if action.lower() == "updatereservation":

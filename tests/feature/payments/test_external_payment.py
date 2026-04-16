@@ -5,8 +5,6 @@ import pytest
 from buckaroo.builders.payments.default_builder import DefaultBuilder
 from buckaroo.builders.payments.external_payment_builder import ExternalPaymentBuilder
 from buckaroo.factories.payment_method_factory import PaymentMethodFactory
-from tests.support.mock_request import BuckarooMockRequest
-from tests.support.test_helpers import TestHelpers
 
 
 class TestExternalPaymentFeature:
@@ -35,12 +33,8 @@ class TestExternalPaymentFeature:
         reason="Registry key 'externalPayment' is camelCase but create_builder() "
                "lowercases input, making ExternalPaymentBuilder unreachable",
     )
-    def test_external_payment_pay(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("externalPayment")
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
-        )
-        response = buckaroo.payments.create_payment("externalPayment", {
+    def test_external_payment_pay(self, buckaroo):
+        builder = buckaroo.payments.create_payment("externalPayment", {
             "amount": 10.00,
             "currency": "EUR",
             "description": "Test external payment",
@@ -49,11 +43,6 @@ class TestExternalPaymentFeature:
             "return_url_cancel": "https://example.com/cancel",
             "return_url_error": "https://example.com/error",
             "return_url_reject": "https://example.com/reject",
-        }).pay()
-
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]
-        assert response.currency == "EUR"
-        assert response.amount_debit == 10.00
-        assert response.service_code == "ExternalPayment"
+        })
+        # Should be ExternalPaymentBuilder, but camelCase key makes it DefaultBuilder.
+        assert isinstance(builder, ExternalPaymentBuilder)

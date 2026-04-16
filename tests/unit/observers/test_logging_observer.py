@@ -74,14 +74,10 @@ def test_list_of_dicts_masks_sensitive_key():
 def test_deep_buckaroo_shape_parameters_list():
     """Deep Buckaroo payload: Services.ServiceList[].Parameters[].Name/Value.
 
-    NOTE: the current masker inspects dict KEYS for the ***MASKED*** path
-    and string VALUES for the ***POTENTIALLY_SENSITIVE*** fallback. So in the
-    Parameters-list shape the Name "encryptedCardData" is a *value* — and
-    because that string itself contains the sensitive substring, it gets the
-    POTENTIALLY_SENSITIVE redaction. The actual card data sits under key
-    "Value" — which is not a sensitive key, but the value string "CARD-SECRET"
-    does not contain a sensitive keyword either, so it passes through.
-    This pins current behaviour; gap noted for a future issue.
+    The masker inspects dict KEYS for the ***MASKED*** path and string VALUES
+    for the ***POTENTIALLY_SENSITIVE*** fallback. The Name "encryptedCardData"
+    is a *value* containing a sensitive substring, so it gets POTENTIALLY_SENSITIVE.
+    The "Value" assertion for the card data lives in its own xfail test below.
     """
     obs = _observer()
     payload = {
@@ -103,9 +99,29 @@ def test_deep_buckaroo_shape_parameters_list():
     param = result["Services"]["ServiceList"][0]["Parameters"][0]
     # Name is a value containing a sensitive substring → POTENTIALLY_SENSITIVE.
     assert param["Name"] == "***POTENTIALLY_SENSITIVE***"
-    # Value key is not sensitive; string "CARD-SECRET" contains no sensitive
-    # keyword, so it passes through unredacted.
-    assert param["Value"] == "CARD-SECRET"
+
+
+@pytest.mark.xfail(reason="masker does not recurse into Parameters list values")
+def test_deep_buckaroo_shape_parameters_value_should_be_masked():
+    """The Value field paired with a sensitive Name like 'encryptedCardData'
+    should be masked, but the current masker does not recurse into
+    Parameters list values."""
+    obs = _observer()
+    payload = {
+        "Services": {
+            "ServiceList": [
+                {
+                    "Name": "creditcard",
+                    "Parameters": [
+                        {"Name": "encryptedCardData", "Value": "CARD-SECRET"}
+                    ],
+                }
+            ]
+        },
+    }
+    result = obs._mask_sensitive_data(payload)
+    param = result["Services"]["ServiceList"][0]["Parameters"][0]
+    assert param["Value"] == "***MASKED***"
 
 
 # --- JSON string input ---
@@ -448,6 +464,7 @@ def test_create_logger_passes_through_extra_kwargs(tmp_path):
 
 # --- create_logger_from_env ---
 
+# Kept despite autouse _clean_buckaroo_env — returns monkeypatch for .setenv() chaining in tests.
 @pytest.fixture
 def clean_env(monkeypatch):
     for var in (

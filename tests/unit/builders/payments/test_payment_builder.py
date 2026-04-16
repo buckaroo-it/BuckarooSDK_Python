@@ -657,7 +657,7 @@ def _patch_http_client_post_returning(client, value):
 
 
 def test_post_transaction_returns_empty_payment_response_when_client_returns_none():
-    mock, client = wire_recording_http()
+    _, client = wire_recording_http()
     _patch_http_client_post_returning(client, None)
     builder = populate_required_fields(make_test_builder(client), amount=10.50)
 
@@ -669,7 +669,7 @@ def test_post_transaction_returns_empty_payment_response_when_client_returns_non
 
 
 def test_post_data_request_returns_empty_payment_response_when_client_returns_none():
-    mock, client = wire_recording_http()
+    _, client = wire_recording_http()
     _patch_http_client_post_returning(client, None)
     builder = populate_required_fields(make_test_builder(client), amount=10.50)
 

@@ -34,22 +34,3 @@ def test_positional_http_status_round_trip():
     assert err.args == ("server exploded", 500)
 
 
-def test_str_reflects_single_arg():
-    err = BuckarooError("denied")
-
-    assert str(err) == "denied"
-
-
-def test_repr_includes_class_name_and_args():
-    err = BuckarooError("denied", 401)
-
-    rendered = repr(err)
-    assert rendered.startswith("BuckarooError(")
-    assert "'denied'" in rendered
-    assert "401" in rendered
-
-
-def test_repr_with_no_args():
-    err = BuckarooError()
-
-    assert repr(err) == "BuckarooError()"

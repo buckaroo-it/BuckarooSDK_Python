@@ -103,8 +103,16 @@ class TestAllowedServiceParameters:
     )
     def test_action_matching_is_case_insensitive(self, client, action):
         """The source lowercases ``action`` so alt-cased inputs hit the same branch."""
-        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters(action)
-        assert allowed != {}
+        builder = BuckarooVoucherBuilder(client)
+        allowed = builder.get_allowed_service_parameters(action)
+        canonical_actions = {
+            "pay": "Pay", "PAY": "Pay",
+            "getbalance": "GetBalance", "GETBALANCE": "GetBalance",
+            "deactivatevoucher": "DeactivateVoucher",
+            "createapplication": "CreateApplication", "CREATEAPPLICATION": "CreateApplication",
+        }
+        expected = builder.get_allowed_service_parameters(canonical_actions[action])
+        assert allowed == expected
 
     @pytest.mark.parametrize("action", ["Refund", "Capture", "Authorize", "unknown"])
     def test_unsupported_action_returns_empty_dict(self, client, action):

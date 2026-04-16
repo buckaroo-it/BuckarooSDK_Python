@@ -35,7 +35,7 @@ def test_class_does_not_declare_service_name_attribute():
     ``_serviceName`` on the class — the service name is derived dynamically
     from ``_payload['voucher_name']`` with a ``'Vouchers'`` default.
     """
-    assert not hasattr(VoucherBuilder, "_serviceName")
+    assert "_serviceName" not in VoucherBuilder.__dict__
 
 
 def test_get_service_name_defaults_to_vouchers_when_payload_empty(client):

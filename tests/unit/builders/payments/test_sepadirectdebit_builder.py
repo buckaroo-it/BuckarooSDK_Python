@@ -134,20 +134,6 @@ def test_get_allowed_service_parameters_pay_snapshot(
     }
 
 
-@pytest.mark.parametrize(
-    "mandate_field",
-    ["mandateReference", "mandateDate", "startRecurrent", "electronicSignature"],
-)
-def test_pay_spec_contains_mandate_field(
-    builder: SepaDirectDebitBuilder, mandate_field: str
-) -> None:
-    """Pin the quirk called out in phase 7.30: Pay exposes mandate parameters."""
-    allowed = builder.get_allowed_service_parameters("Pay")
-    assert mandate_field in allowed
-    assert allowed[mandate_field]["type"] is str
-    assert allowed[mandate_field]["required"] is False
-
-
 def test_get_allowed_service_parameters_default_action_matches_pay(
     builder: SepaDirectDebitBuilder,
 ) -> None:

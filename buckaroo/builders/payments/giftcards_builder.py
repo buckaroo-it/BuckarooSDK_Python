@@ -15,19 +15,19 @@ class GiftcardsBuilder(PaymentBuilder):
         """Get the allowed service parameters for Giftcards payments based on action."""
 
         if action.lower() in ["pay"]:
-            if self._payload.get('giftcard_name').lower() == 'fashioncheque':
+            if self._payload.get('giftcard_name', '').lower() == 'fashioncheque':
                 return {
                     "FashionChequeCardNumber": {"type": str, "required": True, "description": "Save payment token for future use"},
                     "FashionChequePIN": {"type": str, "required": True, "description": "Save payment token for future use"},
                 }
             
-            if self._payload.get('giftcard_name').lower() == 'intersolve':
+            if self._payload.get('giftcard_name', '').lower() == 'intersolve':
                 return {
                     "IntersolveCardnumber": {"type": str, "required": True, "description": ""},
                     "IntersolvePIN": {"type": str, "required": True, "description": ""},
                 }
             
-            if self._payload.get('giftcard_name').lower() == 'tcs':
+            if self._payload.get('giftcard_name', '').lower() == 'tcs':
                 return {
                     "TCSCardnumber": {"type": str, "required": True, "description": ""},
                     "TCSValidationCode": {"type": str, "required": True, "description": ""},

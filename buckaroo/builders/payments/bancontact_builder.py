@@ -19,7 +19,7 @@ class BancontactBuilder(PaymentBuilder):
                 "savetoken": {"type": str, "required": False, "description": "Save payment token for future use"},
             }
         
-        if action.lower() in ["payEncrypted", "completePayment"]:
+        if action.lower() in ["payencrypted", "completepayment"]:
             return {
                 "encryptedCardData": {"type": str, "required": True, "description": "Encrypted card data for payment"},
             }

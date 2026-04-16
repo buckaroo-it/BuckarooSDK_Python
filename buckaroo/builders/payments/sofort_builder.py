@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import Dict, Any
 from .payment_builder import PaymentBuilder
 from .capabilities.bank_transfer_capabilities import BankTransferCapabilities
-from ...models.payment_response import PaymentResponse
 
 class SofortBuilder(PaymentBuilder, BankTransferCapabilities):
     """Builder for Sofort payments with bank transfer capabilities."""
@@ -61,17 +60,8 @@ class SofortBuilder(PaymentBuilder, BankTransferCapabilities):
         return self
     
     # Bank transfer capabilities (inherited from BankTransferCapabilities):
-    # - instant_refund() 
-    # - pay_fast_checkout()
-    # 
+    # - instantRefund()
+    # - payFastCheckout()
+    #
     # Standard methods (inherited from PaymentBuilder):
     # - pay(), refund(), capture(), cancel(), execute_action()
-    
-    # Optional: Create aliases with method names for consistency
-    def payFastCheckout(self, validate: bool = True) -> PaymentResponse:
-        """Enable PayFast Checkout for Sofort payments."""
-        return self.pay_fast_checkout(validate=validate)
-    
-    def instantRefund(self, validate: bool = True) -> PaymentResponse:
-        """Initiate an instant refund for Sofort payments."""
-        return self.instant_refund(validate=validate)

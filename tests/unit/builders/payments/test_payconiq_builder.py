@@ -104,40 +104,40 @@ def test_from_dict_without_mobile_number(client):
     assert isinstance(builder, PayconiqBuilder)
 
 
-def test_payconiq_payFastCheckout_alias_is_broken(client):
-    """PayconiqBuilder.payFastCheckout shadows the mixin method and calls
-    self.pay_fast_checkout() which does not exist. This is a source bug."""
+def test_payconiq_payFastCheckout_works(client, mock_strategy):
+    """PayconiqBuilder.payFastCheckout uses the inherited mixin method."""
+    mock_strategy.queue(
+        BuckarooMockRequest.json("POST", "*/json/transaction*",
+            {"Key": "pcq-fc-1", "Status": {"Code": {"Code": 190}}})
+    )
     builder = (
         PayconiqBuilder(client)
-        .currency("EUR")
-        .amount(10.00)
-        .description("Fast checkout")
-        .invoice("INV-FC")
+        .currency("EUR").amount(10.00).description("Fast checkout").invoice("INV-FC")
         .return_url("https://example.test/return")
         .return_url_cancel("https://example.test/cancel")
         .return_url_error("https://example.test/error")
         .return_url_reject("https://example.test/reject")
     )
-    with pytest.raises(AttributeError):
-        builder.payFastCheckout(validate=False)
+    response = builder.payFastCheckout(validate=False)
+    assert response is not None
 
 
-def test_payconiq_instantRefund_alias_is_broken(client):
-    """PayconiqBuilder.instantRefund shadows the mixin method and calls
-    self.instant_refund() which does not exist. This is a source bug."""
+def test_payconiq_instantRefund_works(client, mock_strategy):
+    """PayconiqBuilder.instantRefund uses the inherited mixin method."""
+    mock_strategy.queue(
+        BuckarooMockRequest.json("POST", "*/json/transaction*",
+            {"Key": "pcq-ir-1", "Status": {"Code": {"Code": 190}}})
+    )
     builder = (
         PayconiqBuilder(client)
-        .currency("EUR")
-        .amount(10.00)
-        .description("Instant refund")
-        .invoice("INV-IR")
+        .currency("EUR").amount(10.00).description("Instant refund").invoice("INV-IR")
         .return_url("https://example.test/return")
         .return_url_cancel("https://example.test/cancel")
         .return_url_error("https://example.test/error")
         .return_url_reject("https://example.test/reject")
     )
-    with pytest.raises(AttributeError):
-        builder.instantRefund(validate=False)
+    response = builder.instantRefund(validate=False)
+    assert response is not None
 
 
 def test_pay_end_to_end(client, mock_strategy):

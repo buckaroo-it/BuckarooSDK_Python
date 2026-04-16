@@ -109,13 +109,8 @@ def test_from_dict_without_country_code(client):
     assert result is builder
 
 
-# -- Broken aliases: payFastCheckout / instantRefund on the builder shadow the mixin --
-# SofortBuilder defines payFastCheckout() and instantRefund() that delegate to
-# self.pay_fast_checkout() and self.instant_refund(), which do not exist.
-# These override the working mixin methods, causing AttributeError.
-
-def test_pay_fast_checkout_alias_is_broken(client, mock_strategy):
-    """SofortBuilder.payFastCheckout delegates to non-existent pay_fast_checkout."""
+def test_pay_fast_checkout_works(client, mock_strategy):
+    """SofortBuilder.payFastCheckout uses the inherited mixin method."""
     mock_strategy.queue(
         BuckarooMockRequest.json(
             "POST", "*/json/transaction*",
@@ -130,12 +125,12 @@ def test_pay_fast_checkout_alias_is_broken(client, mock_strategy):
         .return_url_error("https://example.test/error")
         .return_url_reject("https://example.test/reject")
     )
-    with pytest.raises(AttributeError):
-        builder.payFastCheckout()
+    response = builder.payFastCheckout()
+    assert response is not None
 
 
-def test_instant_refund_alias_is_broken(client, mock_strategy):
-    """SofortBuilder.instantRefund delegates to non-existent instant_refund."""
+def test_instant_refund_works(client, mock_strategy):
+    """SofortBuilder.instantRefund uses the inherited mixin method."""
     mock_strategy.queue(
         BuckarooMockRequest.json(
             "POST", "*/json/transaction*",
@@ -150,8 +145,8 @@ def test_instant_refund_alias_is_broken(client, mock_strategy):
         .return_url_error("https://example.test/error")
         .return_url_reject("https://example.test/reject")
     )
-    with pytest.raises(AttributeError):
-        builder.instantRefund()
+    response = builder.instantRefund()
+    assert response is not None
 
 
 # -- End-to-end pay --

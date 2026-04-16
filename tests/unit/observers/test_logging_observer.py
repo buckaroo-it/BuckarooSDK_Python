@@ -101,11 +101,9 @@ def test_deep_buckaroo_shape_parameters_list():
     assert param["Name"] == "***POTENTIALLY_SENSITIVE***"
 
 
-@pytest.mark.xfail(reason="masker does not recurse into Parameters list values")
-def test_deep_buckaroo_shape_parameters_value_should_be_masked():
+def test_deep_buckaroo_shape_parameters_value_is_masked():
     """The Value field paired with a sensitive Name like 'encryptedCardData'
-    should be masked, but the current masker does not recurse into
-    Parameters list values."""
+    is masked via the Name/Value pair detection."""
     obs = _observer()
     payload = {
         "Services": {
@@ -122,6 +120,20 @@ def test_deep_buckaroo_shape_parameters_value_should_be_masked():
     result = obs._mask_sensitive_data(payload)
     param = result["Services"]["ServiceList"][0]["Parameters"][0]
     assert param["Value"] == "***MASKED***"
+
+
+def test_name_value_pair_without_sensitive_name_passes_through():
+    """A dict with Name/Value where Name is not sensitive leaves Value intact."""
+    obs = _observer()
+    result = obs._mask_sensitive_data({"Name": "amount", "Value": "42"})
+    assert result["Value"] == "42"
+
+
+def test_name_value_pair_with_non_string_name_passes_through():
+    """A dict with a non-string Name skips the sensitive pair check."""
+    obs = _observer()
+    result = obs._mask_sensitive_data({"Name": 123, "Value": "data"})
+    assert result["Value"] == "data"
 
 
 # --- JSON string input ---

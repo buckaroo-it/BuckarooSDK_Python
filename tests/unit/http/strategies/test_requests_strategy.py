@@ -305,8 +305,7 @@ class TestRequestExceptionMapping:
 
         assert str(excinfo.value) == "Request timeout after 7 seconds"
 
-    @pytest.mark.xfail(reason="timeout=None should not interpolate literal None")
-    def test_timeout_none_interpolates_literal_none_in_message(self):
+    def test_timeout_none_produces_clean_message(self):
         strategy = RequestsStrategy()
         strategy.session = MagicMock()
         strategy.session.request.side_effect = rs_module.requests.exceptions.Timeout(

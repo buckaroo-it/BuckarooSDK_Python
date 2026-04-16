@@ -103,6 +103,13 @@ class BuckarooLoggingObserver:
         
         return logger
     
+    def _is_sensitive_parameter_pair(self, data: dict) -> bool:
+        """Check if a dict is a Buckaroo Name/Value pair where Name is sensitive."""
+        name_val = data.get("Name", "")
+        if isinstance(name_val, str) and name_val:
+            return any(s in name_val.lower() for s in self._sensitive_fields)
+        return False
+
     def _mask_sensitive_data(self, data: Any) -> Any:
         """
         Recursively mask sensitive data in dictionaries and strings.
@@ -121,6 +128,8 @@ class BuckarooLoggingObserver:
             for key, value in data.items():
                 key_lower = key.lower()
                 if any(sensitive in key_lower for sensitive in self._sensitive_fields):
+                    masked[key] = "***MASKED***"
+                elif key == "Value" and self._is_sensitive_parameter_pair(data):
                     masked[key] = "***MASKED***"
                 else:
                     masked[key] = self._mask_sensitive_data(value)

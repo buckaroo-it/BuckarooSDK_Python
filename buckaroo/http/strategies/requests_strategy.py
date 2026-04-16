@@ -133,7 +133,9 @@ class RequestsStrategy(HttpStrategy):
             )
             
         except requests.exceptions.Timeout:
-            raise Exception(f"Request timeout after {timeout} seconds")
+            if timeout is not None:
+                raise Exception(f"Request timeout after {timeout} seconds")
+            raise Exception("Request timeout")
         except requests.exceptions.ConnectionError:
             raise Exception("Connection error - check your internet connection")
         except requests.exceptions.RequestException as e:

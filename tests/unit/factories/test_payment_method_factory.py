@@ -23,58 +23,35 @@ def client():
     return object()
 
 
-# Unreachable camelCase keys (currently only "externalPayment") are excluded here
-# and covered separately by a strict xfail below.
-_REACHABLE_REGISTRY = {
-    k: v for k, v in PaymentMethodFactory._payment_methods.items() if k == k.lower()
-}
-
-# Tripwire: if a future developer adds another camelCase key to the registry,
-# this test fails and forces them to either lowercase it or explicitly widen
-# the known-unreachable set (and add a matching xfail).
-_KNOWN_UNREACHABLE_CAMELCASE_KEYS = {"externalPayment"}
-
-
-def test_camelcase_registry_keys_are_locked_down():
-    unreachable = {
+# Tripwire: all registry keys must be lowercase so create_builder() can find them.
+def test_all_registry_keys_are_lowercase():
+    non_lowercase = {
         k for k in PaymentMethodFactory._payment_methods if k != k.lower()
     }
-    assert unreachable == _KNOWN_UNREACHABLE_CAMELCASE_KEYS
+    assert non_lowercase == set()
 
 
-@pytest.mark.parametrize("method, builder_class", list(_REACHABLE_REGISTRY.items()))
+@pytest.mark.parametrize(
+    "method, builder_class",
+    list(PaymentMethodFactory._payment_methods.items()),
+)
 def test_create_builder_returns_registered_class_instance(method, builder_class, client):
     builder = PaymentMethodFactory.create_builder(method, client)
     assert isinstance(builder, builder_class)
 
 
-@pytest.mark.parametrize("method, builder_class", list(_REACHABLE_REGISTRY.items()))
+@pytest.mark.parametrize(
+    "method, builder_class",
+    list(PaymentMethodFactory._payment_methods.items()),
+)
 def test_create_builder_returns_payment_builder_subclass(method, builder_class, client):
     builder = PaymentMethodFactory.create_builder(method, client)
     assert isinstance(builder, PaymentBuilder)
 
 
-@pytest.mark.parametrize("method", list(_REACHABLE_REGISTRY.keys()))
+@pytest.mark.parametrize("method", list(PaymentMethodFactory._payment_methods.keys()))
 def test_is_method_supported_true_for_every_registered_method(method):
     assert PaymentMethodFactory.is_method_supported(method) is True
-
-
-@pytest.mark.xfail(
-    reason=(
-        "Registry key 'externalPayment' is camelCase but create_builder() / "
-        "is_method_supported() lowercase input before lookup, making the entry "
-        "unreachable through the public API."
-    ),
-    strict=True,
-)
-def test_mixed_case_registry_key_is_reachable(client):
-    from buckaroo.builders.payments.external_payment_builder import (
-        ExternalPaymentBuilder,
-    )
-
-    assert PaymentMethodFactory.is_method_supported("externalPayment") is True
-    builder = PaymentMethodFactory.create_builder("externalPayment", client)
-    assert isinstance(builder, ExternalPaymentBuilder)
 
 
 def test_get_available_methods_lists_every_registry_key():

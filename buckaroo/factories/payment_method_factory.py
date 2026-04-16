@@ -58,7 +58,7 @@ class PaymentMethodFactory(BuilderFactory):
         "clicktopay": ClickToPayBuilder,
         "creditcard": CreditcardBuilder,
         "default": DefaultBuilder,
-        "externalPayment": ExternalPaymentBuilder,
+        "externalpayment": ExternalPaymentBuilder,
         "eps": EpsBuilder,
         "giftcards": GiftcardsBuilder,
         "googlepay": GooglePayBuilder,

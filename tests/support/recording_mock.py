@@ -92,3 +92,12 @@ def recorded_request(mock: RecordingMock) -> Dict[str, Any]:
 def recorded_action(mock: RecordingMock) -> str:
     """Return the ``Action`` from the single recorded call's first service."""
     return recorded_request(mock)["Services"]["ServiceList"][0]["Action"]
+
+
+def recorded_service_parameters(mock: RecordingMock) -> List[Dict[str, Any]]:
+    """Return the ``Parameters`` list from the single recorded call's first service.
+
+    Each entry is the full Buckaroo shape, i.e.
+    ``{"Name": ..., "GroupType": ..., "GroupID": ..., "Value": ...}``.
+    """
+    return recorded_request(mock)["Services"]["ServiceList"][0].get("Parameters") or []

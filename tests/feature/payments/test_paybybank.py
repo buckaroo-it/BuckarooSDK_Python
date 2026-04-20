@@ -1,5 +1,7 @@
 """Feature test: paybybank pay() and capability methods through full stack with MockBuckaroo."""
 
+from tests.support.mock_request import BuckarooMockRequest
+from tests.support.recording_mock import recorded_action, recorded_service_parameters
 from tests.support.test_helpers import TestHelpers
 
 
@@ -13,6 +15,29 @@ class TestPaybybankFeature:
             payload_overrides={"description": "Test paybybank"},
             service_params={"issuer": "INGBNL2A"},
         )
+
+    def test_paybybank_pay_sends_issuer_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        """service_parameters['issuer'] must reach ServiceList[0].Parameters."""
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST",
+                "*/json/transaction*",
+                TestHelpers.pending_redirect_response("paybybank"),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "paybybank",
+            TestHelpers.standard_payload(
+                invoice="INV-PBB-WIRE",
+                service_parameters={"issuer": "INGBNL2A"},
+            ),
+        ).pay()
+
+        assert recorded_action(recording_mock) == "Pay"
+        params = {p["Name"]: p["Value"] for p in recorded_service_parameters(recording_mock)}
+        assert params.get("Issuer") == "INGBNL2A"
 
     def test_paybybank_refund(self, buckaroo, mock_strategy):
         TestHelpers.assert_refund_returns_success(

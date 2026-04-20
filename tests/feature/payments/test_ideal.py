@@ -1,4 +1,5 @@
 from tests.support.mock_request import BuckarooMockRequest
+from tests.support.recording_mock import recorded_action
 from tests.support.test_helpers import TestHelpers
 
 
@@ -36,3 +37,50 @@ class TestIdealFeature:
         TestHelpers.assert_fast_checkout_returns_pending_with_redirect(
             buckaroo, mock_strategy, method="ideal", invoice="INV-FAST",
         )
+
+    # ------------------------------------------------------------------
+    # Wire-level assertions — verify BankTransferCapabilities mixins
+    # (InstantRefund + FastCheckout) actually put the right Action on
+    # the outgoing request.
+
+    def test_ideal_instant_refund_sends_action_instantrefund_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        """The InstantRefundCapable mixin must put ``Action=instantRefund`` on the wire."""
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*",
+                TestHelpers.success_response({
+                    "Services": [{"Name": "ideal", "Action": "InstantRefund", "Parameters": []}],
+                    "ServiceCode": "ideal",
+                    "AmountCredit": 10.00,
+                    "AmountDebit": None,
+                }),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "ideal",
+            TestHelpers.standard_payload(
+                invoice="INV-IDEAL-WIRE-IREFUND",
+                original_transaction_key="ABC123",
+            ),
+        ).instantRefund()
+
+        assert recorded_action(recording_mock) == "instantRefund"
+
+    def test_ideal_fast_checkout_sends_action_payfastcheckout_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        """The FastCheckoutCapable mixin must put ``Action=payFastCheckout`` on the wire."""
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*",
+                TestHelpers.pending_redirect_response("ideal", "PayFastCheckout"),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "ideal",
+            TestHelpers.standard_payload(invoice="INV-IDEAL-WIRE-FAST"),
+        ).payFastCheckout()
+
+        assert recorded_action(recording_mock) == "payFastCheckout"

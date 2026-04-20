@@ -1,4 +1,5 @@
 from tests.support.mock_request import BuckarooMockRequest
+from tests.support.recording_mock import recorded_action
 from tests.support.test_helpers import TestHelpers
 
 
@@ -127,6 +128,107 @@ class TestCreditcardFeature:
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
+
+    # ------------------------------------------------------------------
+    # Wire-level assertions — verify the Action string on the outgoing
+    # request for each capability mixin. These guard against a builder
+    # that silently routes .refund() through Action="Pay" or similar.
+
+    def test_creditcard_refund_sends_action_refund_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*", TestHelpers.refund_response("creditcard"),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "creditcard",
+            TestHelpers.standard_payload(
+                invoice="INV-CC-WIRE-REFUND",
+                original_transaction_key="ABC123",
+            ),
+        ).refund()
+
+        assert recorded_action(recording_mock) == "Refund"
+
+    def test_creditcard_authorize_sends_action_authorize_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*",
+                TestHelpers.pending_redirect_response("creditcard", "Authorize"),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "creditcard",
+            TestHelpers.standard_payload(invoice="INV-CC-WIRE-AUTH"),
+        ).authorize()
+
+        assert recorded_action(recording_mock) == "Authorize"
+
+    def test_creditcard_capture_sends_action_capture_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*",
+                TestHelpers.success_response({
+                    "Services": [{"Name": "creditcard", "Action": "Capture", "Parameters": []}],
+                    "ServiceCode": "creditcard",
+                }),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "creditcard",
+            TestHelpers.standard_payload(
+                invoice="INV-CC-WIRE-CAP",
+                original_transaction_key="ABC123",
+            ),
+        ).capture()
+
+        assert recorded_action(recording_mock) == "Capture"
+
+    def test_creditcard_cancel_authorize_sends_action_cancelauthorize_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*",
+                TestHelpers.success_response({
+                    "Services": [{"Name": "creditcard", "Action": "CancelAuthorize", "Parameters": []}],
+                    "ServiceCode": "creditcard",
+                }),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "creditcard",
+            TestHelpers.standard_payload(
+                invoice="INV-CC-WIRE-CANCEL",
+                original_transaction_key="ABC123",
+            ),
+        ).cancelAuthorize()
+
+        assert recorded_action(recording_mock) == "CancelAuthorize"
+
+    def test_creditcard_pay_encrypted_sends_action_payencrypted_on_the_wire(
+        self, recording_buckaroo, recording_mock
+    ):
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST", "*/json/transaction*",
+                TestHelpers.pending_redirect_response("creditcard", "PayEncrypted"),
+            )
+        )
+        builder = recording_buckaroo.payments.create_payment(
+            "creditcard",
+            TestHelpers.standard_payload(invoice="INV-CC-WIRE-ENC"),
+        )
+        builder.add_parameter("EncryptedCardData", "encrypted-data-here")
+        builder.payEncrypted()
+
+        assert recorded_action(recording_mock) == "PayEncrypted"
 
     def test_creditcard_authorize_with_token(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("creditcard", "AuthorizeWithToken")

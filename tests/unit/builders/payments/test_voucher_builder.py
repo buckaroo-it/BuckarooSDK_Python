@@ -34,8 +34,7 @@ def test_get_service_name_defaults_to_vouchers_when_payload_empty(client):
 
 
 def test_get_service_name_reads_voucher_name_from_payload(client):
-    builder = VoucherBuilder(client)
-    builder._payload["voucher_name"] = "CustomVoucher"
+    builder = VoucherBuilder(client).from_dict({"voucher_name": "CustomVoucher"})
     assert builder.get_service_name() == "CustomVoucher"
 
 

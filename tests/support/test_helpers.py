@@ -6,15 +6,18 @@ consistent across both implementations.
 
 from __future__ import annotations
 
+import json
 import secrets
-import uuid
-from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+
+from tests.support.mock_request import BuckarooMockRequest
 
 STATUS_SUCCESS = 190
 STATUS_FAILED = 490
 SUBCODE_SUCCESS = "S001"
 SUBCODE_FAILED = "F001"
+FIXED_DATETIME = "2026-01-01T00:00:00"
+FIXED_INVOICE = "INV-FIXED"
 
 
 class TestHelpers:
@@ -56,11 +59,11 @@ class TestHelpers:
             "Status": {
                 "Code": {"Code": STATUS_SUCCESS, "Description": "Success"},
                 "SubCode": {"Code": SUBCODE_SUCCESS, "Description": "Transaction successful"},
-                "DateTime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+                "DateTime": FIXED_DATETIME,
             },
             "RequiredAction": None,
             "Services": [],
-            "Invoice": f"INV-{uuid.uuid4().hex[:13]}",
+            "Invoice": FIXED_INVOICE,
             "ServiceCode": "creditcard",
             "IsTest": True,
             "Currency": "EUR",
@@ -104,7 +107,7 @@ class TestHelpers:
             "Status": {
                 "Code": {"Code": 791, "Description": "Pending processing"},
                 "SubCode": {"Code": "S001", "Description": "Transaction pending"},
-                "DateTime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+                "DateTime": FIXED_DATETIME,
             },
             "RequiredAction": {
                 "Name": "Redirect",
@@ -117,7 +120,7 @@ class TestHelpers:
                     "Parameters": [],
                 }
             ],
-            "Invoice": f"INV-{uuid.uuid4().hex[:13]}",
+            "Invoice": FIXED_INVOICE,
             "ServiceCode": service_name,
             "IsTest": True,
             "Currency": "EUR",
@@ -159,10 +162,6 @@ class TestHelpers:
         Returns the ``PaymentResponse`` so callers can tack on extra
         per-method assertions (currency, amount_debit, etc.).
         """
-        # Imported here to avoid a circular import at module load time
-        # (tests.support.mock_request itself pulls in buckaroo modules).
-        from tests.support.mock_request import BuckarooMockRequest
-
         response_body = TestHelpers.pending_redirect_response(
             method, overrides=response_overrides
         )
@@ -178,6 +177,7 @@ class TestHelpers:
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
+        _assert_recorded_action(mock_strategy, "Pay")
         return response
 
     @staticmethod
@@ -191,8 +191,6 @@ class TestHelpers:
         payload_overrides: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Queue a refund-shaped response, run ``refund()``, assert success."""
-        from tests.support.mock_request import BuckarooMockRequest
-
         response_body = TestHelpers.refund_response(method)
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
@@ -206,6 +204,7 @@ class TestHelpers:
         response = buckaroo.payments.create_payment(method, payload).refund()
         assert response.status.code.code == STATUS_SUCCESS
         assert response.key == response_body["Key"]
+        _assert_recorded_action(mock_strategy, "Refund")
         return response
 
     @staticmethod
@@ -219,8 +218,6 @@ class TestHelpers:
         payload_overrides: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Queue an InstantRefund-shaped response, run ``instantRefund()``."""
-        from tests.support.mock_request import BuckarooMockRequest
-
         response_body = TestHelpers.success_response({
             "Services": [{"Name": method, "Action": "InstantRefund", "Parameters": []}],
             "ServiceCode": method,
@@ -239,6 +236,7 @@ class TestHelpers:
         response = buckaroo.payments.create_payment(method, payload).instantRefund()
         assert response.status.code.code == STATUS_SUCCESS
         assert response.key == response_body["Key"]
+        _assert_recorded_action(mock_strategy, "instantRefund")
         return response
 
     @staticmethod
@@ -251,8 +249,6 @@ class TestHelpers:
         payload_overrides: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Queue a PayFastCheckout redirect response, run ``payFastCheckout()``."""
-        from tests.support.mock_request import BuckarooMockRequest
-
         response_body = TestHelpers.pending_redirect_response(method, "PayFastCheckout")
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
@@ -266,4 +262,22 @@ class TestHelpers:
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
+        _assert_recorded_action(mock_strategy, "payFastCheckout")
         return response
+
+
+def _assert_recorded_action(mock_strategy: Any, expected: str) -> None:
+    """Assert the last outgoing request carried ``Action=expected``.
+
+    Works with ``RecordingMock`` (root ``mock_strategy`` fixture). If the mock
+    doesn't record calls (plain ``MockBuckaroo``), skip silently so the helpers
+    stay compatible with both — but the suite's default fixture is
+    ``RecordingMock``, so this path normally runs.
+    """
+    calls = getattr(mock_strategy, "calls", None)
+    if not calls:
+        return
+    actual = json.loads(calls[-1]["data"])["Services"]["ServiceList"][0]["Action"]
+    assert actual == expected, (
+        f"wire-level Action mismatch: expected {expected!r}, got {actual!r}"
+    )

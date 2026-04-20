@@ -1,5 +1,6 @@
 """Smoke test verifying feature test fixtures work end-to-end."""
 
+from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.test_helpers import TestHelpers
 
@@ -15,7 +16,7 @@ class TestFeatureFixturesSmoke:
             "description": "Smoke test",
             "invoice": "SMOKE-001",
         })
-        assert builder is not None
+        assert isinstance(builder, PaymentBuilder)
 
     def test_mock_strategy_intercepts_pay_call(self, buckaroo, mock_strategy):
         """Queued mock is consumed by builder.pay()."""
@@ -32,7 +33,7 @@ class TestFeatureFixturesSmoke:
             description="Smoke test",
         ))
         result = builder.pay()
-        assert result is not None
+        assert result.key == response_body["Key"]
 
     def test_pending_redirect_response_helper(self):
         """pending_redirect_response builds a valid Buckaroo response shape."""

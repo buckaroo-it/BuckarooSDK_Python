@@ -60,14 +60,14 @@ class TestMalformedResponse:
         with pytest.raises(BuckarooApiError, match="Failed to parse Buckaroo response JSON"):
             BuckarooResponse(http_resp)
 
-    def test_empty_response_does_not_raise(self):
+    @pytest.mark.parametrize("text", ["", "   ", "\n"])
+    def test_empty_response_does_not_raise(self, text):
         """Empty or whitespace-only body is treated as empty dict, no error."""
-        for text in ["", "   ", "\n"]:
-            http_resp = HttpResponse(
-                status_code=200,
-                headers={},
-                text=text,
-                success=True,
-            )
-            resp = BuckarooResponse(http_resp)
-            assert resp.data == {}
+        http_resp = HttpResponse(
+            status_code=200,
+            headers={},
+            text=text,
+            success=True,
+        )
+        resp = BuckarooResponse(http_resp)
+        assert resp.data == {}

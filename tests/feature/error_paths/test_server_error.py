@@ -1,4 +1,4 @@
-"""Tests for HTTP 500 server error handling."""
+"""Tests for HTTP 5xx server error handling."""
 
 import pytest
 
@@ -7,36 +7,47 @@ from tests.support.mock_request import BuckarooMockRequest
 from tests.support.test_helpers import TestHelpers
 
 
+def _error_body():
+    return {
+        "Status": {
+            "Code": {"Code": 492, "Description": "Technical failure"},
+            "SubCode": None,
+            "DateTime": "2024-01-01T00:00:00",
+        },
+    }
+
+
 class TestServerError:
-    """Verify that 500 responses raise BuckarooApiError with response attached."""
+    """Verify that 5xx responses raise BuckarooApiError with response attached."""
 
-    def test_500_response_raises_api_error(self, buckaroo, mock_strategy):
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", {
-            "Status": {
-                "Code": {"Code": 492, "Description": "Technical failure"},
-                "SubCode": None,
-                "DateTime": "2024-01-01T00:00:00",
-            },
-        }, status=500))
+    @pytest.mark.parametrize(
+        "status,body,invoice",
+        [
+            (500, _error_body(), "TEST-500"),
+            (502, {}, "TEST-502"),
+        ],
+    )
+    def test_5xx_response_raises_api_error(
+        self, buckaroo, mock_strategy, status, body, invoice
+    ):
+        mock_strategy.queue(
+            BuckarooMockRequest.json("POST", "*/json/transaction", body, status=status)
+        )
 
-        with pytest.raises(BuckarooApiError, match="500") as exc_info:
+        with pytest.raises(BuckarooApiError, match=str(status)) as exc_info:
             buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
-                invoice="TEST-500",
-                description="Server error test",
+                invoice=invoice,
+                description=f"Server error {status} test",
             )).pay()
 
         err = exc_info.value
-        assert err.status_code == 500
+        assert err.status_code == status
         assert err.response is not None
 
     def test_500_response_is_not_successful(self, buckaroo, mock_strategy):
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", {
-            "Status": {
-                "Code": {"Code": 492, "Description": "Technical failure"},
-                "SubCode": None,
-                "DateTime": "2024-01-01T00:00:00",
-            },
-        }, status=500))
+        mock_strategy.queue(
+            BuckarooMockRequest.json("POST", "*/json/transaction", _error_body(), status=500)
+        )
 
         with pytest.raises(BuckarooApiError) as exc_info:
             buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
@@ -46,13 +57,3 @@ class TestServerError:
 
         assert exc_info.value.response.success is False
         assert exc_info.value.response.status_code == 500
-
-    def test_502_gateway_error(self, buckaroo, mock_strategy):
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", {}, status=502))
-
-        with pytest.raises(BuckarooApiError, match="502"):
-            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
-                invoice="TEST-502",
-                amount=5.00,
-                description="Gateway error test",
-            )).pay()

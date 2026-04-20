@@ -60,8 +60,10 @@ class TestCreateSolution:
     def test_falsy_params_skip_from_dict(self, service, params):
         builder = service.create_solution("subscription", params)
         assert isinstance(builder, SubscriptionBuilder)
-        # couples to BaseBuilder._payload — stable internal contract
-        assert builder._payload == {}
+        # Falsy params must not populate any fields; request dict shows it.
+        req = builder.build("Pay", validate=False).to_dict()
+        assert req["Currency"] is None
+        assert req["AmountDebit"] is None
 
     def test_unknown_method_returns_default_builder_and_logs_warning(
         self, service, caplog
@@ -95,11 +97,22 @@ class TestCreateAutoDetect:
     """``create(payload)`` — method auto-detection routing for solutions."""
 
     def test_detects_from_explicit_method_key(self, service):
-        payload = {"method": "subscription", "currency": "EUR"}
+        payload = {
+            "method": "subscription",
+            "currency": "EUR",
+            "amount": 3.5,
+            "description": "autodetect sub",
+            "invoice": "INV-SUB",
+            "return_url": "https://ex/ok",
+            "return_url_cancel": "https://ex/cancel",
+            "return_url_error": "https://ex/error",
+            "return_url_reject": "https://ex/reject",
+        }
         builder = service.create(payload)
         assert isinstance(builder, SubscriptionBuilder)
-        # couples to BaseBuilder._payload — stable internal contract
-        assert builder._payload == payload
+        req = builder.build("Pay", validate=False).to_dict()
+        assert req["Currency"] == "EUR"
+        assert req["AmountDebit"] == 3.5
 
     def test_method_key_is_case_insensitive(self, service):
         builder = service.create({"method": "SUBSCRIPTION"})
@@ -112,13 +125,21 @@ class TestCreateAutoDetect:
         assert any("Unsupported payment method" in r.message for r in caplog.records)
 
     def test_payload_without_method_key_uses_default_builder(self, service):
-        payload = {"currency": "EUR", "amount": 1.0}
+        payload = {
+            "currency": "EUR",
+            "amount": 1.0,
+            "description": "no method",
+            "invoice": "INV-NM",
+            "return_url": "https://ex/ok",
+            "return_url_cancel": "https://ex/cancel",
+            "return_url_error": "https://ex/error",
+            "return_url_reject": "https://ex/reject",
+        }
         builder = service.create(payload)
         assert isinstance(builder, DefaultBuilder)
-        # couples to BaseBuilder._currency / _amount_debit / _payload — stable internal contract
-        assert builder._currency == "EUR"
-        assert builder._amount_debit == 1.0
-        assert builder._payload == payload
+        req = builder.build("Pay", validate=False).to_dict()
+        assert req["Currency"] == "EUR"
+        assert req["AmountDebit"] == 1.0
 
 
 class TestFactoryDelegation:

@@ -34,8 +34,7 @@ def test_get_service_name_defaults_to_unknown(client: BuckarooClient) -> None:
 
 
 def test_get_service_name_reads_method_from_payload(client: BuckarooClient) -> None:
-    builder = DefaultBuilder(client)
-    builder._payload["method"] = "CustomSolution"
+    builder = DefaultBuilder(client).from_dict({"method": "CustomSolution"})
     assert builder.get_service_name() == "CustomSolution"
 
 

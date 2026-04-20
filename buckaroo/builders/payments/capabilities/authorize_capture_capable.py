@@ -72,9 +72,9 @@ class AuthorizeCaptureCapable:
 
         request_data['OriginalTransactionKey'] = txn_key
 
-        # Buckaroo API requires AmountCredit for cancel-authorize, not AmountDebit
-        if 'AmountDebit' in request_data:
-            request_data['AmountCredit'] = request_data.pop('AmountDebit')
+        # PaymentRequest.to_dict always writes AmountDebit; swap to AmountCredit
+        # since Buckaroo expects AmountCredit for cancel-authorize.
+        request_data['AmountCredit'] = request_data.pop('AmountDebit')
 
         return self._post_transaction(request_data)
 

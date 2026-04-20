@@ -19,10 +19,7 @@ from buckaroo.builders.base_builder import BaseBuilder
 from buckaroo.exceptions._parameter_validation_error import (
     ParameterValidationError,
 )
-from tests.support.builders import (
-    populate_required_fields,
-    strip_amount_debit_from_build,
-)
+from tests.support.builders import populate_required_fields
 
 
 # ---------------------------------------------------------------------------
@@ -679,37 +676,6 @@ def test_from_dict_ignores_client_ip_of_unsupported_type():
     request = builder.build(validate=False).to_dict()
     # Falls through to PaymentRequest's default.
     assert request["ClientIP"] == {"Type": 0, "Address": "0.0.0.0"}
-
-
-def test_refund_full_without_amount_debit_in_request_is_a_noop_swap():
-    """Covers the ``else`` branch where ``AmountDebit`` was never in the dict."""
-    client, http = _client_returning({})
-    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
-    builder.from_dict({"original_transaction_key": "TXN-X"})
-    strip_amount_debit_from_build(builder)
-
-    builder.refund()
-
-    _, sent = http.calls[0]
-    assert sent["OriginalTransactionKey"] == "TXN-X"
-    assert "AmountDebit" not in sent
-    assert "AmountCredit" not in sent
-
-
-def test_refund_partial_without_amount_debit_in_request_skips_delete():
-    """Covers the ``if 'AmountDebit' in request_data`` False branch on the partial path."""
-    client, http = _client_returning({})
-    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
-    builder.from_dict(
-        {"original_transaction_key": "TXN-Y", "refund_amount": 2.5}
-    )
-    strip_amount_debit_from_build(builder)
-
-    builder.refund()
-
-    _, sent = http.calls[0]
-    assert sent["AmountCredit"] == 2.5
-    assert "AmountDebit" not in sent
 
 
 def test_build_with_strict_validation_raises_on_unknown_parameter():

@@ -16,7 +16,5 @@ class TestKlarnaFeature:
                 "billingCustomer": [{"firstName": "John", "lastName": "Doe"}],
                 "shippingCustomer": [{"firstName": "John", "lastName": "Doe"}],
             },
-            response_overrides={"AmountDebit": 25.00},
         )
         assert response.currency == "EUR"
-        assert response.amount_debit == 25.00

@@ -18,7 +18,6 @@ from buckaroo.http.client import BuckarooApiError
 from tests.support.builders import (
     make_test_builder,
     populate_required_fields,
-    strip_amount_debit_from_build,
 )
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.recording_mock import recorded_request, wire_recording_http
@@ -415,45 +414,6 @@ def test_refund_full_swaps_debit_to_credit_and_adds_transaction_key():
     sent = recorded_request(mock)
     assert sent["OriginalTransactionKey"] == "TXN-123"
     assert sent["AmountCredit"] == 10.50
-    assert "AmountDebit" not in sent
-    mock.assert_all_consumed()
-
-
-def test_refund_full_without_amount_debit_skips_swap():
-    """Covers the ``if 'AmountDebit' in request_data`` False branch on the full-refund path."""
-    mock, client = wire_recording_http()
-    mock.queue(
-        BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "R-F"})
-    )
-    builder = populate_required_fields(make_test_builder(client), amount=10.50)
-    builder.from_dict({"original_transaction_key": "TXN-X"})
-    strip_amount_debit_from_build(builder)
-
-    builder.refund(validate=False)
-
-    sent = recorded_request(mock)
-    assert sent["OriginalTransactionKey"] == "TXN-X"
-    assert "AmountDebit" not in sent
-    assert "AmountCredit" not in sent
-    mock.assert_all_consumed()
-
-
-def test_refund_partial_without_amount_debit_skips_delete():
-    """Covers the partial-refund ``if 'AmountDebit' in request_data`` False branch."""
-    mock, client = wire_recording_http()
-    mock.queue(
-        BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "R-P"})
-    )
-    builder = populate_required_fields(make_test_builder(client), amount=10.50)
-    builder.from_dict(
-        {"original_transaction_key": "TXN-Y", "refund_amount": 2.5}
-    )
-    strip_amount_debit_from_build(builder)
-
-    builder.refund(validate=False)
-
-    sent = recorded_request(mock)
-    assert sent["AmountCredit"] == 2.5
     assert "AmountDebit" not in sent
     mock.assert_all_consumed()
 

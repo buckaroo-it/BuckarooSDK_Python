@@ -33,8 +33,7 @@ def test_get_service_name_defaults_to_giftcards_when_payload_empty(client):
 
 
 def test_get_service_name_reads_giftcard_name_from_payload(client):
-    builder = GiftcardsBuilder(client)
-    builder._payload["giftcard_name"] = "fashioncheque"
+    builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "fashioncheque"})
     assert builder.get_service_name() == "fashioncheque"
 
 
@@ -46,8 +45,7 @@ def test_get_allowed_service_parameters_empty_payload_returns_default(client):
 
 
 def test_get_allowed_service_parameters_pay_fashioncheque_snapshot(client):
-    builder = GiftcardsBuilder(client)
-    builder._payload["giftcard_name"] = "fashioncheque"
+    builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "fashioncheque"})
     assert builder.get_allowed_service_parameters("Pay") == {
         "FashionChequeCardNumber": {
             "type": str,
@@ -63,8 +61,7 @@ def test_get_allowed_service_parameters_pay_fashioncheque_snapshot(client):
 
 
 def test_get_allowed_service_parameters_pay_intersolve_snapshot(client):
-    builder = GiftcardsBuilder(client)
-    builder._payload["giftcard_name"] = "intersolve"
+    builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "intersolve"})
     assert builder.get_allowed_service_parameters("Pay") == {
         "IntersolveCardnumber": {"type": str, "required": True, "description": ""},
         "IntersolvePIN": {"type": str, "required": True, "description": ""},
@@ -72,8 +69,7 @@ def test_get_allowed_service_parameters_pay_intersolve_snapshot(client):
 
 
 def test_get_allowed_service_parameters_pay_tcs_snapshot(client):
-    builder = GiftcardsBuilder(client)
-    builder._payload["giftcard_name"] = "tcs"
+    builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "tcs"})
     assert builder.get_allowed_service_parameters("Pay") == {
         "TCSCardnumber": {"type": str, "required": True, "description": ""},
         "TCSValidationCode": {"type": str, "required": True, "description": ""},
@@ -82,8 +78,7 @@ def test_get_allowed_service_parameters_pay_tcs_snapshot(client):
 
 def test_get_allowed_service_parameters_pay_default_branch_snapshot(client):
     """Unknown ``giftcard_name`` values fall through to the generic spec."""
-    builder = GiftcardsBuilder(client)
-    builder._payload["giftcard_name"] = "other"
+    builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "other"})
     assert builder.get_allowed_service_parameters("Pay") == {
         "Cardnumber": {"type": str, "required": True, "description": ""},
         "PIN": {"type": str, "required": True, "description": ""},
@@ -94,8 +89,7 @@ def test_get_allowed_service_parameters_pay_default_branch_snapshot(client):
 
 def test_get_allowed_service_parameters_is_case_insensitive_for_pay(client):
     """Source lower-cases the action; ``'pay'`` and ``'Pay'`` must match."""
-    builder = GiftcardsBuilder(client)
-    builder._payload["giftcard_name"] = "other"
+    builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "other"})
     assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters("Pay")
 
 
@@ -118,7 +112,7 @@ def test_pay_dispatches_giftcards_service_through_mock_buckaroo():
     )
 
     builder = populate_required_fields(GiftcardsBuilder(client), amount=10.50)
-    builder._payload["giftcard_name"] = "fashioncheque"
+    builder.from_dict({"giftcard_name": "fashioncheque"})
 
     response = builder.pay(validate=False)
 

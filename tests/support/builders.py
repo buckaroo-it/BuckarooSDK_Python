@@ -95,28 +95,3 @@ def populate_required_fields(
         .return_url_error(return_url_error)
         .return_url_reject(return_url_reject)
     )
-
-
-def strip_amount_debit_from_build(builder):
-    """Wrap ``builder.build`` so the resulting ``to_dict()`` omits ``AmountDebit``.
-
-    Used to exercise the ``if 'AmountDebit' in request_data`` False branch on
-    refund paths. The underlying ``PaymentRequest`` serializer always writes
-    the key, so post-hoc removal is the minimal way to reach that branch.
-    """
-    real_build = builder.build
-
-    def _build(*args, **kwargs):
-        req = real_build(*args, **kwargs)
-        original_to_dict = req.to_dict
-
-        def _to_dict():
-            d = original_to_dict()
-            d.pop("AmountDebit", None)
-            return d
-
-        req.to_dict = _to_dict
-        return req
-
-    builder.build = _build
-    return builder

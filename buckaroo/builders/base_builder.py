@@ -393,14 +393,12 @@ class BaseBuilder(ABC):
         # Set refund amount if specified, otherwise use original amount
         if refund_amount is not None:
             request_data['AmountCredit'] = refund_amount
-            # Remove debit amount for refunds
-            if 'AmountDebit' in request_data:
-                del request_data['AmountDebit']
+            # PaymentRequest.to_dict always writes AmountDebit; strip it for refunds
+            del request_data['AmountDebit']
         else:
             # Full refund - swap debit to credit
-            if 'AmountDebit' in request_data:
-                request_data['AmountCredit'] = request_data['AmountDebit']
-                del request_data['AmountDebit']
+            request_data['AmountCredit'] = request_data['AmountDebit']
+            del request_data['AmountDebit']
         
         return self._post_transaction(request_data)
     

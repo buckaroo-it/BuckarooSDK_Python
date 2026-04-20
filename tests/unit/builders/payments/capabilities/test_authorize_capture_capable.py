@@ -163,34 +163,6 @@ class TestCancelAuthorize:
 
         assert recorded_action(mock) == "CancelAuthorize"
 
-    def test_cancel_authorize_without_amount_debit_leaves_request_unswapped(self):
-        """If the built request lacks AmountDebit, no swap happens."""
-        mock, client = wire_recording_http()
-        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {}))
-        builder = _ready_builder(client)
-
-        original_build = builder.build
-
-        class _NoDebit:
-            def __init__(self, underlying):
-                self._underlying = underlying
-
-            def to_dict(self):
-                d = self._underlying.to_dict()
-                d.pop("AmountDebit", None)
-                return d
-
-        def _build(action="Pay", validate=True, strict_validation=False):
-            return _NoDebit(original_build(action, validate, strict_validation))
-
-        builder.build = _build
-
-        builder.cancelAuthorize(original_transaction_key="abc", validate=False)
-
-        body = recorded_request(mock)
-        assert "AmountDebit" not in body
-        assert "AmountCredit" not in body
-
     def test_cancel_authorize_when_both_amounts_present_debit_replaces_credit(self):
         """When AmountDebit AND a pre-existing AmountCredit both appear on the
         built request, the swap clobbers AmountCredit with the old debit value.

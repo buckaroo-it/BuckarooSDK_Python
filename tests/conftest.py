@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.support.mock_buckaroo import MockBuckaroo
+from tests.support.recording_mock import RecordingMock
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -15,8 +15,11 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture
 def mock_strategy(request):
-    """Fresh :class:`MockBuckaroo` per test, asserts-consumed on clean teardown."""
-    mock = MockBuckaroo()
+    """Fresh :class:`RecordingMock` per test — records outgoing calls so feature
+    helpers can assert the wire-level ``Action``. Subclass of ``MockBuckaroo`` so
+    it's a drop-in wherever the old fixture was used.
+    """
+    mock = RecordingMock()
     yield mock
     rep_call = getattr(request.node, "rep_call", None)
     if rep_call is not None and rep_call.failed:

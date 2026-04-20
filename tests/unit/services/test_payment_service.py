@@ -65,8 +65,9 @@ class TestCreatePayment:
     def test_falsy_params_skip_from_dict(self, service, params, method, expected_cls):
         builder = service.create_payment(method, params)
         assert isinstance(builder, expected_cls)
-        # couples to BaseBuilder._payload — stable internal contract
-        assert builder._payload == {}
+        # Falsy params must not populate required fields; build() surfaces that.
+        with pytest.raises(ValueError, match="Missing required fields"):
+            builder.build("Pay", validate=False)
 
     def test_unknown_method_returns_default_builder_and_logs_warning(
         self, service, caplog
@@ -81,21 +82,39 @@ class TestCreateAutoDetect:
     """``create(payload)`` — method auto-detection routing."""
 
     def test_detects_from_explicit_method_key(self, service):
-        payload = {"method": "ideal", "amount": 5.0}
+        payload = {
+            "method": "ideal",
+            "amount": 5.0,
+            "currency": "EUR",
+            "description": "autodetect",
+            "invoice": "INV-AD",
+            "return_url": "https://ex/ok",
+            "return_url_cancel": "https://ex/cancel",
+            "return_url_error": "https://ex/error",
+            "return_url_reject": "https://ex/reject",
+        }
         builder = service.create(payload)
         assert isinstance(builder, IdealBuilder)
-        # couples to BaseBuilder._payload — stable internal contract
-        assert builder._payload == payload
+        req = builder.build("Pay", validate=False).to_dict()
+        assert req["AmountDebit"] == 5.0
+        assert req["Currency"] == "EUR"
 
     def test_detects_from_services_service_list(self, service):
         payload = {
             "Services": {"ServiceList": [{"Name": "creditcard"}]},
             "amount": 7.0,
+            "currency": "EUR",
+            "description": "autodetect",
+            "invoice": "INV-AD",
+            "return_url": "https://ex/ok",
+            "return_url_cancel": "https://ex/cancel",
+            "return_url_error": "https://ex/error",
+            "return_url_reject": "https://ex/reject",
         }
         builder = service.create(payload)
         assert isinstance(builder, CreditcardBuilder)
-        # couples to BaseBuilder._payload — stable internal contract
-        assert builder._payload == payload
+        req = builder.build("Pay", validate=False).to_dict()
+        assert req["AmountDebit"] == 7.0
 
     def test_empty_payload_falls_back_to_default_and_warns(self, service, caplog):
         with caplog.at_level(logging.WARNING):

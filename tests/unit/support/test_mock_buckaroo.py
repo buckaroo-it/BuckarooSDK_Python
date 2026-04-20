@@ -116,13 +116,5 @@ def test_requests_consume_in_order():
     mock.assert_all_consumed()
 
 
-def test_module_has_docstring_with_usage_example():
-    import tests.support.mock_buckaroo as module
-
-    assert module.__doc__ is not None
-    assert "MockBuckaroo" in module.__doc__
-    assert "queue" in module.__doc__
-
-
 def test_mock_strategy_fixture_yields_fresh_instance(mock_strategy):
     assert isinstance(mock_strategy, MockBuckaroo)

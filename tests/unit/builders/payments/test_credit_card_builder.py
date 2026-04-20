@@ -14,12 +14,6 @@ Covers the three quirks specific to this builder:
 
 from __future__ import annotations
 
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
 from buckaroo.builders.payments.credit_card_builder import CreditcardBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
@@ -43,12 +37,6 @@ class TestConstruction:
 
     def test_service_name_class_constant_is_creditcard(self):
         assert CreditcardBuilder._serviceName == "creditcard"
-
-    def test_is_encrypted_pay_capable(self):
-        assert issubclass(CreditcardBuilder, EncryptedPayCapable)
-
-    def test_is_authorize_capture_capable(self):
-        assert issubclass(CreditcardBuilder, AuthorizeCaptureCapable)
 
 
 # ---------------------------------------------------------------------------

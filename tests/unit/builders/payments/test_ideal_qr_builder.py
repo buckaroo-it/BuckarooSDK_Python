@@ -102,6 +102,15 @@ def test_get_allowed_service_parameters_unsupported_action_returns_empty(client)
     assert IdealQrBuilder(client).get_allowed_service_parameters("Refund") == {}
 
 
+def test_required_fields_is_callable_not_property(client):
+    """IdealQr overrides ``BaseBuilder.required_fields`` as a method; passing an
+    explicit ``"Pay"`` action must return a dict that includes ``currency``.
+    Pins the regression from phase-4 where a property shadow swallowed the arg."""
+    fields = IdealQrBuilder(client).required_fields("Pay")
+    assert isinstance(fields, dict)
+    assert "currency" in fields
+
+
 def test_required_fields_omits_amount_debit(client):
     """IdealQr overrides ``required_fields`` to drop ``amount_debit`` since
     QR flows carry the amount in service parameters instead."""

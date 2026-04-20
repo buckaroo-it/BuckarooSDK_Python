@@ -11,21 +11,6 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.multibanco_builder import MultibancoBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
@@ -84,40 +69,6 @@ def test_get_allowed_service_parameters_defaults_to_pay_and_returns_empty(client
     builder = MultibancoBuilder(client)
 
     assert builder.get_allowed_service_parameters() == {}
-
-
-# ---------------------------------------------------------------------------
-# Capability mixin sanity — Multibanco mixes in nothing
-
-
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-    ids=lambda c: c.__name__,
-)
-def test_multibanco_builder_does_not_inherit_capability_mixin(capability):
-    assert not issubclass(MultibancoBuilder, capability), (
-        f"MultibancoBuilder unexpectedly inherits {capability.__name__}; "
-        "Multibanco does not support that capability per the SDK spec."
-    )
-
-
-@pytest.mark.parametrize(
-    "method",
-    ["pay", "refund", "capture", "cancel", "build", "execute_action"],
-)
-def test_base_builder_methods_present_and_callable(client, method):
-    """MultibancoBuilder inherits every generic action from BaseBuilder."""
-    builder = MultibancoBuilder(client)
-
-    assert hasattr(builder, method)
-    assert callable(getattr(builder, method))
 
 
 # ---------------------------------------------------------------------------

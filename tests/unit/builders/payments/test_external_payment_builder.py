@@ -12,21 +12,6 @@ from __future__ import annotations
 import pytest
 
 from buckaroo._buckaroo_client import BuckarooClient
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.external_payment_builder import ExternalPaymentBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.models.payment_response import PaymentResponse
@@ -74,28 +59,15 @@ def test_get_allowed_service_parameters_defaults_to_pay(
     assert builder.get_allowed_service_parameters() == {}
 
 
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-)
-def test_does_not_mix_in_any_capability(capability: type) -> None:
-    assert not issubclass(ExternalPaymentBuilder, capability)
-
-
-@pytest.mark.parametrize(
-    "method_name", ["pay", "refund", "capture", "cancel", "execute_action", "build"]
-)
-def test_base_builder_methods_are_present_and_callable(
-    builder: ExternalPaymentBuilder, method_name: str
+def test_get_allowed_service_parameters_overrides_base_stub(
+    builder: ExternalPaymentBuilder,
 ) -> None:
-    assert hasattr(builder, method_name)
-    assert callable(getattr(builder, method_name))
+    """Every concrete builder overrides :meth:`BaseBuilder.get_allowed_service_parameters`.
+    ExternalPayment's override returns an empty dict unconditionally; pin that
+    for both the no-arg call and an explicit ``Refund`` action so the abstract
+    stub is never what callers see."""
+    assert builder.get_allowed_service_parameters() == {}
+    assert builder.get_allowed_service_parameters("Refund") == {}
 
 
 def test_pay_round_trips_through_mock_buckaroo(

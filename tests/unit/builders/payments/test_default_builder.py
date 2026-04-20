@@ -77,14 +77,6 @@ def test_has_no_capability_mixin_methods(client, mixin_method):
     )
 
 
-def test_inherits_base_builder_action_methods(client):
-    """BaseBuilder-defined action methods (not mixins) are present and callable."""
-    builder = DefaultBuilder(client)
-    for method in ("pay", "refund", "capture", "cancel", "partial_refund", "execute_action"):
-        assert hasattr(builder, method)
-        assert callable(getattr(builder, method))
-
-
 def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
     mock_strategy.queue(
         BuckarooMockRequest.json(

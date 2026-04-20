@@ -12,21 +12,6 @@ from __future__ import annotations
 import pytest
 
 from buckaroo.builders.payments.bizum_builder import BizumBuilder
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
 from tests.support.mock_request import BuckarooMockRequest
@@ -84,40 +69,6 @@ def test_get_allowed_service_parameters_defaults_to_pay_and_returns_empty(client
     builder = BizumBuilder(client)
 
     assert builder.get_allowed_service_parameters() == {}
-
-
-# ---------------------------------------------------------------------------
-# Capability mixin sanity — Bizum mixes in nothing
-
-
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-    ids=lambda c: c.__name__,
-)
-def test_bizum_builder_does_not_inherit_capability_mixin(capability):
-    assert not issubclass(BizumBuilder, capability), (
-        f"BizumBuilder unexpectedly inherits {capability.__name__}; "
-        "Bizum does not support that capability per the SDK spec."
-    )
-
-
-@pytest.mark.parametrize(
-    "method",
-    ["pay", "refund", "capture", "cancel", "build", "execute_action"],
-)
-def test_base_builder_methods_present_and_callable(client, method):
-    """BizumBuilder inherits every generic action from BaseBuilder."""
-    builder = BizumBuilder(client)
-
-    assert hasattr(builder, method)
-    assert callable(getattr(builder, method))
 
 
 # ---------------------------------------------------------------------------

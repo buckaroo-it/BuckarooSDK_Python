@@ -11,21 +11,6 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.knaken_builder import KnakenBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
@@ -75,40 +60,6 @@ def test_get_allowed_service_parameters_defaults_to_pay_and_returns_empty(client
     builder = KnakenBuilder(client)
 
     assert builder.get_allowed_service_parameters() == {}
-
-
-# ---------------------------------------------------------------------------
-# Capability mixin sanity — Knaken mixes in nothing
-
-
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-    ids=lambda c: c.__name__,
-)
-def test_knaken_builder_does_not_inherit_capability_mixin(capability):
-    assert not issubclass(KnakenBuilder, capability), (
-        f"KnakenBuilder unexpectedly inherits {capability.__name__}; "
-        "Knaken does not support that capability per the SDK spec."
-    )
-
-
-# ---------------------------------------------------------------------------
-# Base-class actions present and callable (hasattr + callable sanity)
-
-
-@pytest.mark.parametrize("method", ["pay", "refund"])
-def test_base_builder_action_is_present_and_callable(client, method):
-    builder = KnakenBuilder(client)
-
-    assert hasattr(builder, method)
-    assert callable(getattr(builder, method))
 
 
 # ---------------------------------------------------------------------------

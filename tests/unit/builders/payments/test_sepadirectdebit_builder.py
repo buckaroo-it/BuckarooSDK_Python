@@ -15,21 +15,6 @@ from __future__ import annotations
 import pytest
 
 from buckaroo._buckaroo_client import BuckarooClient
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.sepadirectdebit_builder import (
     SepaDirectDebitBuilder,
@@ -155,34 +140,7 @@ def test_get_allowed_service_parameters_non_pay_actions_return_empty(
 
 
 # ---------------------------------------------------------------------------
-# Capability mixin sanity — SepaDirectDebit mixes in nothing
-
-
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-    ids=lambda c: c.__name__,
-)
-def test_sepadirectdebit_builder_does_not_inherit_capability_mixin(capability):
-    assert not issubclass(SepaDirectDebitBuilder, capability), (
-        f"SepaDirectDebitBuilder unexpectedly inherits {capability.__name__}; "
-        "SepaDirectDebit does not support that capability per the SDK spec."
-    )
-
-
-def test_has_inherited_pay_action_method(
-    builder: SepaDirectDebitBuilder,
-) -> None:
-    # Only the inherited ``pay`` action is available; pin presence + callability
-    # so a refactor of the base class that hides ``pay`` surfaces here.
-    assert hasattr(builder, "pay")
-    assert callable(builder.pay)
+# Capability-only methods — SepaDirectDebit mixes in nothing
 
 
 def test_does_not_mix_in_capability_methods(

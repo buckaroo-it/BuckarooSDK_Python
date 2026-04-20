@@ -20,21 +20,6 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.klarnakp_builder import KlarnaKPBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
@@ -202,44 +187,6 @@ class TestRequiredFields:
 
     def test_defaults_to_pay_and_returns_empty_dict(self, client):
         assert KlarnaKPBuilder(client).required_fields() == {}
-
-
-# ---------------------------------------------------------------------------
-# Capability-mixin sanity — KlarnaKPBuilder mixes in nothing
-
-
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-    ids=lambda c: c.__name__,
-)
-def test_klarnakp_builder_does_not_inherit_capability_mixin(capability):
-    assert not issubclass(KlarnaKPBuilder, capability), (
-        f"KlarnaKPBuilder unexpectedly inherits {capability.__name__}; "
-        "KlarnaKP does not mix in any capability classes per the SDK spec."
-    )
-
-
-# ---------------------------------------------------------------------------
-# Base methods from PaymentBuilder are still present
-
-
-class TestBaseBuilderSurfaceRemainsIntact:
-    def test_pay_present_and_callable(self, client):
-        builder = KlarnaKPBuilder(client)
-        assert hasattr(builder, "pay")
-        assert callable(builder.pay)
-
-    def test_refund_present_and_callable(self, client):
-        builder = KlarnaKPBuilder(client)
-        assert hasattr(builder, "refund")
-        assert callable(builder.refund)
 
 
 # ---------------------------------------------------------------------------

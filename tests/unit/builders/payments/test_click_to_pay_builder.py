@@ -45,32 +45,6 @@ def test_get_allowed_service_parameters_unknown_action_is_empty(builder):
     assert builder.get_allowed_service_parameters("Refund") == {}
 
 
-def test_no_capability_mixins_declared(builder):
-    """ClickToPayBuilder has no capability mixins — only the base methods."""
-    from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-        AuthorizeCaptureCapable,
-    )
-    from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-        EncryptedPayCapable,
-    )
-    from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-        FastCheckoutCapable,
-    )
-    from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-        InstantRefundCapable,
-    )
-
-    assert not isinstance(builder, AuthorizeCaptureCapable)
-    assert not isinstance(builder, EncryptedPayCapable)
-    assert not isinstance(builder, FastCheckoutCapable)
-    assert not isinstance(builder, InstantRefundCapable)
-
-
-def test_base_pay_method_present_and_callable(builder):
-    assert hasattr(builder, "pay")
-    assert callable(builder.pay)
-
-
 def test_pay_end_to_end_through_mock_buckaroo(builder, mock_strategy):
     """pay() builds a Pay action against the ClickToPay service, sends it
     through the HTTP client, and returns a parsed PaymentResponse."""

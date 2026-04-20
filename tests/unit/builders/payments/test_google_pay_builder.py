@@ -43,36 +43,13 @@ def test_get_allowed_service_parameters_unsupported_action_returns_empty(client)
     assert GooglePayBuilder(client).get_allowed_service_parameters("Refund") == {}
 
 
-@pytest.mark.parametrize("method", ["pay", "refund", "build", "from_dict"])
-def test_base_payment_methods_present_and_callable(client, method):
+def test_google_pay_declares_from_dict_method(client):
+    """``from_dict`` is inherited from PaymentBuilder and used by GooglePay
+    callers to bulk-populate service parameters. Pin the shape so a base-class
+    refactor that renames it surfaces here."""
     builder = GooglePayBuilder(client)
-    assert hasattr(builder, method)
-    assert callable(getattr(builder, method))
-
-
-def test_google_pay_mixes_in_no_capability_mixins(client):
-    """GooglePayBuilder is a plain PaymentBuilder; no authorize/refund/fast-checkout mixins."""
-    from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-        AuthorizeCaptureCapable,
-    )
-    from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-        BankTransferCapabilities,
-    )
-    from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-        EncryptedPayCapable,
-    )
-    from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-        FastCheckoutCapable,
-    )
-    from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-        InstantRefundCapable,
-    )
-
-    assert not issubclass(GooglePayBuilder, AuthorizeCaptureCapable)
-    assert not issubclass(GooglePayBuilder, BankTransferCapabilities)
-    assert not issubclass(GooglePayBuilder, EncryptedPayCapable)
-    assert not issubclass(GooglePayBuilder, FastCheckoutCapable)
-    assert not issubclass(GooglePayBuilder, InstantRefundCapable)
+    assert hasattr(builder, "from_dict")
+    assert callable(builder.from_dict)
 
 
 def test_pay_dispatches_googlepay_service_through_mock_buckaroo():

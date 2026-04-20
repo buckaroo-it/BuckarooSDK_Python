@@ -129,3 +129,73 @@ def test_capability_method_present_and_callable(
         f"but is missing method {method!r}"
     )
     assert callable(getattr(builder, method))
+
+
+# ---------------------------------------------------------------------------
+# Capability-declaration matrix
+#
+# Pins the expected capability mixin set per registry entry. Historically the
+# same assertion was duplicated in every per-builder file that shipped with
+# no capabilities; the matrix below replaces those copies. Add the mixin to
+# the builder's set here when a new capability lands.
+
+KNOWN_MIXINS: List[Type] = list(CAPABILITY_METHODS.keys())
+
+# BankTransferCapabilities extends both InstantRefundCapable and
+# FastCheckoutCapable, so declaring BankTransferCapabilities implies the other
+# two. The expected sets below include every mixin the builder is a subclass
+# of — direct mixin plus transitive bases.
+EXPECTED_CAPABILITIES: Dict[str, set] = {
+    "creditcard": {EncryptedPayCapable, AuthorizeCaptureCapable},
+    "ideal": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
+    "paybybank": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
+    "payconiq": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
+    "sofort": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
+}
+
+
+@pytest.mark.parametrize(
+    "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
+)
+@pytest.mark.parametrize("mixin", KNOWN_MIXINS, ids=lambda c: c.__name__)
+def test_builder_declares_only_expected_capabilities(
+    method_name, builder_class, mixin, client
+):
+    expected = EXPECTED_CAPABILITIES.get(method_name, set())
+    actual = issubclass(builder_class, mixin)
+    assert actual is (mixin in expected), (
+        f"{builder_class.__name__} capability mismatch for {mixin.__name__}: "
+        f"issubclass={actual}, expected={mixin in expected}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Inherited-base-method matrix
+#
+# Every concrete builder inherits these public action methods from
+# :class:`BaseBuilder`. The per-builder copies of this assertion used to live
+# inline; consolidating here keeps the contract in one place.
+
+INHERITED_BASE_METHODS: List[str] = [
+    "pay",
+    "refund",
+    "capture",
+    "cancel",
+    "partial_refund",
+    "build",
+    "execute_action",
+]
+
+
+@pytest.mark.parametrize(
+    "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
+)
+@pytest.mark.parametrize("base_method", INHERITED_BASE_METHODS)
+def test_inherited_base_builder_methods_callable(
+    method_name, builder_class, base_method, client
+):
+    builder = builder_class(client)
+    assert hasattr(builder, base_method), (
+        f"{builder_class.__name__} is missing inherited BaseBuilder method {base_method!r}"
+    )
+    assert callable(getattr(builder, base_method))

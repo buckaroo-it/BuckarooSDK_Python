@@ -12,21 +12,6 @@ from __future__ import annotations
 import pytest
 
 from buckaroo._buckaroo_client import BuckarooClient
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.trustly_builder import TrustlyBuilder
 from tests.support.mock_request import BuckarooMockRequest
@@ -104,28 +89,6 @@ def test_get_allowed_service_parameters_defaults_to_pay(builder):
 )
 def test_get_allowed_service_parameters_non_pay_returns_empty(builder, action):
     assert builder.get_allowed_service_parameters(action) == {}
-
-
-# ---------------------------------------------------------------------------
-# Capability mixin sanity — Trustly mixes in nothing
-
-
-@pytest.mark.parametrize(
-    "capability",
-    [
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ],
-    ids=lambda c: c.__name__,
-)
-def test_trustly_builder_does_not_inherit_capability_mixin(capability):
-    assert not issubclass(TrustlyBuilder, capability), (
-        f"TrustlyBuilder unexpectedly inherits {capability.__name__}; "
-        "Trustly does not support that capability per the SDK spec."
-    )
 
 
 # ---------------------------------------------------------------------------

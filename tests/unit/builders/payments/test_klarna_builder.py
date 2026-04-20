@@ -10,21 +10,6 @@ docstring mention of "bank transfer capabilities"), and an end-to-end
 from __future__ import annotations
 
 from buckaroo._buckaroo_client import BuckarooClient
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.klarna_builder import KlarnaBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
@@ -74,26 +59,6 @@ def test_get_allowed_service_parameters_is_case_insensitive_for_pay(client):
 
 def test_get_allowed_service_parameters_unsupported_action_returns_empty(client):
     assert KlarnaBuilder(client).get_allowed_service_parameters("Refund") == {}
-
-
-def test_does_not_mix_in_capability_methods(client):
-    """KlarnaBuilder subclasses :class:`PaymentBuilder` only — it does not mix
-    in any capability. Guard against accidental mixin drift by asserting the
-    class hierarchy is capability-free. Baseline builder methods (``pay``,
-    ``refund``, ``capture``, ``cancel``) still come from ``BaseBuilder``."""
-    builder = KlarnaBuilder(client)
-    for capability in (
-        AuthorizeCaptureCapable,
-        BankTransferCapabilities,
-        EncryptedPayCapable,
-        FastCheckoutCapable,
-        InstantRefundCapable,
-    ):
-        assert not isinstance(builder, capability)
-
-    for method in ("pay", "refund", "capture", "cancel"):
-        assert hasattr(builder, method)
-        assert callable(getattr(builder, method))
 
 
 def test_pay_dispatches_klarna_service_through_mock_buckaroo():

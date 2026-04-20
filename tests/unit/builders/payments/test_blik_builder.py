@@ -53,14 +53,6 @@ def test_get_allowed_service_parameters_other_actions_also_empty(
         assert builder.get_allowed_service_parameters(action) == {}
 
 
-def test_has_inherited_pay_action_method(builder: BlikBuilder) -> None:
-    # Blik mixes in no capability classes; only the inherited ``pay`` action is
-    # available. Pin presence + callability so a refactor of the base class
-    # that hides ``pay`` surfaces here.
-    assert hasattr(builder, "pay")
-    assert callable(builder.pay)
-
-
 def test_does_not_mix_in_capability_only_methods(builder: BlikBuilder) -> None:
     # Capability mixins are opt-in. Blik opts out; none of the capability-only
     # methods (i.e. methods that *only* exist on a mixin, not on the base) should

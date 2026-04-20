@@ -179,3 +179,91 @@ class TestHelpers:
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
         return response
+
+    @staticmethod
+    def assert_refund_returns_success(
+        buckaroo: Any,
+        mock_strategy: Any,
+        *,
+        method: str,
+        invoice: str,
+        original_transaction_key: str = "ABC123",
+        payload_overrides: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        """Queue a refund-shaped response, run ``refund()``, assert success."""
+        from tests.support.mock_request import BuckarooMockRequest
+
+        response_body = TestHelpers.refund_response(method)
+        mock_strategy.queue(
+            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        )
+        overrides = {
+            "description": "Refund",
+            "original_transaction_key": original_transaction_key,
+            **(payload_overrides or {}),
+        }
+        payload = TestHelpers.standard_payload(invoice=invoice, **overrides)
+        response = buckaroo.payments.create_payment(method, payload).refund()
+        assert response.status.code.code == STATUS_SUCCESS
+        assert response.key == response_body["Key"]
+        return response
+
+    @staticmethod
+    def assert_instant_refund_returns_success(
+        buckaroo: Any,
+        mock_strategy: Any,
+        *,
+        method: str,
+        invoice: str,
+        original_transaction_key: str = "ABC123",
+        payload_overrides: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        """Queue an InstantRefund-shaped response, run ``instantRefund()``."""
+        from tests.support.mock_request import BuckarooMockRequest
+
+        response_body = TestHelpers.success_response({
+            "Services": [{"Name": method, "Action": "InstantRefund", "Parameters": []}],
+            "ServiceCode": method,
+            "AmountCredit": 10.00,
+            "AmountDebit": None,
+        })
+        mock_strategy.queue(
+            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        )
+        overrides = {
+            "description": "Instant refund",
+            "original_transaction_key": original_transaction_key,
+            **(payload_overrides or {}),
+        }
+        payload = TestHelpers.standard_payload(invoice=invoice, **overrides)
+        response = buckaroo.payments.create_payment(method, payload).instantRefund()
+        assert response.status.code.code == STATUS_SUCCESS
+        assert response.key == response_body["Key"]
+        return response
+
+    @staticmethod
+    def assert_fast_checkout_returns_pending_with_redirect(
+        buckaroo: Any,
+        mock_strategy: Any,
+        *,
+        method: str,
+        invoice: str,
+        payload_overrides: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        """Queue a PayFastCheckout redirect response, run ``payFastCheckout()``."""
+        from tests.support.mock_request import BuckarooMockRequest
+
+        response_body = TestHelpers.pending_redirect_response(method, "PayFastCheckout")
+        mock_strategy.queue(
+            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        )
+        overrides = {
+            "description": "Fast checkout",
+            **(payload_overrides or {}),
+        }
+        payload = TestHelpers.standard_payload(invoice=invoice, **overrides)
+        response = buckaroo.payments.create_payment(method, payload).payFastCheckout()
+        assert response.is_pending()
+        assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
+        return response

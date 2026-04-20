@@ -17,15 +17,11 @@ class TestCreditcardFeature:
         assert response.key == response_body["Key"]
 
     def test_creditcard_refund(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.refund_response("creditcard")
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("creditcard", TestHelpers.standard_payload(
-            invoice="INV-CC-002",
-            description="Test refund",
-            original_transaction_key="ABC123",
-        )).refund()
-        assert response.status.code.code == 190
-        assert response.key == response_body["Key"]
+        TestHelpers.assert_refund_returns_success(
+            buckaroo, mock_strategy,
+            method="creditcard", invoice="INV-CC-002",
+            payload_overrides={"description": "Test refund"},
+        )
 
     def test_creditcard_authorize(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("creditcard", "Authorize")

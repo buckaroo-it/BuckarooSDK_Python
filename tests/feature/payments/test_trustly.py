@@ -1,4 +1,3 @@
-from tests.support.mock_request import BuckarooMockRequest
 from tests.support.test_helpers import TestHelpers
 
 
@@ -17,12 +16,8 @@ class TestTrustlyFeature:
         )
 
     def test_trustly_refund(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.refund_response("trustly")
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("trustly", TestHelpers.standard_payload(
-            invoice="INV-TRSR-001",
-            description="Refund",
+        TestHelpers.assert_refund_returns_success(
+            buckaroo, mock_strategy,
+            method="trustly", invoice="INV-TRSR-001",
             original_transaction_key="some-key",
-        )).refund()
-        assert response.status.code.code == 190
-        assert response.key == response_body["Key"]
+        )

@@ -10,17 +10,11 @@ class TestAlipayFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        response = buckaroo.payments.create_payment("alipay", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test alipay payment",
-            "invoice": "INV-ALIPAY-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {"UseMobileView": False},
-        }).pay()
+        response = buckaroo.payments.create_payment("alipay", TestHelpers.standard_payload(
+            invoice="INV-ALIPAY-001",
+            description="Test alipay payment",
+            service_parameters={"UseMobileView": False},
+        )).pay()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None

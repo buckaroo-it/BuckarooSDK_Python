@@ -27,16 +27,10 @@ class TestFeatureFixturesSmoke:
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
 
-        builder = buckaroo.payments.create_payment("ideal", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Smoke test",
-            "invoice": "SMOKE-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        })
+        builder = buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+            invoice="SMOKE-001",
+            description="Smoke test",
+        ))
         result = builder.pay()
         assert result is not None
 

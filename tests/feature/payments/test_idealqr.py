@@ -10,16 +10,10 @@ class TestIdealqrFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        response = buckaroo.payments.create_payment("idealqr", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test idealqr",
-            "invoice": "INV-IQRT-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.payments.create_payment("idealqr", TestHelpers.standard_payload(
+            invoice="INV-IQRT-001",
+            description="Test idealqr",
+        )).pay()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None
@@ -28,14 +22,10 @@ class TestIdealqrFeature:
     def test_idealqr_refund(self, buckaroo, mock_strategy):
         response_body = TestHelpers.refund_response("idealqr")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("idealqr", {
-            "amount": 10.00, "currency": "EUR", "description": "Refund",
-            "invoice": "INV-IQRR-001",
-            "original_transaction_key": "some-key",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).refund()
+        response = buckaroo.payments.create_payment("idealqr", TestHelpers.standard_payload(
+            invoice="INV-IQRR-001",
+            description="Refund",
+            original_transaction_key="some-key",
+        )).refund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]

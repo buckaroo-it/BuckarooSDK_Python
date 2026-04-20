@@ -10,23 +10,18 @@ class TestRivertyFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        response = buckaroo.payments.create_payment("riverty", {
-            "amount": 25.00,
-            "currency": "EUR",
-            "description": "Test riverty",
-            "invoice": "INV-RIV-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {
+        response = buckaroo.payments.create_payment("riverty", TestHelpers.standard_payload(
+            invoice="INV-RIV-001",
+            amount=25.00,
+            description="Test riverty",
+            service_parameters={
                 "article": [
                     {"description": "Widget", "quantity": "2", "price": "12.50"},
                 ],
                 "billingCustomer": {"firstName": "John", "lastName": "Doe"},
                 "shippingCustomer": {"firstName": "John", "lastName": "Doe"},
             },
-        }).pay()
+        )).pay()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None

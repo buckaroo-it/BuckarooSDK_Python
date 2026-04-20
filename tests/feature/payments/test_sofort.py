@@ -8,14 +8,10 @@ class TestSofortFeature:
     def test_sofort_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("sofort")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("sofort", {
-            "amount": 10.00, "currency": "EUR", "description": "Test sofort",
-            "invoice": "INV-SOF-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.payments.create_payment("sofort", TestHelpers.standard_payload(
+            invoice="INV-SOF-001",
+            description="Test sofort",
+        )).pay()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
@@ -25,15 +21,11 @@ class TestSofortFeature:
     def test_sofort_refund(self, buckaroo, mock_strategy):
         response_body = TestHelpers.refund_response("sofort")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("sofort", {
-            "amount": 10.00, "currency": "EUR", "description": "Refund",
-            "invoice": "INV-SOF-REFUND",
-            "original_transaction_key": "ABC123",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).refund()
+        response = buckaroo.payments.create_payment("sofort", TestHelpers.standard_payload(
+            invoice="INV-SOF-REFUND",
+            description="Refund",
+            original_transaction_key="ABC123",
+        )).refund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
@@ -45,29 +37,21 @@ class TestSofortFeature:
             "AmountDebit": None,
         })
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("sofort", {
-            "amount": 10.00, "currency": "EUR", "description": "Instant refund",
-            "invoice": "INV-SOF-IREFUND",
-            "original_transaction_key": "ABC123",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).instantRefund()
+        response = buckaroo.payments.create_payment("sofort", TestHelpers.standard_payload(
+            invoice="INV-SOF-IREFUND",
+            description="Instant refund",
+            original_transaction_key="ABC123",
+        )).instantRefund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
     def test_sofort_fast_checkout(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("sofort", "PayFastCheckout")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("sofort", {
-            "amount": 10.00, "currency": "EUR", "description": "Fast checkout",
-            "invoice": "INV-SOF-FAST",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).payFastCheckout()
+        response = buckaroo.payments.create_payment("sofort", TestHelpers.standard_payload(
+            invoice="INV-SOF-FAST",
+            description="Fast checkout",
+        )).payFastCheckout()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]

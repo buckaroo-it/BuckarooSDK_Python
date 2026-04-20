@@ -12,19 +12,14 @@ class TestKlarnakpFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        response = buckaroo.payments.create_payment("klarnakp", {
-            "amount": 25.00,
-            "currency": "EUR",
-            "description": "Test klarnakp",
-            "invoice": "INV-KKP-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {
+        response = buckaroo.payments.create_payment("klarnakp", TestHelpers.standard_payload(
+            invoice="INV-KKP-001",
+            amount=25.00,
+            description="Test klarnakp",
+            service_parameters={
                 "reservationNumber": "RES-12345",
             },
-        }).pay()
+        )).pay()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None
@@ -39,22 +34,17 @@ class TestKlarnakpFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/DataRequest", response_body)
         )
-        response = buckaroo.payments.create_payment("klarnakp", {
-            "amount": 50.00,
-            "currency": "EUR",
-            "description": "Test klarnakp reserve",
-            "invoice": "INV-KKP-002",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {
+        response = buckaroo.payments.create_payment("klarnakp", TestHelpers.standard_payload(
+            invoice="INV-KKP-002",
+            amount=50.00,
+            description="Test klarnakp reserve",
+            service_parameters={
                 "operatingCountry": "NL",
                 "article": [
                     {"description": "Widget", "quantity": "2", "price": "25.00"},
                 ],
             },
-        }).reserve()
+        )).reserve()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None
@@ -69,19 +59,14 @@ class TestKlarnakpFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/DataRequest", response_body)
         )
-        response = buckaroo.payments.create_payment("klarnakp", {
-            "amount": 25.00,
-            "currency": "EUR",
-            "description": "Test klarnakp cancel reservation",
-            "invoice": "INV-KKP-003",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {
+        response = buckaroo.payments.create_payment("klarnakp", TestHelpers.standard_payload(
+            invoice="INV-KKP-003",
+            amount=25.00,
+            description="Test klarnakp cancel reservation",
+            service_parameters={
                 "reservationNumber": "RES-12345",
             },
-        }).cancelReservation()
+        )).cancelReservation()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None

@@ -11,16 +11,10 @@ class TestSubscriptionFeature:
             "ServiceCode": "Subscription",
         })
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/DataRequest", response_body))
-        response = buckaroo.solutions.create_solution("subscription", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test subscription",
-            "invoice": "INV-SUB-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).createSubscription()
+        response = buckaroo.solutions.create_solution("subscription", TestHelpers.standard_payload(
+            invoice="INV-SUB-001",
+            description="Test subscription",
+        )).createSubscription()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
@@ -51,16 +45,10 @@ class TestSubscriptionFeature:
             "ServiceCode": "Subscription",
         })
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/DataRequest", response_body))
-        response = buckaroo.solutions.create_solution("SUBSCRIPTION", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Case test",
-            "invoice": "INV-SUB-CASE",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).createSubscription()
+        response = buckaroo.solutions.create_solution("SUBSCRIPTION", TestHelpers.standard_payload(
+            invoice="INV-SUB-CASE",
+            description="Case test",
+        )).createSubscription()
         assert response.status.code.code == 190
 
     def test_subscription_is_available(self, buckaroo):

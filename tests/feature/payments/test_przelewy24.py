@@ -10,21 +10,15 @@ class TestPrzelewy24Feature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        response = buckaroo.payments.create_payment("przelewy24", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test przelewy24",
-            "invoice": "INV-P24-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {
+        response = buckaroo.payments.create_payment("przelewy24", TestHelpers.standard_payload(
+            invoice="INV-P24-001",
+            description="Test przelewy24",
+            service_parameters={
                 "customerEmail": "test@example.com",
                 "customerFirstName": "John",
                 "customerLastName": "Doe",
             },
-        }).pay()
+        )).pay()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None

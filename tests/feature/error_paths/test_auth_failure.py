@@ -2,6 +2,7 @@ import pytest
 
 from buckaroo.exceptions._authentication_error import AuthenticationError
 from tests.support.mock_request import BuckarooMockRequest
+from tests.support.test_helpers import TestHelpers
 
 
 class TestAuthFailure:
@@ -20,16 +21,10 @@ class TestAuthFailure:
         }, status=401))
 
         with pytest.raises(AuthenticationError, match="store key and secret key"):
-            buckaroo.payments.create_payment("ideal", {
-                "amount": 10.00,
-                "currency": "EUR",
-                "description": "Auth failure test",
-                "invoice": "INV-AUTH-001",
-                "return_url": "https://example.com/return",
-                "return_url_cancel": "https://example.com/cancel",
-                "return_url_error": "https://example.com/error",
-                "return_url_reject": "https://example.com/reject",
-            }).pay()
+            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+                invoice="INV-AUTH-001",
+                description="Auth failure test",
+            )).pay()
 
     def test_auth_failure_403_raises_authentication_error(self, buckaroo, mock_strategy):
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", {
@@ -44,13 +39,7 @@ class TestAuthFailure:
         }, status=403))
 
         with pytest.raises(AuthenticationError, match="Access forbidden"):
-            buckaroo.payments.create_payment("ideal", {
-                "amount": 10.00,
-                "currency": "EUR",
-                "description": "Auth failure 403 test",
-                "invoice": "INV-AUTH-403",
-                "return_url": "https://example.com/return",
-                "return_url_cancel": "https://example.com/cancel",
-                "return_url_error": "https://example.com/error",
-                "return_url_reject": "https://example.com/reject",
-            }).pay()
+            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+                invoice="INV-AUTH-403",
+                description="Auth failure 403 test",
+            )).pay()

@@ -7,6 +7,7 @@ import pytest
 from buckaroo.http.client import BuckarooApiError, BuckarooResponse
 from buckaroo.http.strategies.http_strategy import HttpResponse
 from tests.support.mock_request import BuckarooMockRequest
+from tests.support.test_helpers import TestHelpers
 
 
 class TestMalformedResponse:
@@ -27,16 +28,10 @@ class TestMalformedResponse:
         mock_strategy.queue(mock)
 
         with pytest.raises(BuckarooApiError, match="Failed to parse Buckaroo response JSON"):
-            buckaroo.payments.create_payment("ideal", {
-                "currency": "EUR",
-                "amount": 10.00,
-                "invoice": "TEST-MALFORMED",
-                "description": "Malformed JSON test",
-                "return_url": "https://example.com/return",
-                "return_url_cancel": "https://example.com/cancel",
-                "return_url_error": "https://example.com/error",
-                "return_url_reject": "https://example.com/reject",
-            }).pay()
+            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+                invoice="TEST-MALFORMED",
+                description="Malformed JSON test",
+            )).pay()
 
     def test_malformed_json_wraps_json_decode_error(self, buckaroo, mock_strategy):
         """The raised BuckarooApiError chains the original JSONDecodeError."""
@@ -51,16 +46,11 @@ class TestMalformedResponse:
         mock_strategy.queue(mock)
 
         with pytest.raises(BuckarooApiError) as exc_info:
-            buckaroo.payments.create_payment("ideal", {
-                "currency": "EUR",
-                "amount": 5.00,
-                "invoice": "TEST-CHAIN",
-                "description": "Chained exception test",
-                "return_url": "https://example.com/return",
-                "return_url_cancel": "https://example.com/cancel",
-                "return_url_error": "https://example.com/error",
-                "return_url_reject": "https://example.com/reject",
-            }).pay()
+            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+                invoice="TEST-CHAIN",
+                amount=5.00,
+                description="Chained exception test",
+            )).pay()
 
         assert exc_info.value.__cause__ is not None
         assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)

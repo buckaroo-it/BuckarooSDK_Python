@@ -16,16 +16,10 @@ class TestExternalPaymentFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        builder = buckaroo.payments.create_payment("externalPayment", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test external payment",
-            "invoice": "INV-EXT-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        })
+        builder = buckaroo.payments.create_payment("externalPayment", TestHelpers.standard_payload(
+            invoice="INV-EXT-001",
+            description="Test external payment",
+        ))
         assert isinstance(builder, ExternalPaymentBuilder)
         response = builder.pay()
         assert response.is_pending()

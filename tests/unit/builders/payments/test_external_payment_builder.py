@@ -32,6 +32,7 @@ from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.models.payment_response import PaymentResponse
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
+from tests.support.test_helpers import TestHelpers
 
 
 @pytest.fixture
@@ -117,20 +118,11 @@ def test_pay_round_trips_through_mock_buckaroo(
         )
     )
 
-    response = (
-        builder.from_dict(
-            {
-                "currency": "EUR",
-                "amount": 25.0,
-                "description": "External pay",
-                "invoice": "INV-EXT-001",
-                "return_url": "https://example.test/ok",
-                "return_url_cancel": "https://example.test/cancel",
-                "return_url_error": "https://example.test/error",
-                "return_url_reject": "https://example.test/reject",
-            }
-        ).pay()
-    )
+    response = builder.from_dict(TestHelpers.standard_payload(
+        invoice="INV-EXT-001",
+        amount=25.0,
+        description="External pay",
+    )).pay()
 
     assert isinstance(response, PaymentResponse)
     assert response.key == "EXT-TXN-1"
@@ -158,19 +150,12 @@ def test_refund_round_trips_through_mock_buckaroo(
         )
     )
 
-    response = builder.from_dict(
-        {
-            "currency": "EUR",
-            "amount": 10.0,
-            "description": "External refund",
-            "invoice": "INV-EXT-REFUND",
-            "return_url": "https://example.test/ok",
-            "return_url_cancel": "https://example.test/cancel",
-            "return_url_error": "https://example.test/error",
-            "return_url_reject": "https://example.test/reject",
-            "original_transaction_key": "ORIG-EXT-KEY",
-        }
-    ).refund()
+    response = builder.from_dict(TestHelpers.standard_payload(
+        invoice="INV-EXT-REFUND",
+        amount=10.0,
+        description="External refund",
+        original_transaction_key="ORIG-EXT-KEY",
+    )).refund()
 
     assert isinstance(response, PaymentResponse)
     assert response.key == "EXT-REFUND-1"

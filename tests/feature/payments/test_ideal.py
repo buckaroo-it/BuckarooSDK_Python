@@ -8,14 +8,10 @@ class TestIdealFeature:
     def test_ideal_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("ideal")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("ideal", {
-            "amount": 10.00, "currency": "EUR", "description": "Test ideal",
-            "invoice": "INV-IDEAL-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+            invoice="INV-IDEAL-001",
+            description="Test ideal",
+        )).pay()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
@@ -23,29 +19,21 @@ class TestIdealFeature:
     def test_ideal_case_insensitive_lookup(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("ideal")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("IDEAL", {
-            "amount": 10.00, "currency": "EUR", "description": "Case test",
-            "invoice": "INV-CASE",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.payments.create_payment("IDEAL", TestHelpers.standard_payload(
+            invoice="INV-CASE",
+            description="Case test",
+        )).pay()
         assert response.is_pending()
         assert response.key == response_body["Key"]
 
     def test_ideal_refund(self, buckaroo, mock_strategy):
         response_body = TestHelpers.refund_response("ideal")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("ideal", {
-            "amount": 10.00, "currency": "EUR", "description": "Refund",
-            "invoice": "INV-REFUND",
-            "original_transaction_key": "ABC123",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).refund()
+        response = buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+            invoice="INV-REFUND",
+            description="Refund",
+            original_transaction_key="ABC123",
+        )).refund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
@@ -57,29 +45,21 @@ class TestIdealFeature:
             "AmountDebit": None,
         })
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("ideal", {
-            "amount": 10.00, "currency": "EUR", "description": "Instant refund",
-            "invoice": "INV-IREFUND",
-            "original_transaction_key": "ABC123",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).instantRefund()
+        response = buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+            invoice="INV-IREFUND",
+            description="Instant refund",
+            original_transaction_key="ABC123",
+        )).instantRefund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
     def test_ideal_fast_checkout(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("ideal", "PayFastCheckout")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("ideal", {
-            "amount": 10.00, "currency": "EUR", "description": "Fast checkout",
-            "invoice": "INV-FAST",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).payFastCheckout()
+        response = buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
+            invoice="INV-FAST",
+            description="Fast checkout",
+        )).payFastCheckout()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]

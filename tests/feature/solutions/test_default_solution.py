@@ -9,16 +9,10 @@ class TestDefaultSolutionFeature:
     def test_default_solution_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("default")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.solutions.create_solution("default", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test default solution",
-            "invoice": "INV-SOL-DEF-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.solutions.create_solution("default", TestHelpers.standard_payload(
+            invoice="INV-SOL-DEF-001",
+            description="Test default solution",
+        )).pay()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
@@ -31,33 +25,22 @@ class TestDefaultSolutionFeature:
             "Currency": "EUR",
         })
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.solutions.create_solution("default", {
-            "amount": 25.00,
-            "currency": "EUR",
-            "description": "Test default solution success",
-            "invoice": "INV-SOL-DEF-002",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.solutions.create_solution("default", TestHelpers.standard_payload(
+            invoice="INV-SOL-DEF-002",
+            amount=25.00,
+            description="Test default solution success",
+        )).pay()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
     def test_default_solution_refund(self, buckaroo, mock_strategy):
         response_body = TestHelpers.refund_response("default")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.solutions.create_solution("default", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test default solution refund",
-            "invoice": "INV-SOL-DEF-003",
-            "original_transaction_key": "ABCD1234",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).refund()
+        response = buckaroo.solutions.create_solution("default", TestHelpers.standard_payload(
+            invoice="INV-SOL-DEF-003",
+            description="Test default solution refund",
+            original_transaction_key="ABCD1234",
+        )).refund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
@@ -70,15 +53,10 @@ class TestDefaultSolutionFeature:
         """DefaultBuilder reads service name from payload's 'method' key."""
         response_body = TestHelpers.pending_redirect_response("custommethod")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.solutions.create_solution("nonexistent", {
-            "method": "custommethod",
-            "amount": 5.00,
-            "currency": "EUR",
-            "description": "Test custom method fallback",
-            "invoice": "INV-SOL-DEF-004",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.solutions.create_solution("nonexistent", TestHelpers.standard_payload(
+            invoice="INV-SOL-DEF-004",
+            amount=5.00,
+            description="Test custom method fallback",
+            method="custommethod",
+        )).pay()
         assert response.is_pending()

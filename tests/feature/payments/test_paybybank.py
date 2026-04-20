@@ -10,17 +10,11 @@ class TestPaybybankFeature:
     def test_paybybank_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("paybybank")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("paybybank", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test paybybank",
-            "invoice": "INV-PBB-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {"issuer": "INGBNL2A"},
-        }).pay()
+        response = buckaroo.payments.create_payment("paybybank", TestHelpers.standard_payload(
+            invoice="INV-PBB-001",
+            description="Test paybybank",
+            service_parameters={"issuer": "INGBNL2A"},
+        )).pay()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]
@@ -28,17 +22,11 @@ class TestPaybybankFeature:
     def test_paybybank_refund(self, buckaroo, mock_strategy):
         response_body = TestHelpers.refund_response("paybybank")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("paybybank", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Refund",
-            "invoice": "INV-PBB-REFUND",
-            "original_transaction_key": "ABC123",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).refund()
+        response = buckaroo.payments.create_payment("paybybank", TestHelpers.standard_payload(
+            invoice="INV-PBB-REFUND",
+            description="Refund",
+            original_transaction_key="ABC123",
+        )).refund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
@@ -50,33 +38,21 @@ class TestPaybybankFeature:
             "AmountDebit": None,
         })
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("paybybank", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Instant refund",
-            "invoice": "INV-PBB-IREFUND",
-            "original_transaction_key": "ABC123",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).instantRefund()
+        response = buckaroo.payments.create_payment("paybybank", TestHelpers.standard_payload(
+            invoice="INV-PBB-IREFUND",
+            description="Instant refund",
+            original_transaction_key="ABC123",
+        )).instantRefund()
         assert response.status.code.code == 190
         assert response.key == response_body["Key"]
 
     def test_paybybank_fast_checkout(self, buckaroo, mock_strategy):
         response_body = TestHelpers.pending_redirect_response("paybybank", "PayFastCheckout")
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("paybybank", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Fast checkout",
-            "invoice": "INV-PBB-FAST",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).payFastCheckout()
+        response = buckaroo.payments.create_payment("paybybank", TestHelpers.standard_payload(
+            invoice="INV-PBB-FAST",
+            description="Fast checkout",
+        )).payFastCheckout()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
         assert response.key == response_body["Key"]

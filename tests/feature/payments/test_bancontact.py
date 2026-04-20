@@ -10,16 +10,10 @@ class TestBancontactFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        response = buckaroo.payments.create_payment("bancontact", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test bancontact payment",
-            "invoice": "INV-BANCONTACT-001",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-        }).pay()
+        response = buckaroo.payments.create_payment("bancontact", TestHelpers.standard_payload(
+            invoice="INV-BANCONTACT-001",
+            description="Test bancontact payment",
+        )).pay()
 
         assert response.is_pending()
         assert response.get_redirect_url() is not None
@@ -34,19 +28,13 @@ class TestBancontactFeature:
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
         )
-        builder = buckaroo.payments.create_payment("bancontact", {
-            "amount": 10.00,
-            "currency": "EUR",
-            "description": "Test bancontact encrypted",
-            "invoice": "INV-BANCONTACT-ENC",
-            "return_url": "https://example.com/return",
-            "return_url_cancel": "https://example.com/cancel",
-            "return_url_error": "https://example.com/error",
-            "return_url_reject": "https://example.com/reject",
-            "service_parameters": {
+        builder = buckaroo.payments.create_payment("bancontact", TestHelpers.standard_payload(
+            invoice="INV-BANCONTACT-ENC",
+            description="Test bancontact encrypted",
+            service_parameters={
                 "encryptedCardData": "encrypted_test_data_abc123",
             },
-        })
+        ))
         response = builder.execute_action("PayEncrypted")
 
         assert response.is_pending()

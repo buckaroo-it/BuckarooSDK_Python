@@ -3,16 +3,10 @@
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.test_helpers import TestHelpers
 
-_BILLINK_BASE_PARAMS = {
-    "amount": 10.00,
-    "currency": "EUR",
-    "description": "Test billink",
-    "invoice": "INV-BILLINK-001",
-    "return_url": "https://example.com/return",
-    "return_url_cancel": "https://example.com/cancel",
-    "return_url_error": "https://example.com/error",
-    "return_url_reject": "https://example.com/reject",
-    "service_parameters": {
+_BILLINK_BASE_PARAMS = TestHelpers.standard_payload(
+    invoice="INV-BILLINK-001",
+    description="Test billink",
+    service_parameters={
         "billingCustomer": [
             {"firstName": "John", "lastName": "Doe", "email": "john@example.com"},
         ],
@@ -23,7 +17,7 @@ _BILLINK_BASE_PARAMS = {
             {"description": "Widget", "quantity": "1", "price": "10.00"},
         ],
     },
-}
+)
 
 
 class TestBillinkFeature:

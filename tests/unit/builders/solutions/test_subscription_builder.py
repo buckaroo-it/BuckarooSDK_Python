@@ -4,23 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.solutions.subscription_builder import SubscriptionBuilder
 from buckaroo.builders.solutions.solution_builder import SolutionBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 def test_construction_with_client_succeeds(client):
@@ -65,15 +52,7 @@ def test_create_subscription_posts_and_parses_response(client, mock_strategy):
     )
 
     response = (
-        SubscriptionBuilder(client)
-        .currency("EUR")
-        .amount(9.99)
-        .description("Subscription order")
-        .invoice("SUB-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(SubscriptionBuilder(client), amount=9.99)
         .createSubscription()
     )
 

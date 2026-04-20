@@ -11,21 +11,11 @@ posts to ``/json/DataRequest`` rather than ``/json/transaction``.
 
 from __future__ import annotations
 
-import pytest
-
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.ideal_qr_builder import IdealQrBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient wired to a MockBuckaroo strategy."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 def test_construct_with_buckaroo_client_returns_payment_builder(client):

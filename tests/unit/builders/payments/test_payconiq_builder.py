@@ -8,24 +8,11 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.payconiq_builder import PayconiqBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import BankTransferCapabilities
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 def test_construction_with_client_succeeds(client):
@@ -111,12 +98,7 @@ def test_payconiq_payFastCheckout_works(client, mock_strategy):
             {"Key": "pcq-fc-1", "Status": {"Code": {"Code": 190}}})
     )
     builder = (
-        PayconiqBuilder(client)
-        .currency("EUR").amount(10.00).description("Fast checkout").invoice("INV-FC")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(PayconiqBuilder(client))
     )
     response = builder.payFastCheckout(validate=False)
     assert response is not None
@@ -129,12 +111,7 @@ def test_payconiq_instantRefund_works(client, mock_strategy):
             {"Key": "pcq-ir-1", "Status": {"Code": {"Code": 190}}})
     )
     builder = (
-        PayconiqBuilder(client)
-        .currency("EUR").amount(10.00).description("Instant refund").invoice("INV-IR")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(PayconiqBuilder(client))
     )
     response = builder.instantRefund(validate=False)
     assert response is not None
@@ -150,15 +127,7 @@ def test_pay_end_to_end(client, mock_strategy):
     )
 
     response = (
-        PayconiqBuilder(client)
-        .currency("EUR")
-        .amount(25.00)
-        .description("Payconiq order")
-        .invoice("INV-PQ")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(PayconiqBuilder(client), amount=25.00)
         .mobile_number("+31600000000")
         .pay()
     )

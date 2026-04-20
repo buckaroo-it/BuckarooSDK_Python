@@ -29,20 +29,8 @@ from buckaroo.builders.payments.capabilities.instant_refund_capable import (
 )
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.trustly_builder import TrustlyBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 @pytest.fixture
@@ -156,15 +144,7 @@ def test_pay_posts_trustly_service_to_transaction_endpoint_and_parses_response(
     )
 
     response = (
-        TrustlyBuilder(client)
-        .currency("EUR")
-        .amount(42.00)
-        .description("Trustly order")
-        .invoice("INV-TRUSTLY-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(TrustlyBuilder(client), amount=42.00)
         .add_parameter("customerFirstName", "Alice")
         .add_parameter("customerLastName", "Example")
         .add_parameter("customerCountryCode", "NL")

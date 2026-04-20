@@ -16,9 +16,6 @@ Tests pin:
 
 from __future__ import annotations
 
-import pytest
-
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
     BankTransferCapabilities,
 )
@@ -30,16 +27,8 @@ from buckaroo.builders.payments.capabilities.instant_refund_capable import (
 )
 from buckaroo.builders.payments.ideal_builder import IdealBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient with HTTP strategy swapped for a MockBuckaroo."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
+from tests.support.builders import populate_required_fields
 
 
 # ---------------------------------------------------------------------------
@@ -119,15 +108,7 @@ def test_pay_dispatches_ideal_service_through_mock_buckaroo(client):
     )
 
     response = (
-        IdealBuilder(client)
-        .currency("EUR")
-        .amount(10.00)
-        .description("iDEAL order")
-        .invoice("INV-IDEAL-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(IdealBuilder(client))
         .pay()
     )
 

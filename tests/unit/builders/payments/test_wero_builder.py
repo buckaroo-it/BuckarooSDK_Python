@@ -4,23 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.wero_builder import WeroBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 def test_construction_with_client_succeeds(client):
@@ -60,15 +47,7 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
     )
 
     response = (
-        WeroBuilder(client)
-        .currency("EUR")
-        .amount(25.00)
-        .description("Wero order")
-        .invoice("INV-W1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(WeroBuilder(client), amount=25.00)
         .pay()
     )
 

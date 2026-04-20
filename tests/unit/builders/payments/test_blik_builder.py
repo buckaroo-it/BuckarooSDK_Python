@@ -13,20 +13,9 @@ import pytest
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.blik_builder import BlikBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
+from tests.support.builders import populate_required_fields
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
 
 
 @pytest.fixture
@@ -101,17 +90,16 @@ def test_pay_posts_transaction_through_mock_strategy(
         )
     )
 
-    response = (
-        builder.currency("PLN")
-        .amount(10.0)
-        .description("Blik payment")
-        .invoice("INV-BLIK-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
-        .pay()
-    )
+    response = populate_required_fields(
+        builder,
+        currency="PLN",
+        description="Blik payment",
+        invoice="INV-BLIK-1",
+        return_url="https://example.test/return",
+        return_url_cancel="https://example.test/cancel",
+        return_url_error="https://example.test/error",
+        return_url_reject="https://example.test/reject",
+    ).pay()
 
     assert response.key == "blik-key"
     assert response.status.code.code == 190

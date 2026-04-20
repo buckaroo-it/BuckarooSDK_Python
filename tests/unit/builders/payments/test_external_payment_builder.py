@@ -35,18 +35,6 @@ from tests.support.mock_request import BuckarooMockRequest
 
 
 @pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
-
-
-@pytest.fixture
 def builder(client: BuckarooClient) -> ExternalPaymentBuilder:
     return ExternalPaymentBuilder(client)
 

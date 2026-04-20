@@ -15,23 +15,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.przelewy24_builder import Przelewy24Builder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
+from tests.support.builders import populate_required_fields
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
 
 
 def test_construction_with_client_succeeds(client):
@@ -103,18 +90,17 @@ def test_pay_dispatches_through_mock_buckaroo(client, mock_strategy):
         )
     )
 
-    response = (
-        Przelewy24Builder(client)
-        .currency("PLN")
-        .amount(50.00)
-        .description("P24 order")
-        .invoice("INV-P24-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
-        .pay(validate=False)
-    )
+    response = populate_required_fields(
+        Przelewy24Builder(client),
+        currency="PLN",
+        amount=50.00,
+        description="P24 order",
+        invoice="INV-P24-1",
+        return_url="https://example.test/return",
+        return_url_cancel="https://example.test/cancel",
+        return_url_error="https://example.test/error",
+        return_url_reject="https://example.test/reject",
+    ).pay(validate=False)
 
     assert response.key == "p24-key-1"
     mock_strategy.assert_all_consumed()

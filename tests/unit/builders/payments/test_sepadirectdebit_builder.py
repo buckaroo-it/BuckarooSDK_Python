@@ -34,21 +34,9 @@ from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.sepadirectdebit_builder import (
     SepaDirectDebitBuilder,
 )
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.recording_mock import recorded_request, wire_recording_http
-
-
-@pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 @pytest.fixture
@@ -227,13 +215,7 @@ def test_pay_posts_sepadirectdebit_service_to_transaction_endpoint():
         )
     )
     builder = SepaDirectDebitBuilder(stub_client)
-    builder.currency("EUR").amount(12.34).description("desc").invoice(
-        "INV-SDD-1"
-    ).return_url("https://ret.example/ok").return_url_cancel(
-        "https://ret.example/cancel"
-    ).return_url_error("https://ret.example/error").return_url_reject(
-        "https://ret.example/reject"
-    )
+    populate_required_fields(builder, amount=12.34)
 
     response = builder.pay(validate=False)
 

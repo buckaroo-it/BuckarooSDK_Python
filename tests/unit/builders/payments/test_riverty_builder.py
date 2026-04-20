@@ -30,18 +30,7 @@ from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.riverty_builder import RivertyBuilder
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_buckaroo() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_buckaroo: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_buckaroo
-    return c
+from tests.support.builders import populate_required_fields
 
 
 @pytest.fixture
@@ -127,9 +116,9 @@ def test_inherited_payment_actions_are_callable(builder: RivertyBuilder) -> None
 
 
 def test_pay_end_to_end_via_mock_buckaroo(
-    builder: RivertyBuilder, mock_buckaroo: MockBuckaroo
+    builder: RivertyBuilder, mock_strategy: MockBuckaroo
 ) -> None:
-    mock_buckaroo.queue(
+    mock_strategy.queue(
         BuckarooMockRequest.json(
             "POST",
             "*/json/transaction*",
@@ -138,14 +127,7 @@ def test_pay_end_to_end_via_mock_buckaroo(
     )
 
     response = (
-        builder.currency("EUR")
-        .amount(79.50)
-        .description("Riverty order")
-        .invoice("INV-RIVERTY-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(builder, amount=79.50)
         .from_dict(
             {
                 "service_parameters": {
@@ -161,4 +143,4 @@ def test_pay_end_to_end_via_mock_buckaroo(
     )
 
     assert response.key == "riverty-key"
-    mock_buckaroo.assert_all_consumed()
+    mock_strategy.assert_all_consumed()

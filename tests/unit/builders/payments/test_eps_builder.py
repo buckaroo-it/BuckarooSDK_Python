@@ -15,18 +15,7 @@ from buckaroo.builders.payments.eps_builder import EpsBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 @pytest.fixture
@@ -70,14 +59,7 @@ def test_pay_posts_eps_action_and_parses_response(
     )
 
     response = (
-        builder.currency("EUR")
-        .amount(12.34)
-        .description("eps order")
-        .invoice("INV-EPS-1")
-        .return_url("https://example.test/ok")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(builder, amount=12.34)
         .pay()
     )
 

@@ -8,26 +8,13 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.sofort_builder import SofortBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import BankTransferCapabilities
 from buckaroo.builders.payments.capabilities.instant_refund_capable import InstantRefundCapable
 from buckaroo.builders.payments.capabilities.fast_checkout_capable import FastCheckoutCapable
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 # -- Construction --
@@ -118,12 +105,7 @@ def test_pay_fast_checkout_works(client, mock_strategy):
         )
     )
     builder = (
-        SofortBuilder(client)
-        .currency("EUR").amount(10).description("fc test").invoice("FC-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(SofortBuilder(client))
     )
     response = builder.payFastCheckout()
     assert response is not None
@@ -138,12 +120,7 @@ def test_instant_refund_works(client, mock_strategy):
         )
     )
     builder = (
-        SofortBuilder(client)
-        .currency("EUR").amount(10).description("ir test").invoice("IR-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(SofortBuilder(client))
     )
     response = builder.instantRefund()
     assert response is not None
@@ -161,15 +138,7 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
     )
 
     response = (
-        SofortBuilder(client)
-        .currency("EUR")
-        .amount(25.00)
-        .description("Sofort order")
-        .invoice("INV-SOFORT-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(SofortBuilder(client), amount=25.00)
         .country_code("NL")
         .pay()
     )

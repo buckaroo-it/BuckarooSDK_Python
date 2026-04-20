@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.belfius_builder import BelfiusBuilder
 from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
     AuthorizeCaptureCapable,
@@ -30,17 +29,8 @@ from buckaroo.builders.payments.capabilities.instant_refund_capable import (
 )
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.recording_mock import recorded_request, wire_recording_http
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient with HTTP strategy swapped for a MockBuckaroo."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 # ---------------------------------------------------------------------------

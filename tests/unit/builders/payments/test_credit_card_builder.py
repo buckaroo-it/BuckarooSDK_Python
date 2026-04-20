@@ -14,9 +14,6 @@ Covers the three quirks specific to this builder:
 
 from __future__ import annotations
 
-import pytest
-
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
     AuthorizeCaptureCapable,
 )
@@ -26,21 +23,12 @@ from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
 from buckaroo.builders.payments.credit_card_builder import CreditcardBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.recording_mock import recorded_action, wire_recording_http
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient wired to a non-recording MockBuckaroo strategy."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 # ---------------------------------------------------------------------------

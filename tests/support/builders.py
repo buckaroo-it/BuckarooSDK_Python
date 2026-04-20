@@ -68,21 +68,32 @@ def make_test_builder(
     return _TestBuilder(client)
 
 
-def populate_required_fields(builder, *, amount: float = 10.0):
+def populate_required_fields(
+    builder,
+    *,
+    currency: str = "EUR",
+    amount: float = 10.0,
+    description: str = "desc",
+    invoice: str = "INV-1",
+    return_url: str = "https://ret.example/ok",
+    return_url_cancel: str = "https://ret.example/cancel",
+    return_url_error: str = "https://ret.example/error",
+    return_url_reject: str = "https://ret.example/reject",
+):
     """Apply every required core setter so ``build()`` passes validation.
 
-    Sets currency, amount, description, invoice, and the four return URLs.
-    Returns the builder so the helper can be chained if desired.
+    Any field can be overridden via keyword argument. Returns the builder so
+    the helper can be chained.
     """
     return (
-        builder.currency("EUR")
+        builder.currency(currency)
         .amount(amount)
-        .description("desc")
-        .invoice("INV-1")
-        .return_url("https://ret.example/ok")
-        .return_url_cancel("https://ret.example/cancel")
-        .return_url_error("https://ret.example/error")
-        .return_url_reject("https://ret.example/reject")
+        .description(description)
+        .invoice(invoice)
+        .return_url(return_url)
+        .return_url_cancel(return_url_cancel)
+        .return_url_error(return_url_error)
+        .return_url_reject(return_url_reject)
     )
 
 

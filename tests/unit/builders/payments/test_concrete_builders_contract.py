@@ -20,7 +20,6 @@ from typing import Dict, List, Tuple, Type
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
     AuthorizeCaptureCapable,
 )
@@ -38,7 +37,6 @@ from buckaroo.builders.payments.capabilities.instant_refund_capable import (
 )
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.factories.payment_method_factory import PaymentMethodFactory
-from tests.support.mock_buckaroo import MockBuckaroo
 
 
 REGISTRY: List[Tuple[str, Type[PaymentBuilder]]] = sorted(
@@ -61,14 +59,6 @@ CAPABILITY_METHODS: Dict[Type, List[str]] = {
     InstantRefundCapable: ["instantRefund"],
     FastCheckoutCapable: ["payFastCheckout"],
 }
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient wired to a MockBuckaroo strategy — never dispatched."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 @pytest.fixture

@@ -17,25 +17,10 @@ methods. The surface under test is:
 
 from __future__ import annotations
 
-import pytest
-
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.solutions.default_builder import DefaultBuilder
 from buckaroo.builders.solutions.solution_builder import SolutionBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
 
 
 def test_construction_with_client_succeeds(client: BuckarooClient) -> None:

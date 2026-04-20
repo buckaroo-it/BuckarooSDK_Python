@@ -7,21 +7,12 @@ dispatch through ``MockBuckaroo``.
 
 from __future__ import annotations
 
-import pytest
-
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.giftcards_builder import GiftcardsBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
+from tests.support.builders import populate_required_fields
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient wired to a MockBuckaroo strategy."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 def test_construct_with_buckaroo_client_returns_payment_builder(client):
@@ -126,13 +117,8 @@ def test_pay_dispatches_giftcards_service_through_mock_buckaroo():
         )
     )
 
-    builder = GiftcardsBuilder(client)
+    builder = populate_required_fields(GiftcardsBuilder(client), amount=10.50)
     builder._payload["giftcard_name"] = "fashioncheque"
-    builder.currency("EUR").amount(10.50).description("desc").invoice("INV-1")
-    builder.return_url("https://ret.example/ok")
-    builder.return_url_cancel("https://ret.example/cancel")
-    builder.return_url_error("https://ret.example/error")
-    builder.return_url_reject("https://ret.example/reject")
 
     response = builder.pay(validate=False)
 

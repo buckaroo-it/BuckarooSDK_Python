@@ -22,7 +22,6 @@ import pytest
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.solutions.solution_builder import SolutionBuilder
 from buckaroo.factories.solution_method_factory import SolutionMethodFactory
-from tests.support.mock_buckaroo import MockBuckaroo
 
 
 # Canonical action per registered solution method. Keys must match
@@ -30,14 +29,6 @@ from tests.support.mock_buckaroo import MockBuckaroo
 CANONICAL_ACTIONS: Dict[str, str] = {
     "subscription": "CreateSubscription",
 }
-
-
-@pytest.fixture
-def client() -> BuckarooClient:
-    """BuckarooClient wired to a MockBuckaroo strategy — never dispatched."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 @pytest.mark.parametrize(

@@ -9,19 +9,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.buckaroo_voucher_builder import (
     BuckarooVoucherBuilder,
 )
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
-
-
-@pytest.fixture
-def client():
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
 
 
 class TestConstruction:

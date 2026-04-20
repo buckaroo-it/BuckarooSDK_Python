@@ -337,11 +337,7 @@ class TestMultiCapabilityBuilder:
             service_name="dummy",
             capabilities=(EncryptedPayCapable, AuthorizeCaptureCapable),
         )
-        builder.currency("EUR").amount(10.0).description("d").invoice("I").return_url(
-            "https://e/ok"
-        ).return_url_cancel("https://e/c").return_url_error("https://e/e").return_url_reject(
-            "https://e/r"
-        )
+        populate_required_fields(builder)
 
         builder.authorize(validate=False)
         builder.payEncrypted(validate=False)

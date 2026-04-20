@@ -15,23 +15,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.paypal_builder import PaypalBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
+from tests.support.builders import populate_required_fields
 
 
 def test_construction_with_client_succeeds(client):
@@ -106,15 +93,7 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
     )
 
     response = (
-        PaypalBuilder(client)
-        .currency("EUR")
-        .amount(42.50)
-        .description("Paypal order")
-        .invoice("INV-PP-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(PaypalBuilder(client), amount=42.50)
         .add_parameter("buyerEmail", "buyer@example.test")
         .pay()
     )

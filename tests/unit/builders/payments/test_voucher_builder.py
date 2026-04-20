@@ -11,19 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.voucher_builder import VoucherBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def client():
-    """BuckarooClient wired to a MockBuckaroo strategy — never dispatched."""
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
-    return c
+from tests.support.builders import populate_required_fields
 
 
 def test_construct_with_buckaroo_client_returns_payment_builder(client):
@@ -76,11 +67,8 @@ def test_get_allowed_service_parameters_non_pay_returns_empty(client, action):
     assert VoucherBuilder(client).get_allowed_service_parameters(action) == {}
 
 
-def test_pay_posts_transaction_and_parses_response():
-    client = BuckarooClient("store_key", "secret_key", mode="test")
-    mock = MockBuckaroo()
-    client.http_client.http_strategy = mock
-    mock.queue(
+def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
+    mock_strategy.queue(
         BuckarooMockRequest.json(
             "POST",
             "*/json/transaction*",
@@ -89,15 +77,7 @@ def test_pay_posts_transaction_and_parses_response():
     )
 
     response = (
-        VoucherBuilder(client)
-        .currency("EUR")
-        .amount(25.00)
-        .description("Voucher order")
-        .invoice("INV-V-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
+        populate_required_fields(VoucherBuilder(client), amount=25.00)
         .add_parameter(
             "article",
             [{"Identifier": "A-1", "Description": "Coffee", "Quantity": 1}],
@@ -106,4 +86,4 @@ def test_pay_posts_transaction_and_parses_response():
     )
 
     assert response.key == "voucher-key-1"
-    mock.assert_all_consumed()
+    mock_strategy.assert_all_consumed()

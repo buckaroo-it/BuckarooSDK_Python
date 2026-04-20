@@ -13,23 +13,10 @@ from __future__ import annotations
 
 import pytest
 
-from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.payments.click_to_pay_builder import ClickToPayBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
-from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_buckaroo():
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_buckaroo):
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_buckaroo
-    return c
+from tests.support.builders import populate_required_fields
 
 
 @pytest.fixture
@@ -84,10 +71,10 @@ def test_base_pay_method_present_and_callable(builder):
     assert callable(builder.pay)
 
 
-def test_pay_end_to_end_through_mock_buckaroo(builder, mock_buckaroo):
+def test_pay_end_to_end_through_mock_buckaroo(builder, mock_strategy):
     """pay() builds a Pay action against the ClickToPay service, sends it
     through the HTTP client, and returns a parsed PaymentResponse."""
-    mock_buckaroo.queue(
+    mock_strategy.queue(
         BuckarooMockRequest.json(
             "POST",
             "*/json/transaction*",
@@ -100,17 +87,10 @@ def test_pay_end_to_end_through_mock_buckaroo(builder, mock_buckaroo):
     )
 
     response = (
-        builder.currency("EUR")
-        .amount(12.34)
-        .description("desc")
-        .invoice("INV-CTP-1")
-        .return_url("https://ret.example/ok")
-        .return_url_cancel("https://ret.example/cancel")
-        .return_url_error("https://ret.example/error")
-        .return_url_reject("https://ret.example/reject")
+        populate_required_fields(builder, amount=12.34)
         .pay()
     )
 
     assert response.key == "CTP-KEY"
     assert response.status.code.code == 190
-    mock_buckaroo.assert_all_consumed()
+    mock_strategy.assert_all_consumed()

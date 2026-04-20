@@ -29,20 +29,9 @@ from buckaroo.builders.payments.capabilities.instant_refund_capable import (
 )
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.swish_builder import SwishBuilder
+from tests.support.builders import populate_required_fields
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-
-
-@pytest.fixture
-def mock_strategy() -> MockBuckaroo:
-    return MockBuckaroo()
-
-
-@pytest.fixture
-def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
-    c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = mock_strategy
-    return c
 
 
 @pytest.fixture
@@ -152,17 +141,17 @@ def test_pay_posts_transaction_and_parses_response(
         )
     )
 
-    response = (
-        builder.currency("SEK")
-        .amount(49.99)
-        .description("Swish order")
-        .invoice("INV-SWISH-1")
-        .return_url("https://example.test/return")
-        .return_url_cancel("https://example.test/cancel")
-        .return_url_error("https://example.test/error")
-        .return_url_reject("https://example.test/reject")
-        .pay()
-    )
+    response = populate_required_fields(
+        builder,
+        currency="SEK",
+        amount=49.99,
+        description="Swish order",
+        invoice="INV-SWISH-1",
+        return_url="https://example.test/return",
+        return_url_cancel="https://example.test/cancel",
+        return_url_error="https://example.test/error",
+        return_url_reject="https://example.test/reject",
+    ).pay()
 
     assert response.key == "swish-key-123"
     assert response.status.code.code == 190

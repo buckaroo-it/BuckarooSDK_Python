@@ -6,24 +6,13 @@ from tests.support.test_helpers import TestHelpers
 
 class TestKlarnakpFeature:
     def test_klarnakp_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response(
-            "klarnakp", overrides={"AmountDebit": 25.00}
+        response = TestHelpers.assert_pay_returns_pending_with_redirect(
+            buckaroo, mock_strategy,
+            method="klarnakp", invoice="INV-KKP-001",
+            payload_overrides={"amount": 25.00, "description": "Test klarnakp"},
+            service_params={"reservationNumber": "RES-12345"},
+            response_overrides={"AmountDebit": 25.00},
         )
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
-        )
-        response = buckaroo.payments.create_payment("klarnakp", TestHelpers.standard_payload(
-            invoice="INV-KKP-001",
-            amount=25.00,
-            description="Test klarnakp",
-            service_parameters={
-                "reservationNumber": "RES-12345",
-            },
-        )).pay()
-
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]
         assert response.currency == "EUR"
         assert response.amount_debit == 25.00
 

@@ -1,25 +1,17 @@
 """Feature test: voucher pay() round-trip through full stack with MockBuckaroo."""
 
-from tests.support.mock_request import BuckarooMockRequest
 from tests.support.test_helpers import TestHelpers
 
 
 class TestVoucherFeature:
     def test_voucher_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("voucher")
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
-        )
-        response = buckaroo.payments.create_payment("voucher", TestHelpers.standard_payload(
-            invoice="INV-VOU-001",
-            description="Test voucher",
-            service_parameters={
+        TestHelpers.assert_pay_returns_pending_with_redirect(
+            buckaroo, mock_strategy,
+            method="voucher", invoice="INV-VOU-001",
+            payload_overrides={"description": "Test voucher"},
+            service_params={
                 "article": [
                     {"identifier": "ART-001", "description": "Test Article", "quantity": "1", "price": "10.00"},
                 ],
             },
-        )).pay()
-
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]
+        )

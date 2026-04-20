@@ -4,20 +4,16 @@ from tests.support.test_helpers import TestHelpers
 
 class TestTransferFeature:
     def test_transfer_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("transfer")
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("transfer", TestHelpers.standard_payload(
-            invoice="INV-TRF-001",
-            description="Test transfer",
-            service_parameters={
+        TestHelpers.assert_pay_returns_pending_with_redirect(
+            buckaroo, mock_strategy,
+            method="transfer", invoice="INV-TRF-001",
+            payload_overrides={"description": "Test transfer"},
+            service_params={
                 "customeremail": "test@example.com",
                 "customerfirstname": "John",
                 "customerlastname": "Doe",
             },
-        )).pay()
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]
+        )
 
     def test_transfer_cancel(self, buckaroo, mock_strategy):
         response_body = TestHelpers.success_response({

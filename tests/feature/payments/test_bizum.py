@@ -1,20 +1,12 @@
 """Feature test: bizum pay() round-trip through full stack with MockBuckaroo."""
 
-from tests.support.mock_request import BuckarooMockRequest
 from tests.support.test_helpers import TestHelpers
 
 
 class TestBizumFeature:
     def test_bizum_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("bizum")
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        TestHelpers.assert_pay_returns_pending_with_redirect(
+            buckaroo, mock_strategy,
+            method="bizum", invoice="INV-BIZUM-001",
+            payload_overrides={"description": "Test bizum"},
         )
-        response = buckaroo.payments.create_payment("bizum", TestHelpers.standard_payload(
-            invoice="INV-BIZUM-001",
-            description="Test bizum",
-        )).pay()
-
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]

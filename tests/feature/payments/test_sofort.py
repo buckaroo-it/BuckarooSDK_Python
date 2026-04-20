@@ -6,15 +6,11 @@ class TestSofortFeature:
     """Feature tests for Sofort payment method with InstantRefund and FastCheckout capabilities."""
 
     def test_sofort_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("sofort")
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("sofort", TestHelpers.standard_payload(
-            invoice="INV-SOF-001",
-            description="Test sofort",
-        )).pay()
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]
+        response = TestHelpers.assert_pay_returns_pending_with_redirect(
+            buckaroo, mock_strategy,
+            method="sofort", invoice="INV-SOF-001",
+            payload_overrides={"description": "Test sofort"},
+        )
         assert response.currency == "EUR"
         assert response.amount_debit == 10.00
 

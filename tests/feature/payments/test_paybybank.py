@@ -8,16 +8,12 @@ class TestPaybybankFeature:
     """Feature tests for PayByBank with InstantRefund and FastCheckout capabilities."""
 
     def test_paybybank_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("paybybank")
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
-        response = buckaroo.payments.create_payment("paybybank", TestHelpers.standard_payload(
-            invoice="INV-PBB-001",
-            description="Test paybybank",
-            service_parameters={"issuer": "INGBNL2A"},
-        )).pay()
-        assert response.is_pending()
-        assert response.get_redirect_url() is not None
-        assert response.key == response_body["Key"]
+        TestHelpers.assert_pay_returns_pending_with_redirect(
+            buckaroo, mock_strategy,
+            method="paybybank", invoice="INV-PBB-001",
+            payload_overrides={"description": "Test paybybank"},
+            service_params={"issuer": "INGBNL2A"},
+        )
 
     def test_paybybank_refund(self, buckaroo, mock_strategy):
         response_body = TestHelpers.refund_response("paybybank")

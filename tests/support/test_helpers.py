@@ -142,3 +142,40 @@ class TestHelpers:
         if overrides:
             response.update(overrides)
         return response
+
+    @staticmethod
+    def assert_pay_returns_pending_with_redirect(
+        buckaroo: Any,
+        mock_strategy: Any,
+        *,
+        method: str,
+        invoice: str,
+        service_params: Optional[Dict[str, Any]] = None,
+        payload_overrides: Optional[Dict[str, Any]] = None,
+        response_overrides: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        """Queue a pending-redirect mock, run ``pay()``, assert the common trio.
+
+        Returns the ``PaymentResponse`` so callers can tack on extra
+        per-method assertions (currency, amount_debit, etc.).
+        """
+        # Imported here to avoid a circular import at module load time
+        # (tests.support.mock_request itself pulls in buckaroo modules).
+        from tests.support.mock_request import BuckarooMockRequest
+
+        response_body = TestHelpers.pending_redirect_response(
+            method, overrides=response_overrides
+        )
+        mock_strategy.queue(
+            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        )
+        payload = TestHelpers.standard_payload(
+            invoice=invoice, **(payload_overrides or {})
+        )
+        if service_params is not None:
+            payload["service_parameters"] = service_params
+        response = buckaroo.payments.create_payment(method, payload).pay()
+        assert response.is_pending()
+        assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
+        return response

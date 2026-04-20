@@ -22,3 +22,12 @@ exclude_lines = [
 
 [tool.coverage.paths]
 source = ["buckaroo", "*/buckaroo"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["examples", "plans"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]

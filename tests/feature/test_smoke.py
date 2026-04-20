@@ -1,8 +1,7 @@
 """Smoke test verifying feature test fixtures work end-to-end."""
 
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.helpers import TestHelpers
-from tests.support.test_helpers import TestHelpers as TH
+from tests.support.test_helpers import TestHelpers
 
 
 class TestFeatureFixturesSmoke:
@@ -43,7 +42,7 @@ class TestFeatureFixturesSmoke:
 
     def test_pending_redirect_response_helper(self):
         """pending_redirect_response builds a valid Buckaroo response shape."""
-        resp = TH.pending_redirect_response("ideal")
+        resp = TestHelpers.pending_redirect_response("ideal")
         assert resp["Status"]["Code"]["Code"] == 791
         assert resp["RequiredAction"]["Name"] == "Redirect"
         assert resp["ServiceCode"] == "ideal"
@@ -51,7 +50,7 @@ class TestFeatureFixturesSmoke:
 
     def test_refund_response_helper(self):
         """refund_response builds a valid Buckaroo refund shape."""
-        resp = TH.refund_response("ideal")
+        resp = TestHelpers.refund_response("ideal")
         assert resp["Services"][0]["Action"] == "Refund"
         assert resp["AmountCredit"] == 10.00
         assert resp["ServiceCode"] == "ideal"

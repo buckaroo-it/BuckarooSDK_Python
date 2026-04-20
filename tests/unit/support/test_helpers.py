@@ -1,10 +1,10 @@
-"""Unit tests for tests.support.helpers.TestHelpers."""
+"""Unit tests for tests.support.test_helpers.TestHelpers."""
 
 from __future__ import annotations
 
 import re
 
-from tests.support.helpers import TestHelpers
+from tests.support.test_helpers import TestHelpers
 
 
 class TestGenerateTransactionKey:

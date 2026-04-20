@@ -14,7 +14,7 @@ def pytest_runtest_makereport(item, call):
 
 
 @pytest.fixture
-def mock_buckaroo(request):
+def mock_strategy(request):
     """Fresh :class:`MockBuckaroo` per test, asserts-consumed on clean teardown."""
     mock = MockBuckaroo()
     yield mock

@@ -9,8 +9,8 @@ from tests.support.mock_buckaroo import MockBuckaroo
 
 
 @pytest.fixture
-def client():
-    """BuckarooClient wired to a MockBuckaroo strategy — never dispatched."""
+def client(mock_strategy: MockBuckaroo) -> BuckarooClient:
+    """BuckarooClient wired to ``mock_strategy`` — no real HTTP."""
     c = BuckarooClient("store_key", "secret_key", mode="test")
-    c.http_client.http_strategy = MockBuckaroo()
+    c.http_client.http_strategy = mock_strategy
     return c

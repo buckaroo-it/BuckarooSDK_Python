@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 import sys
 from logging.handlers import RotatingFileHandler
 
@@ -77,7 +76,7 @@ def test_deep_buckaroo_shape_parameters_list():
     The masker inspects dict KEYS for the ***MASKED*** path and string VALUES
     for the ***POTENTIALLY_SENSITIVE*** fallback. The Name "encryptedCardData"
     is a *value* containing a sensitive substring, so it gets POTENTIALLY_SENSITIVE.
-    The "Value" assertion for the card data lives in its own xfail test below.
+    The paired Value is covered by ``test_deep_buckaroo_shape_parameters_value_is_masked``.
     """
     obs = _observer()
     payload = {

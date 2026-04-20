@@ -14,10 +14,10 @@ Usage::
     )
 
     def test_something():
-        http_client, mock = wire_recording_http()
+        mock, client = wire_recording_http()
         mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {}))
 
-        # ...drive the SUT via http_client...
+        # ...drive the SUT via client.http_client...
 
         assert recorded_action(mock) == "Pay"
 """

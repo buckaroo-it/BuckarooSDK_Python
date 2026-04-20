@@ -72,10 +72,9 @@ def test_required_parameter_missing_error_with_service_and_action():
     assert err.service_name == "ideal"
 
 
-# TODO: grammar inconsistency — "is missing Pay action" vs "is missing for ideal"
 def test_required_parameter_missing_error_with_only_action():
     err = RequiredParameterMissingError("issuer", action="Pay")
-    assert str(err) == "Required parameter 'issuer' is missing Pay action"
+    assert str(err) == "Required parameter 'issuer' is missing for Pay action"
 
 
 def test_required_parameter_missing_error_with_only_service():

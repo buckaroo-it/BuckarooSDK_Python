@@ -124,5 +124,5 @@ def test_module_has_docstring_with_usage_example():
     assert "queue" in module.__doc__
 
 
-def test_mock_buckaroo_fixture_yields_fresh_instance(mock_buckaroo):
-    assert isinstance(mock_buckaroo, MockBuckaroo)
+def test_mock_strategy_fixture_yields_fresh_instance(mock_strategy):
+    assert isinstance(mock_strategy, MockBuckaroo)

@@ -15,17 +15,13 @@ class TestMalformedResponse:
 
     def test_malformed_json_raises_error(self, buckaroo, mock_strategy):
         """A 200 response with non-JSON text triggers BuckarooApiError."""
-        mock = BuckarooMockRequest("POST", "*/json/transaction")
-        mock._status = 200
-        mock._body = None
-        # Override to_http_response so it returns non-JSON text
-        mock.to_http_response = lambda: HttpResponse(
-            status_code=200,
-            headers={"Content-Type": "text/html"},
-            text="<html>not json at all</html>",
-            success=True,
+        mock_strategy.queue(
+            BuckarooMockRequest.text(
+                "POST",
+                "*/json/transaction",
+                body="<html>not json at all</html>",
+            )
         )
-        mock_strategy.queue(mock)
 
         with pytest.raises(BuckarooApiError, match="Failed to parse Buckaroo response JSON"):
             buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
@@ -35,15 +31,13 @@ class TestMalformedResponse:
 
     def test_malformed_json_wraps_json_decode_error(self, buckaroo, mock_strategy):
         """The raised BuckarooApiError chains the original JSONDecodeError."""
-        mock = BuckarooMockRequest("POST", "*/json/transaction")
-        mock._status = 200
-        mock.to_http_response = lambda: HttpResponse(
-            status_code=200,
-            headers={"Content-Type": "text/html"},
-            text="{truncated",
-            success=True,
+        mock_strategy.queue(
+            BuckarooMockRequest.text(
+                "POST",
+                "*/json/transaction",
+                body="{truncated",
+            )
         )
-        mock_strategy.queue(mock)
 
         with pytest.raises(BuckarooApiError) as exc_info:
             buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(

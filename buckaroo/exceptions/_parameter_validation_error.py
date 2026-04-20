@@ -44,9 +44,9 @@ class RequiredParameterMissingError(ParameterValidationError):
             action (str, optional): Action being performed
             service_name (str, optional): Service name
         """
-        service_info = f" for {service_name}" if service_name else ""
-        action_info = f" {action} action" if action else ""
-        message = f"Required parameter '{parameter_name}' is missing{service_info}{action_info}"
+        parts = [p for p in (service_name, f"{action} action" if action else None) if p]
+        qualifier = f" for {' '.join(parts)}" if parts else ""
+        message = f"Required parameter '{parameter_name}' is missing{qualifier}"
         
         super().__init__(
             message=message,

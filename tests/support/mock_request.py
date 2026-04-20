@@ -29,6 +29,8 @@ class BuckarooMockRequest:
         self._status = 200
         self._headers: Dict[str, str] = {}
         self._body: Any = None
+        self._raw_text: Optional[str] = None
+        self._content_type: str = "application/json"
         self._exception: Optional[BaseException] = None
 
     @staticmethod
@@ -56,6 +58,24 @@ class BuckarooMockRequest:
         req._headers = dict(headers) if headers else {}
         return req
 
+    @classmethod
+    def text(
+        cls,
+        method: str,
+        url_pattern: str,
+        body: str,
+        status: int = 200,
+        headers: Optional[Dict[str, str]] = None,
+        content_type: str = "text/html",
+    ) -> "BuckarooMockRequest":
+        """Canned raw-text (non-JSON) response. Body is emitted verbatim."""
+        req = cls(method, url_pattern)
+        req._status = status
+        req._raw_text = body
+        req._content_type = content_type
+        req._headers = dict(headers) if headers else {}
+        return req
+
     def with_exception(self, exc: BaseException) -> "BuckarooMockRequest":
         self._exception = exc
         return self
@@ -77,8 +97,8 @@ class BuckarooMockRequest:
         )
 
     def to_http_response(self) -> HttpResponse:
-        headers = {"Content-Type": "application/json", **self._headers}
-        text = _json.dumps(self._body)
+        headers = {"Content-Type": self._content_type, **self._headers}
+        text = self._raw_text if self._raw_text is not None else _json.dumps(self._body)
         return HttpResponse(
             status_code=self._status,
             headers=headers,

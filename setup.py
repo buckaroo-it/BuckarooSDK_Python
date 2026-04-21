@@ -29,7 +29,7 @@ setup(
         "typing_extensions >= 4.5.0",
         "requests >= 2.20",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.8",
     project_urls={
         "Bug Tracker": "https://github.com/buckaroo-it/BuckarooSDK_Python/issues",
         "Changes": "https://github.com/buckaroo-it/BuckarooSDK_Python//blob/master/CHANGELOG.md",
@@ -44,6 +44,7 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

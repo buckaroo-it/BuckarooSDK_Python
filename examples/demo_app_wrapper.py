@@ -1,411 +1,188 @@
 #!/usr/bin/env python3
-"""
-Simplified demo using Buckaroo App wrapper.
+"""Demo of the Buckaroo app wrapper.
 
-This demo shows how to use the BuckarooApp wrapper which handles
-logging initialization automatically and provides convenient methods.
+Shows the four supported ways to construct ``Buckaroo`` and drive a payment
+through ``PaymentService`` / ``SolutionService``. All demos are gated on
+``BUCKAROO_STORE_KEY`` / ``BUCKAROO_SECRET_KEY`` env vars.
 """
 
 import os
 import sys
 
-# Add parent directory to Python path to import buckaroo module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Add parent directory to Python path so the demo can import the SDK in-place.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from buckaroo.app import Buckaroo, BuckarooConfig
-from buckaroo.observers import LogLevel, LogDestination
+from buckaroo.observers import LogDestination, LogLevel
 
 
-def demo_with_app_wrapper():
-    """Demonstrate payments using the Buckaroo app wrapper."""
-    
-    print("BUCKAROO APP WRAPPER DEMO")
-    print("=" * 50)
-    
-    # Method 1: Quick setup (minimal configuration)
-    print("\n1. Quick Setup Demo:")
-    print("-" * 30)
-    
-    store_key = os.getenv("BUCKAROO_STORE_KEY")
-    secret_key = os.getenv("BUCKAROO_SECRET_KEY")
-    
-    if not store_key or not secret_key:
-        print("⚠️  Please set BUCKAROO_STORE_KEY and BUCKAROO_SECRET_KEY environment variables")
-        return
-    
-    try:
-        # Quick setup - logger is automatically initialized
-        app = Buckaroo()
-
-        # Logger is already available, no need to initialize
-        app.log_info("Quick setup demo started")
-        
-        # payment = app.payments.create({
-        #     "method": "klarnakp",  # Payment method
-        #     # "voucher_name": "MonizzeGiftVoucher",
-        #     # "giftcard_name": "Boekenbon",  # Giftcard name
-        #     # "brand": "visa",        # Card brand
-        #     # "amount": 25.50,
-        #     "currency": "EUR", 
-        #     "invoice": "QUICK-001",
-        #     # "description": "Quick setup demo payment",
-        #     # "return_url": "https://www.buckaroo.nl",
-        #     # "return_url_cancel": "https://www.buckaroo.nl/cancel",
-        #     # "return_url_error": "https://www.buckaroo.nl/error", 
-        #     # "return_url_reject": "https://www.buckaroo.nl/reject",
-        #     # "original_transaction_key": "TXN_123",
-        #     # "PaymentData": "Lorem",
-        #     # "CustomerCardName": "Ipsum",
-        #     "original_transaction_key": "d91f5f42-f011-4611-9575-77bb0446d7d2",
-        #     "service_parameters": {
-        #         "original_transaction_key": "d91f5f42-f011-4611-9575-77bb0446d7d2",
-        #         # "issuer": "ABNANL2A",
-        #         # "amountIsChangeable": False,
-        #         # "purchaseId": "ORDER1002",
-        #         # "description": "Order #1001 payment",
-        #         # "isOneOff": True,
-        #         # "expiration": "2026-12-31",
-        #         # "imageSize": "300",
-        #         # "Consumeremail": "customer@example.com",
-        #         # "customerfirstname": "John",
-        #         # "customerlastname": "Doe",
-        #         # "customeraccountname": "John Doe",
-        #         # "customeriban": "NL91ABNA0417164300",
-        #         # "customerCountryCode": "NL",
-        #         # "billingCustomer": {
-        #         #     "category": "Person",
-        #         #     "gender": "male",
-        #         #     "firstName": "John",
-        #         #     "lastName": "Doe",
-        #         #     "email": "customer@example.com",
-        #         #     "phone": "0612345678",
-        #         #     "street": "Main Street",
-        #         #     "streetNumber": "12",
-        #         #     "city": "Amsterdam",
-        #         #     "postalCode": "1234AB",
-        #         #     "country": "NL"
-        #         # },
-        #         # "shippingCustomer": {
-        #         #     "firstName": "John",
-        #         #     "lastName": "Doe",
-        #         #     "street": "Main Street",
-        #         #     "email": "customer@example.com",
-        #         #     "streetNumber": "12",
-        #         #     "city": "Amsterdam",
-        #         #     "postalCode": "1234AB",
-        #         #     "country": "NL"
-        #         # },
-        #         # "operatingCountry": "NL",
-        #         "article": [
-        #             {
-        #                 "articleNumber": "12345",
-        #                 "articleTitle": "Product 1",
-        #                 "articleType": "Article",
-        #                 "articlePrice": 10.00
-        #             },
-        #             {
-        #                 "articleNumber": "67890",
-        #                 "articleTitle": "Product 2",
-        #                 "articleType": "Article",
-        #                 "articlePrice": 5.50
-        #             }
-        #         ]
-        #     }
-        # })
-
-        # Create In3 payment using factory pattern - auto-detected by 'issuer' field
-        # payment = app.payments.create({
-        #     "method": "przelewy24",  # Payment method
-        #     "giftcard_name": "Boekenbon",  # Giftcard name
-        #     "brand": "visa",        # Card brand
-        #     "amount": 25.50,
-        #     "currency": "EUR", 
-        #     "invoice": "QUICK-001",
-        #     "description": "Quick setup demo payment",
-        #     "return_url": "https://www.buckaroo.nl",
-        #     "return_url_cancel": "https://www.buckaroo.nl/cancel",
-        #     "return_url_error": "https://www.buckaroo.nl/error", 
-        #     "return_url_reject": "https://www.buckaroo.nl/reject",
-        #     # "original_transaction_key": "TXN_123",
-        #     # "PaymentData": "Lorem",
-        #     # "CustomerCardName": "Ipsum",
-        #     "service_parameters": {
-        #         # "issuer": "ABNANL2A",
-        #         "billingCustomer": {
-        #             "category": "B2C",
-        #             "customerNumber": "CUST-001",
-        #             "lastName": "Doe",
-        #             "email": "customer@example.com",
-        #             "phone": "0612345678",
-        #             "street": "Main Street",
-        #             "streetNumber": "12",
-        #             "city": "Amsterdam",
-        #             "postalCode": "1234AB",
-        #             "countryCode": "NL"
-        #         },
-        #         "shippingCustomer": {
-        #             "street": "Main Street",
-        #             "streetNumber": "12",
-        #             "city": "Amsterdam",
-        #             "postalCode": "1234AB",
-        #             "countryCode": "NL"
-        #         },
-        #         "article": [
-        #             {
-        #                 "category": "Books",
-        #                 "description": "Product 1",
-        #                 "quantity": 1,
-        #                 "grossUnitPrice": 10.00
-        #             },
-        #             {
-        #                 "category": "Toy Cars",
-        #                 "description": "Product 2",
-        #                 "quantity": 3,
-        #                 "grossUnitPrice": 5.50
-        #             }
-        #         ]
-        #     }
-        # })
-
-        # response = payment.refund(validate=True)  # validate=True is default
+def _have_credentials() -> bool:
+    if not os.getenv("BUCKAROO_STORE_KEY") or not os.getenv("BUCKAROO_SECRET_KEY"):
+        print("⚠️  Set BUCKAROO_STORE_KEY and BUCKAROO_SECRET_KEY to run this demo")
+        return False
+    return True
 
 
-        solution = app.solutions.create({
-            "method": "subscription",  # Payment method
-        })
-
-        response = solution.createSubscription(validate=True)
-
-        print(response.to_dict())
-        # Execute refund - values from payload (no parameters needed)
-        # response = payment.refund()  # Uses originalTransactionKey and refundAmount from payload
-        # print(response)
-        # Or override payload values with parameters
-        # response = payment.refund("DIFFERENT_TXN_123", 10.00)  # Override with specific values
-        
-        # print(f"✅ Payment builder created: {type(payment).__name__}")
-        # print("   Methods can use payload values or parameters:")
-        # print("   - payment.execute() for new payment")
-        # print("   - payment.refund() uses payload 'original_transaction_key' and 'refund_amount'")
-        # print("   - payment.refund('TXN_KEY', amount) to override payload values")
-        # print("   - payment.capture() uses payload 'authorization_key' and 'capture_amount'")
-        # print("   - payment.cancel() uses payload 'cancel_key' or 'original_transaction_key'")
-        
-        # # Show payload values that would be used
-        # print(f"\n   Payload values available:")
-        # print(f"   - originalTransactionKey: {payment._payload.get('original_transaction_key')}")
-        # print(f"   - refundAmount: {payment._payload.get('refund_amount')}")
-        # print(f"   - issuer: {payment._payload.get('issuer')}")
-        
-        # # Show additional payload examples
-        # print("\n   Additional payload examples:")
-        
-        # # Capture example with payload values
-        # capture_payment = app.payments.create({
-        #     "amount": 100.00,
-        #     "currency": "EUR", 
-        #     "invoice": "CAPTURE-001",
-        #     "description": "Capture demo",
-        #     "return_url": "https://www.buckaroo.nl",
-        #     "return_url_cancel": "https://www.buckaroo.nl/cancel", 
-        #     "return_url_error": "https://www.buckaroo.nl/error",
-        #     "return_url_reject": "https://www.buckaroo.nl/reject",
-        #     "authorization_key": "AUTH_456",  # For capture operations
-        #     "capture_amount": 75.00,           # Partial capture amount
-        #     "card_number": "1234567890123456"  # Credit card payment
-        # })
-        # print("   Created capture payment with authorizationKey and captureAmount")
-        # print(f"   - Authorization key: {capture_payment._payload.get('authorization_key')}")
-        # print(f"   - Capture amount: {capture_payment._payload.get('capture_amount')}")
-        # # capture_payment.capture()  # Would use AUTH_456 and 75.00 from payload
-        
-        # # Cancel example with payload values  
-        # cancel_payment = app.payments.create({
-        #     "amount": 50.00,
-        #     "currency": "EUR",
-        #     "invoice": "CANCEL-001", 
-        #     "description": "Cancel demo",
-        #     "return_url": "https://www.buckaroo.nl",
-        #     "return_url_cancel": "https://www.buckaroo.nl/cancel",
-        #     "return_url_error": "https://www.buckaroo.nl/error", 
-        #     "return_url_reject": "https://www.buckaroo.nl/reject",
-        #     "cancel_key": "PENDING_789",       # For cancel operations
-        #     "issuer": "ABNANL2A"
-        # })
-        # print("   Created cancel payment with cancelKey")
-        # print(f"   - Cancel key: {cancel_payment._payload.get('cancel_key')}")
-        # # cancel_payment.cancel()  # Would use PENDING_789 from payload
-        
-        app.log_info("Quick setup demo completed successfully")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        if 'app' in locals():
-            app.log_exception(e)
-
-
-def demo_with_environment_config():
-    """Demonstrate using environment-based configuration."""
-    
-    print("\n2. Environment Configuration Demo:")
+def demo_quick_setup() -> None:
+    """Minimal bootstrap: one call, ready to go."""
+    print("\n1. Quick setup")
     print("-" * 40)
-    
-    try:
-        # Create app from environment variables
-        # This automatically reads all BUCKAROO_* environment variables
-        app = Buckaroo.from_env()
-        
-        app.log_info("Environment-based app started")
-        
-        # Create payment using the generic method
-        payment_data = {
-            'currency': 'EUR',
-            'amount': 15.75,
-            'description': 'Environment config demo',
-            'invoice': 'ENV-DEMO-001',
-            'return_url': 'https://www.buckaroo.nl',
-            'return_url_cancel': 'https://www.buckaroo.nl/cancel',
-            'return_url_error': 'https://www.buckaroo.nl/error',
-            'return_url_reject': 'https://www.buckaroo.nl/reject',
-            'issuer': 'ABNANL2A'
-        }
-        
-        payment = app.create_payment("ideal", payment_data)
-        response = app.execute_payment(payment)
-        
-        print("✅ Environment-based configuration worked!")
-        app.log_info("Environment demo completed")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        if 'app' in locals():
-            app.log_exception(e)
-
-
-def demo_with_custom_config():
-    """Demonstrate using custom configuration."""
-    
-    print("\n3. Custom Configuration Demo:")
-    print("-" * 35)
-    
-    store_key = os.getenv("BUCKAROO_STORE_KEY")
-    secret_key = os.getenv("BUCKAROO_SECRET_KEY")
-    
-    if not store_key or not secret_key:
-        print("⚠️  Skipping - credentials not available")
+    if not _have_credentials():
         return
-    
+
     try:
-        # Create custom configuration
+        app = Buckaroo.quick_setup(
+            store_key=os.environ["BUCKAROO_STORE_KEY"],
+            secret_key=os.environ["BUCKAROO_SECRET_KEY"],
+            mode="test",
+        )
+        app.log_info("quick setup demo started")
+
+        # Drive a subscription via the solutions service. SolutionBuilder.createSubscription
+        # returns a PaymentResponse with the pending-redirect contract.
+        solution = app.solutions.create({"method": "subscription"})
+        response = solution.createSubscription(validate=False)
+
+        print(f"   status.code={response.status.code.code}  key={response.key}")
+        app.log_info("quick setup demo finished")
+    except Exception as e:
+        print(f"   ❌ {e}")
+
+
+def demo_from_env() -> None:
+    """Construct Buckaroo from the ``BUCKAROO_*`` environment variables."""
+    print("\n2. Environment config (Buckaroo.from_env)")
+    print("-" * 40)
+    if not _have_credentials():
+        return
+
+    try:
+        app = Buckaroo.from_env()
+        app.log_info("env-config demo started")
+
+        # create_payment(method, params) dispatches through the PaymentMethodFactory
+        # and returns a ready-to-execute PaymentBuilder.
+        builder = app.payments.create_payment(
+            "ideal",
+            {
+                "currency": "EUR",
+                "amount": 15.75,
+                "description": "env-config demo",
+                "invoice": "ENV-DEMO-001",
+                "return_url": "https://www.buckaroo.nl",
+                "return_url_cancel": "https://www.buckaroo.nl/cancel",
+                "return_url_error": "https://www.buckaroo.nl/error",
+                "return_url_reject": "https://www.buckaroo.nl/reject",
+                "service_parameters": {"issuer": "ABNANL2A"},
+            },
+        )
+        response = builder.pay()
+
+        print(f"   is_pending={response.is_pending()}  redirect={response.get_redirect_url()}")
+        app.log_info("env-config demo finished")
+    except Exception as e:
+        print(f"   ❌ {e}")
+
+
+def demo_custom_config() -> None:
+    """Construct Buckaroo with a hand-built ``BuckarooConfig``."""
+    print("\n3. Custom config")
+    print("-" * 40)
+    if not _have_credentials():
+        return
+
+    try:
         config = BuckarooConfig(
-            store_key=store_key,
-            secret_key=secret_key,
+            store_key=os.environ["BUCKAROO_STORE_KEY"],
+            secret_key=os.environ["BUCKAROO_SECRET_KEY"],
             mode="test",
             enable_logging=True,
             log_level=LogLevel.DEBUG,
             log_destination=LogDestination.STDOUT,
             mask_sensitive_data=True,
             timeout=45,
-            retry_attempts=5
+            retry_attempts=5,
         )
-        
         app = Buckaroo(config)
-        
-        app.log_info("Custom configuration demo started")
-        
-        # Create payment with child logger (adds context to all logs)
-        session_context = {
-            "session_id": "sess_custom_001",
-            "user_id": "demo_user",
-            "demo_type": "custom_config"
-        }
-        
-        child_logger = app.create_child_logger(session_context)
-        
-        if child_logger:
-            child_logger.log_info("Starting payment with custom context")
-        
-        payment = app.create_ideal_payment(
-            amount=42.00,
-            currency="EUR",
-            description="Custom config demo payment",
-            invoice="CUSTOM-001"
+
+        # create_child_logger adds structured context to every subsequent log line.
+        child = app.create_child_logger({"session_id": "sess_custom_001", "demo": "custom_config"})
+        if child:
+            child.log_info("payment flow started with session context")
+
+        builder = app.payments.create_payment(
+            "ideal",
+            {
+                "currency": "EUR",
+                "amount": 42.00,
+                "description": "custom-config demo",
+                "invoice": "CUSTOM-001",
+                "return_url": "https://www.buckaroo.nl",
+                "return_url_cancel": "https://www.buckaroo.nl/cancel",
+                "return_url_error": "https://www.buckaroo.nl/error",
+                "return_url_reject": "https://www.buckaroo.nl/reject",
+                "service_parameters": {"issuer": "ABNANL2A"},
+            },
         )
-        
-        response = app.execute_payment(payment)
-        
-        print("✅ Custom configuration demo completed!")
-        app.log_info("Custom config demo finished")
-        
+        response = builder.pay()
+        print(f"   status.code={response.status.code.code}  key={response.key}")
     except Exception as e:
-        print(f"❌ Error: {e}")
-        if 'app' in locals():
-            app.log_exception(e)
+        print(f"   ❌ {e}")
 
 
-def demo_with_context_manager():
-    """Demonstrate using app as context manager."""
-    
-    print("\n4. Context Manager Demo:")
-    print("-" * 30)
-    
-    store_key = os.getenv("BUCKAROO_STORE_KEY")
-    secret_key = os.getenv("BUCKAROO_SECRET_KEY")
-    
-    if not store_key or not secret_key:
-        print("⚠️  Skipping - credentials not available")
+def demo_context_manager() -> None:
+    """``Buckaroo`` supports ``with`` — logs entry + exit automatically."""
+    print("\n4. Context manager")
+    print("-" * 40)
+    if not _have_credentials():
         return
-    
+
     try:
-        # Use app as context manager
-        with Buckaroo.quick_setup(store_key, secret_key, log_to_stdout=True) as app:
-            app.log_info("Context manager demo started")
-            
-            # Multiple operations within the context
+        with Buckaroo.quick_setup(
+            store_key=os.environ["BUCKAROO_STORE_KEY"],
+            secret_key=os.environ["BUCKAROO_SECRET_KEY"],
+        ) as app:
+            app.log_info("context-manager demo started")
+
             for i in range(2):
-                app.log_info(f"Creating payment {i+1}")
-                
-                payment = app.create_ideal_payment(
-                    amount=10.00 + i,
-                    currency="EUR",
-                    description=f"Context demo payment {i+1}",
-                    invoice=f"CTX-{i+1:03d}"
+                builder = app.payments.create_payment(
+                    "ideal",
+                    {
+                        "currency": "EUR",
+                        "amount": 10.00 + i,
+                        "description": f"ctx demo {i + 1}",
+                        "invoice": f"CTX-{i + 1:03d}",
+                        "return_url": "https://www.buckaroo.nl",
+                        "return_url_cancel": "https://www.buckaroo.nl/cancel",
+                        "return_url_error": "https://www.buckaroo.nl/error",
+                        "return_url_reject": "https://www.buckaroo.nl/reject",
+                        "service_parameters": {"issuer": "ABNANL2A"},
+                    },
                 )
-                
-                # Simulate processing
-                app.log_info(f"Processing payment {i+1}")
-        
-        print("✅ Context manager demo completed!")
-        
+                response = builder.pay()
+                app.log_info(f"payment {i + 1} dispatched", code=response.status.code.code)
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"   ❌ {e}")
 
 
-def main():
-    """Run all demos."""
-    print("BUCKAROO SDK - APP WRAPPER DEMOS")
+def main() -> None:
+    print("BUCKAROO SDK — APP WRAPPER DEMOS")
     print("=" * 60)
-    
-    print("\n📋 Available Logging Environment Variables:")
-    print("- BUCKAROO_LOG_LEVEL=DEBUG|INFO|WARNING|ERROR")
-    print("- BUCKAROO_LOG_DESTINATION=stdout|file|both")
-    print("- BUCKAROO_LOG_FILE=custom.log")
-    print("- BUCKAROO_LOG_MASK_SENSITIVE=true|false")
-    
-    demo_with_app_wrapper()
-    # demo_with_environment_config()
-    # demo_with_custom_config()
-    # demo_with_context_manager()
-    
+    print("Env vars read by BuckarooConfig.from_env():")
+    print("  BUCKAROO_STORE_KEY, BUCKAROO_SECRET_KEY, BUCKAROO_MODE")
+    print("  BUCKAROO_LOG_LEVEL={DEBUG|INFO|WARNING|ERROR}")
+    print("  BUCKAROO_LOG_DESTINATION={stdout|file|both}")
+    print("  BUCKAROO_LOG_FILE=/path/to/log")
+    print("  BUCKAROO_LOG_MASK_SENSITIVE={true|false}")
+    print("  BUCKAROO_TIMEOUT, BUCKAROO_RETRY_ATTEMPTS")
+
+    demo_quick_setup()
+    demo_from_env()
+    demo_custom_config()
+    demo_context_manager()
+
     print("\n" + "=" * 60)
-    print("🎉 ALL DEMOS COMPLETED!")
-    print("The Buckaroo wrapper automatically handles:")
-    print("✅ Logging initialization")
-    print("✅ Client setup") 
-    print("✅ Automatic payment logging")
-    print("✅ Exception handling")
-    print("✅ Environment configuration")
-    print("=" * 60)
+    print("done.")
 
 
 if __name__ == "__main__":

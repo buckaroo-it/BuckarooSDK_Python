@@ -10,7 +10,9 @@ import pytest
 
 from buckaroo.builders.payments.payconiq_builder import PayconiqBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import BankTransferCapabilities
+from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
+    BankTransferCapabilities,
+)
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.builders import populate_required_fields
 
@@ -29,20 +31,36 @@ def test_get_service_name_returns_payconiq(client):
 def test_get_allowed_service_parameters_pay_snapshot(client):
     params = PayconiqBuilder(client).get_allowed_service_parameters("Pay")
     assert params == {
-        "mobilenumber": {"type": str, "required": False, "description": "Mobile number for Payconiq"},
-        "savetoken": {"type": (str, bool), "required": False, "description": "Save payment token for future use"},
-        "isrecurring": {"type": (str, bool), "required": False, "description": "Recurring payment flag"},
+        "mobilenumber": {
+            "type": str,
+            "required": False,
+            "description": "Mobile number for Payconiq",
+        },
+        "savetoken": {
+            "type": (str, bool),
+            "required": False,
+            "description": "Save payment token for future use",
+        },
+        "isrecurring": {
+            "type": (str, bool),
+            "required": False,
+            "description": "Recurring payment flag",
+        },
     }
 
 
 def test_get_allowed_service_parameters_pay_is_case_insensitive(client):
     builder = PayconiqBuilder(client)
-    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
+        "Pay"
+    )
 
 
 def test_get_allowed_service_parameters_payfastcheckout(client):
     builder = PayconiqBuilder(client)
-    assert builder.get_allowed_service_parameters("PayFastCheckout") == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters(
+        "PayFastCheckout"
+    ) == builder.get_allowed_service_parameters("Pay")
 
 
 def test_get_allowed_service_parameters_instantrefund_returns_empty(client):
@@ -56,7 +74,9 @@ def test_get_allowed_service_parameters_other_actions_return_empty(client, actio
 
 def test_get_allowed_service_parameters_unknown_action_returns_default(client):
     builder = PayconiqBuilder(client)
-    assert builder.get_allowed_service_parameters("SomethingElse") == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters(
+        "SomethingElse"
+    ) == builder.get_allowed_service_parameters("Pay")
 
 
 def test_capability_mixin_instant_refund(client):
@@ -75,31 +95,34 @@ def test_mobile_number_setter(client):
 
 
 def test_from_dict_with_mobile_number(client):
-    builder = PayconiqBuilder(client).from_dict({
-        "currency": "EUR",
-        "amount": 5.00,
-        "mobile_number": "+31612345678",
-    })
+    builder = PayconiqBuilder(client).from_dict(
+        {
+            "currency": "EUR",
+            "amount": 5.00,
+            "mobile_number": "+31612345678",
+        }
+    )
     assert isinstance(builder, PayconiqBuilder)
 
 
 def test_from_dict_without_mobile_number(client):
-    builder = PayconiqBuilder(client).from_dict({
-        "currency": "EUR",
-        "amount": 5.00,
-    })
+    builder = PayconiqBuilder(client).from_dict(
+        {
+            "currency": "EUR",
+            "amount": 5.00,
+        }
+    )
     assert isinstance(builder, PayconiqBuilder)
 
 
 def test_payconiq_payFastCheckout_works(client, mock_strategy):
     """PayconiqBuilder.payFastCheckout uses the inherited mixin method."""
     mock_strategy.queue(
-        BuckarooMockRequest.json("POST", "*/json/transaction*",
-            {"Key": "pcq-fc-1", "Status": {"Code": {"Code": 190}}})
+        BuckarooMockRequest.json(
+            "POST", "*/json/transaction*", {"Key": "pcq-fc-1", "Status": {"Code": {"Code": 190}}}
+        )
     )
-    builder = (
-        populate_required_fields(PayconiqBuilder(client))
-    )
+    builder = populate_required_fields(PayconiqBuilder(client))
     response = builder.payFastCheckout(validate=False)
     assert response is not None
 
@@ -107,12 +130,11 @@ def test_payconiq_payFastCheckout_works(client, mock_strategy):
 def test_payconiq_instantRefund_works(client, mock_strategy):
     """PayconiqBuilder.instantRefund uses the inherited mixin method."""
     mock_strategy.queue(
-        BuckarooMockRequest.json("POST", "*/json/transaction*",
-            {"Key": "pcq-ir-1", "Status": {"Code": {"Code": 190}}})
+        BuckarooMockRequest.json(
+            "POST", "*/json/transaction*", {"Key": "pcq-ir-1", "Status": {"Code": {"Code": 190}}}
+        )
     )
-    builder = (
-        populate_required_fields(PayconiqBuilder(client))
-    )
+    builder = populate_required_fields(PayconiqBuilder(client))
     response = builder.instantRefund(validate=False)
     assert response is not None
 
@@ -133,4 +155,3 @@ def test_pay_end_to_end(client, mock_strategy):
     )
 
     assert response.key == "payconiq-key-123"
-    mock_strategy.assert_all_consumed()

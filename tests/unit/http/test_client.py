@@ -74,15 +74,13 @@ def _recompute_signature(
     encoded_url = quote(url, safe="").lower()
 
     if content:
-        content_b64 = base64.b64encode(
-            hashlib.md5(content.encode("utf-8")).digest()
-        ).decode("utf-8")
+        content_b64 = base64.b64encode(hashlib.md5(content.encode("utf-8")).digest()).decode(
+            "utf-8"
+        )
     else:
         content_b64 = ""
 
-    string_to_sign = (
-        f"{store_key}{method}{encoded_url}{timestamp}{nonce}{content_b64}"
-    )
+    string_to_sign = f"{store_key}{method}{encoded_url}{timestamp}{nonce}{content_b64}"
     return base64.b64encode(
         _hmac.new(
             secret_key.encode("utf-8"),
@@ -124,9 +122,9 @@ class TestHmacVectors:
 
             # Content digest component is a vector-level invariant.
             if content:
-                actual_b64 = base64.b64encode(
-                    hashlib.md5(content.encode("utf-8")).digest()
-                ).decode("utf-8")
+                actual_b64 = base64.b64encode(hashlib.md5(content.encode("utf-8")).digest()).decode(
+                    "utf-8"
+                )
             else:
                 actual_b64 = ""
             assert actual_b64 == expected_content_b64, label
@@ -226,9 +224,7 @@ class TestHmacSensitivity:
 
     def test_signature_changes_when_method_changes(self):
         client = _make_client()
-        sig_post, nonce = self._sig_for(
-            client, "POST", "https://example.com/api", "", "1700000000"
-        )
+        sig_post, nonce = self._sig_for(client, "POST", "https://example.com/api", "", "1700000000")
         # Re-derive GET using the SAME nonce so only method differs.
         get_expected = _recompute_signature(
             "test_store_key",
@@ -243,9 +239,7 @@ class TestHmacSensitivity:
 
     def test_signature_changes_when_url_changes(self):
         client = _make_client()
-        sig_a, nonce = self._sig_for(
-            client, "POST", "https://example.com/a", "", "1700000000"
-        )
+        sig_a, nonce = self._sig_for(client, "POST", "https://example.com/a", "", "1700000000")
         sig_b_expected = _recompute_signature(
             "test_store_key",
             "test_secret_key",
@@ -275,9 +269,7 @@ class TestHmacSensitivity:
 
     def test_signature_changes_when_timestamp_changes(self):
         client = _make_client()
-        sig_t1, nonce = self._sig_for(
-            client, "POST", "https://example.com/api", "", "1700000000"
-        )
+        sig_t1, nonce = self._sig_for(client, "POST", "https://example.com/api", "", "1700000000")
         sig_t2 = _recompute_signature(
             "test_store_key",
             "test_secret_key",
@@ -291,12 +283,11 @@ class TestHmacSensitivity:
 
     def test_signature_changes_when_secret_key_changes(self):
         client_a = _make_client(secret_key="secret_a")
-        client_b = _make_client(secret_key="secret_b")
         # Use local re-derivation to remove nonce as a variable.
         _, sig_a, nonce_a, _ = _parse_auth(
-            client_a._generate_hmac_signature(
-                "POST", "https://example.com/api", "", "1700000000"
-            )["Authorization"]
+            client_a._generate_hmac_signature("POST", "https://example.com/api", "", "1700000000")[
+                "Authorization"
+            ]
         )
         sig_b_same_nonce = _recompute_signature(
             "test_store_key",
@@ -312,9 +303,9 @@ class TestHmacSensitivity:
     def test_signature_changes_when_store_key_changes(self):
         client_a = _make_client(store_key="store_a")
         _, sig_a, nonce_a, _ = _parse_auth(
-            client_a._generate_hmac_signature(
-                "POST", "https://example.com/api", "", "1700000000"
-            )["Authorization"]
+            client_a._generate_hmac_signature("POST", "https://example.com/api", "", "1700000000")[
+                "Authorization"
+            ]
         )
         sig_b_same_nonce = _recompute_signature(
             "store_b",
@@ -345,12 +336,22 @@ class TestHmacContentEdgeCases:
         # Re-derive both under a shared nonce; both must collapse to the
         # same signature (proof content component is '' in both paths).
         rederived_1 = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", "", "1700000000", nonce1,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "https://example.com/api",
+            "",
+            "1700000000",
+            nonce1,
         )
         rederived_2 = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", "", "1700000000", nonce2,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "https://example.com/api",
+            "",
+            "1700000000",
+            nonce2,
         )
         assert sig1 == rederived_1
         assert sig2 == rederived_2
@@ -358,24 +359,30 @@ class TestHmacContentEdgeCases:
     def test_non_ascii_utf8_body_is_stable(self):
         client = _make_client()
         body = '{"description":"Payment 支付 💳","amount":15}'
-        h1 = client._generate_hmac_signature(
-            "POST", "https://example.com/api", body, "1700000000"
-        )
+        h1 = client._generate_hmac_signature("POST", "https://example.com/api", body, "1700000000")
         _, sig1, nonce1, _ = _parse_auth(h1["Authorization"])
         expected = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", body, "1700000000", nonce1,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "https://example.com/api",
+            body,
+            "1700000000",
+            nonce1,
         )
         assert sig1 == expected
 
         # Second call with same inputs + parsed nonce yields identical sig.
-        h2 = client._generate_hmac_signature(
-            "POST", "https://example.com/api", body, "1700000000"
-        )
+        h2 = client._generate_hmac_signature("POST", "https://example.com/api", body, "1700000000")
         _, sig2, nonce2, _ = _parse_auth(h2["Authorization"])
         expected2 = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", body, "1700000000", nonce2,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "https://example.com/api",
+            body,
+            "1700000000",
+            nonce2,
         )
         assert sig2 == expected2
 
@@ -395,26 +402,39 @@ class TestHmacUrlScheme:
         # Re-derive both http and https with the SAME nonce; they must match
         # because protocol stripping makes the signed URL identical.
         rederived_http = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "http://example.com/api", body, ts, nonce,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "http://example.com/api",
+            body,
+            ts,
+            nonce,
         )
         rederived_https = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", body, ts, nonce,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "https://example.com/api",
+            body,
+            ts,
+            nonce,
         )
         assert sig_http == rederived_http
         assert rederived_http == rederived_https
 
     def test_url_without_scheme_signs_verbatim(self):
         client = _make_client()
-        headers = client._generate_hmac_signature(
-            "POST", "example.com/api", "", "1700000000"
-        )
+        headers = client._generate_hmac_signature("POST", "example.com/api", "", "1700000000")
         _, sig, nonce, _ = _parse_auth(headers["Authorization"])
 
         expected = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "example.com/api", "", "1700000000", nonce,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "example.com/api",
+            "",
+            "1700000000",
+            nonce,
         )
         assert sig == expected
 
@@ -427,9 +447,7 @@ class TestHmacTimestampDefault:
 
         before = int(_time.time())
         client = _make_client()
-        headers = client._generate_hmac_signature(
-            "POST", "https://example.com/api", ""
-        )
+        headers = client._generate_hmac_signature("POST", "https://example.com/api", "")
         after = int(_time.time())
 
         ts_header = headers["X-Buckaroo-Timestamp"]
@@ -439,8 +457,13 @@ class TestHmacTimestampDefault:
         _, signature, nonce, auth_ts = _parse_auth(headers["Authorization"])
         assert auth_ts == ts_header
         expected = _recompute_signature(
-            "test_store_key", "test_secret_key", "POST",
-            "https://example.com/api", "", ts_header, nonce,
+            "test_store_key",
+            "test_secret_key",
+            "POST",
+            "https://example.com/api",
+            "",
+            ts_header,
+            nonce,
         )
         assert signature == expected
 
@@ -461,9 +484,7 @@ class TestHmacTimestampDefault:
         "post_mixedcase_url",
     ],
 )
-def test_hmac_client_output_matches_vector_under_parsed_nonce(
-    hmac_vectors, vector_index
-):
+def test_hmac_client_output_matches_vector_under_parsed_nonce(hmac_vectors, vector_index):
     (
         _label,
         store_key,
@@ -481,9 +502,7 @@ def test_hmac_client_output_matches_vector_under_parsed_nonce(
     client = _make_client(store_key=store_key, secret_key=secret_key)
     headers = client._generate_hmac_signature(method, url, content, timestamp)
 
-    parsed_store, signature, parsed_nonce, parsed_ts = _parse_auth(
-        headers["Authorization"]
-    )
+    parsed_store, signature, parsed_nonce, parsed_ts = _parse_auth(headers["Authorization"])
     assert parsed_store == store_key
     assert parsed_ts == timestamp
     assert headers["X-Buckaroo-Store-Key"] == store_key
@@ -546,9 +565,7 @@ class TestResponseParsing:
 
         class GarbageBodyMock(MockBuckaroo):
             def request(self, method, url, headers=None, data=None, timeout=None, verify_ssl=True):
-                return HttpResponse(
-                    status_code=200, headers={}, text="not-json{", success=True
-                )
+                return HttpResponse(status_code=200, headers={}, text="not-json{", success=True)
 
         client = _make_client_with_mock(GarbageBodyMock())
 
@@ -592,9 +609,7 @@ class TestNonAuthErrorStatusCodes:
     def test_non_2xx_raises_buckaroo_api_error_carrying_status_and_body(self, status):
         body = {"Code": status, "Message": f"err-{status}"}
         mock = MockBuckaroo()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/Transaction*", body, status=status)
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/Transaction*", body, status=status))
         client = _make_client_with_mock(mock)
 
         with pytest.raises(BuckarooApiError) as exc:
@@ -604,7 +619,9 @@ class TestNonAuthErrorStatusCodes:
 
         assert str(status) in str(exc.value)
         assert exc.value.status_code == status
-        assert f"err-{status}" in str(exc.value.error_data) or f"err-{status}" in (exc.value.response.text if exc.value.response else "")
+        assert f"err-{status}" in str(exc.value.error_data) or f"err-{status}" in (
+            exc.value.response.text if exc.value.response else ""
+        )
 
 
 class TestStrategyExceptionMapping:
@@ -643,9 +660,7 @@ class TestStrategyExceptionMapping:
     def test_authentication_error_from_strategy_propagates_unchanged(self):
         original = AuthenticationError("strategy-side auth failure")
         mock = MockBuckaroo()
-        mock.queue(
-            BuckarooMockRequest("POST", "*/json/Transaction*").with_exception(original)
-        )
+        mock.queue(BuckarooMockRequest("POST", "*/json/Transaction*").with_exception(original))
         client = _make_client_with_mock(mock)
 
         with pytest.raises(AuthenticationError) as exc:
@@ -656,9 +671,7 @@ class TestStrategyExceptionMapping:
     def test_buckaroo_api_error_from_strategy_propagates_unchanged(self):
         original = BuckarooApiError("strategy-side api failure")
         mock = MockBuckaroo()
-        mock.queue(
-            BuckarooMockRequest("POST", "*/json/Transaction*").with_exception(original)
-        )
+        mock.queue(BuckarooMockRequest("POST", "*/json/Transaction*").with_exception(original))
         client = _make_client_with_mock(mock)
 
         with pytest.raises(BuckarooApiError) as exc:

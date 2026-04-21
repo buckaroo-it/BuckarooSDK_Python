@@ -90,7 +90,9 @@ def test_get_allowed_service_parameters_pay_default_branch_snapshot(client):
 def test_get_allowed_service_parameters_is_case_insensitive_for_pay(client):
     """Source lower-cases the action; ``'pay'`` and ``'Pay'`` must match."""
     builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "other"})
-    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
+        "Pay"
+    )
 
 
 def test_get_allowed_service_parameters_unsupported_action_returns_empty(client):

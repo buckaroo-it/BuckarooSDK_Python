@@ -252,8 +252,9 @@ def test_confirm_credential_returns_false_on_transport_exception():
     client = BuckarooClient("store", "secret")
     mock = MockBuckaroo()
     mock.queue(
-        BuckarooMockRequest("GET", "*/json/Transaction/Specification/ideal")
-        .with_exception(RuntimeError("network dead"))
+        BuckarooMockRequest("GET", "*/json/Transaction/Specification/ideal").with_exception(
+            RuntimeError("network dead")
+        )
     )
     client.http_client.http_strategy = mock
 

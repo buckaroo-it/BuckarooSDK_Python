@@ -1,7 +1,7 @@
 """Reusable test helpers for the Buckaroo SDK test suite.
 
-Mirrors ``tests/Support/TestHelpers.php`` from the PHP SDK so fixtures stay
-consistent across both implementations.
+Named ``Helpers`` (not ``TestHelpers``) so pytest doesn't auto-collect the
+class under its ``Test*`` discovery rule.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ FIXED_DATETIME = "2026-01-01T00:00:00"
 FIXED_INVOICE = "INV-FIXED"
 
 
-class TestHelpers:
+class Helpers:
     """Fixture builders for Buckaroo-shaped payloads and responses."""
 
     @staticmethod
@@ -55,7 +55,7 @@ class TestHelpers:
         ``overrides`` is shallow-merged over the top-level dict.
         """
         response: Dict[str, Any] = {
-            "Key": TestHelpers.generate_transaction_key(),
+            "Key": Helpers.generate_transaction_key(),
             "Status": {
                 "Code": {"Code": STATUS_SUCCESS, "Description": "Success"},
                 "SubCode": {"Code": SUBCODE_SUCCESS, "Description": "Transaction successful"},
@@ -84,7 +84,7 @@ class TestHelpers:
         :meth:`success_response`, then shallow-merges ``overrides`` over the
         top-level dict.
         """
-        response = TestHelpers.success_response()
+        response = Helpers.success_response()
         response["Status"]["Code"] = {"Code": STATUS_FAILED, "Description": "Failed"}
         response["Status"]["SubCode"] = {"Code": SUBCODE_FAILED, "Description": error}
         if overrides:
@@ -99,7 +99,7 @@ class TestHelpers:
         overrides: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Buckaroo-shaped pending response with redirect action."""
-        tx_key = TestHelpers.generate_transaction_key()
+        tx_key = Helpers.generate_transaction_key()
         if redirect_url is None:
             redirect_url = f"https://checkout.buckaroo.nl/redirect/{tx_key}"
         response: Dict[str, Any] = {
@@ -136,12 +136,14 @@ class TestHelpers:
         overrides: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Buckaroo-shaped successful refund response."""
-        response = TestHelpers.success_response({
-            "Services": [{"Name": service_name, "Action": "Refund", "Parameters": []}],
-            "ServiceCode": service_name,
-            "AmountCredit": 10.00,
-            "AmountDebit": None,
-        })
+        response = Helpers.success_response(
+            {
+                "Services": [{"Name": service_name, "Action": "Refund", "Parameters": []}],
+                "ServiceCode": service_name,
+                "AmountCredit": 10.00,
+                "AmountDebit": None,
+            }
+        )
         if overrides:
             response.update(overrides)
         return response
@@ -162,15 +164,11 @@ class TestHelpers:
         Returns the ``PaymentResponse`` so callers can tack on extra
         per-method assertions (currency, amount_debit, etc.).
         """
-        response_body = TestHelpers.pending_redirect_response(
-            method, overrides=response_overrides
-        )
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
-        )
-        payload = TestHelpers.standard_payload(
-            invoice=invoice, **(payload_overrides or {})
-        )
+        response_body = Helpers.pending_redirect_response(method, overrides=response_overrides)
+        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
+        overrides = dict(payload_overrides or {})
+        overrides.pop("invoice", None)
+        payload = Helpers.standard_payload(invoice=invoice, **overrides)
         if service_params is not None:
             payload["service_parameters"] = service_params
         response = buckaroo.payments.create_payment(method, payload).pay()
@@ -191,16 +189,15 @@ class TestHelpers:
         payload_overrides: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Queue a refund-shaped response, run ``refund()``, assert success."""
-        response_body = TestHelpers.refund_response(method)
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
-        )
+        response_body = Helpers.refund_response(method)
+        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
         overrides = {
             "description": "Refund",
             "original_transaction_key": original_transaction_key,
             **(payload_overrides or {}),
         }
-        payload = TestHelpers.standard_payload(invoice=invoice, **overrides)
+        overrides.pop("invoice", None)
+        payload = Helpers.standard_payload(invoice=invoice, **overrides)
         response = buckaroo.payments.create_payment(method, payload).refund()
         assert response.status.code.code == STATUS_SUCCESS
         assert response.key == response_body["Key"]
@@ -218,25 +215,58 @@ class TestHelpers:
         payload_overrides: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Queue an InstantRefund-shaped response, run ``instantRefund()``."""
-        response_body = TestHelpers.success_response({
-            "Services": [{"Name": method, "Action": "InstantRefund", "Parameters": []}],
-            "ServiceCode": method,
-            "AmountCredit": 10.00,
-            "AmountDebit": None,
-        })
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        response_body = Helpers.success_response(
+            {
+                "Services": [{"Name": method, "Action": "InstantRefund", "Parameters": []}],
+                "ServiceCode": method,
+                "AmountCredit": 10.00,
+                "AmountDebit": None,
+            }
         )
+        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
         overrides = {
             "description": "Instant refund",
             "original_transaction_key": original_transaction_key,
             **(payload_overrides or {}),
         }
-        payload = TestHelpers.standard_payload(invoice=invoice, **overrides)
+        overrides.pop("invoice", None)
+        payload = Helpers.standard_payload(invoice=invoice, **overrides)
         response = buckaroo.payments.create_payment(method, payload).instantRefund()
         assert response.status.code.code == STATUS_SUCCESS
         assert response.key == response_body["Key"]
         _assert_recorded_action(mock_strategy, "instantRefund")
+        return response
+
+    @staticmethod
+    def assert_action_returns_pending_with_redirect(
+        buckaroo: Any,
+        mock_strategy: Any,
+        *,
+        method: str,
+        invoice: str,
+        action_name: str,
+        call_method: str,
+        payload_overrides: Optional[Dict[str, Any]] = None,
+        extra_builder_setup: Optional[Any] = None,
+    ) -> Any:
+        """Queue a pending-redirect mock for ``action_name``, invoke ``call_method``.
+
+        ``extra_builder_setup`` is a callable that receives the builder
+        before the action fires, so tests can ``add_parameter(...)``.
+        """
+        response_body = Helpers.pending_redirect_response(method, action_name)
+        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
+        overrides = dict(payload_overrides or {})
+        overrides.pop("invoice", None)
+        payload = Helpers.standard_payload(invoice=invoice, **overrides)
+        builder = buckaroo.payments.create_payment(method, payload)
+        if extra_builder_setup is not None:
+            extra_builder_setup(builder)
+        response = getattr(builder, call_method)()
+        assert response.is_pending()
+        assert response.get_redirect_url() is not None
+        assert response.key == response_body["Key"]
+        _assert_recorded_action(mock_strategy, action_name)
         return response
 
     @staticmethod
@@ -249,15 +279,14 @@ class TestHelpers:
         payload_overrides: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Queue a PayFastCheckout redirect response, run ``payFastCheckout()``."""
-        response_body = TestHelpers.pending_redirect_response(method, "PayFastCheckout")
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
-        )
+        response_body = Helpers.pending_redirect_response(method, "PayFastCheckout")
+        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
         overrides = {
             "description": "Fast checkout",
             **(payload_overrides or {}),
         }
-        payload = TestHelpers.standard_payload(invoice=invoice, **overrides)
+        overrides.pop("invoice", None)
+        payload = Helpers.standard_payload(invoice=invoice, **overrides)
         response = buckaroo.payments.create_payment(method, payload).payFastCheckout()
         assert response.is_pending()
         assert response.get_redirect_url() is not None
@@ -269,15 +298,9 @@ class TestHelpers:
 def _assert_recorded_action(mock_strategy: Any, expected: str) -> None:
     """Assert the last outgoing request carried ``Action=expected``.
 
-    Works with ``RecordingMock`` (root ``mock_strategy`` fixture). If the mock
-    doesn't record calls (plain ``MockBuckaroo``), skip silently so the helpers
-    stay compatible with both — but the suite's default fixture is
-    ``RecordingMock``, so this path normally runs.
+    Requires a ``RecordingMock`` (root ``mock_strategy`` fixture). Raises
+    ``AttributeError`` if the mock doesn't record calls, so swapping the
+    fixture to a plain ``MockBuckaroo`` surfaces immediately.
     """
-    calls = getattr(mock_strategy, "calls", None)
-    if not calls:
-        return
-    actual = json.loads(calls[-1]["data"])["Services"]["ServiceList"][0]["Action"]
-    assert actual == expected, (
-        f"wire-level Action mismatch: expected {expected!r}, got {actual!r}"
-    )
+    actual = json.loads(mock_strategy.calls[-1]["data"])["Services"]["ServiceList"][0]["Action"]
+    assert actual == expected, f"wire-level Action mismatch: expected {expected!r}, got {actual!r}"

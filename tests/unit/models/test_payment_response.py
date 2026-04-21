@@ -35,6 +35,7 @@ FAILED_CODES = (
 
 # --- StatusCode.from_dict ---
 
+
 def test_status_code_from_full_dict():
     sc = StatusCode.from_dict({"Code": 190, "Description": "Success"})
     assert sc.code == 190
@@ -73,22 +74,27 @@ def test_status_code_from_unexpected_type():
 
 # --- Status.from_dict ---
 
+
 def test_status_from_full_dict():
-    status = Status.from_dict({
-        "Code": {"Code": 190, "Description": "Success"},
-        "SubCode": {"Code": 1, "Description": "Sub"},
-        "DateTime": "2024-01-01T00:00:00",
-    })
+    status = Status.from_dict(
+        {
+            "Code": {"Code": 190, "Description": "Success"},
+            "SubCode": {"Code": 1, "Description": "Sub"},
+            "DateTime": "2024-01-01T00:00:00",
+        }
+    )
     assert status.code.code == 190
     assert status.sub_code.code == 1
     assert status.datetime == "2024-01-01T00:00:00"
 
 
 def test_status_from_dict_with_null_sub_code():
-    status = Status.from_dict({
-        "Code": {"Code": 190, "Description": "Success"},
-        "SubCode": None,
-    })
+    status = Status.from_dict(
+        {
+            "Code": {"Code": 190, "Description": "Success"},
+            "SubCode": None,
+        }
+    )
     assert status.code.code == 190
     assert status.sub_code.code == 0
     assert status.datetime == ""
@@ -108,14 +114,17 @@ def test_status_from_none():
 
 # --- RequiredAction.from_dict ---
 
+
 def test_required_action_from_full_dict():
-    ra = RequiredAction.from_dict({
-        "RedirectURL": "https://example.com/pay",
-        "RequestedInformation": {"field": "foo"},
-        "PayRemainderDetails": {"remainder": 10},
-        "Name": "Redirect",
-        "TypeDeprecated": 1,
-    })
+    ra = RequiredAction.from_dict(
+        {
+            "RedirectURL": "https://example.com/pay",
+            "RequestedInformation": {"field": "foo"},
+            "PayRemainderDetails": {"remainder": 10},
+            "Name": "Redirect",
+            "TypeDeprecated": 1,
+        }
+    )
     assert ra.redirect_url == "https://example.com/pay"
     assert ra.requested_information == {"field": "foo"}
     assert ra.pay_remainder_details == {"remainder": 10}
@@ -140,6 +149,7 @@ def test_required_action_from_none():
 
 # --- ServiceParameter.from_dict ---
 
+
 def test_service_parameter_from_full_dict():
     sp = ServiceParameter.from_dict({"Name": "TransactionId", "Value": "abc"})
     assert sp.name == "TransactionId"
@@ -160,15 +170,18 @@ def test_service_parameter_from_none():
 
 # --- Service.from_dict ---
 
+
 def test_service_from_full_dict():
-    svc = Service.from_dict({
-        "Name": "ideal",
-        "Action": "Pay",
-        "Parameters": [
-            {"Name": "TransactionId", "Value": "tx1"},
-            {"Name": "IssuerId", "Value": "ABNANL2A"},
-        ],
-    })
+    svc = Service.from_dict(
+        {
+            "Name": "ideal",
+            "Action": "Pay",
+            "Parameters": [
+                {"Name": "TransactionId", "Value": "tx1"},
+                {"Name": "IssuerId", "Value": "ABNANL2A"},
+            ],
+        }
+    )
     assert svc.name == "ideal"
     assert svc.action == "Pay"
     assert len(svc.parameters) == 2
@@ -202,6 +215,7 @@ def test_service_from_none():
 
 # --- PaymentResponse basic construction ---
 
+
 def test_payment_response_from_empty_dict_does_not_raise():
     resp = PaymentResponse({})
     assert resp.status is None
@@ -229,38 +243,40 @@ def test_payment_response_is_successful_uses_raw_flag():
 
 
 def test_payment_response_parses_basic_fields():
-    resp = PaymentResponse({
-        "status_code": 200,
-        "success": True,
-        "headers": {"X-Test": "1"},
-        "transaction_key": "txkey",
-        "buckaroo_status_code": 190,
-        "buckaroo_status_message": "Success",
-        "redirect_url": "https://legacy.example/",
-        "data": {
-            "Key": "KEY1",
-            "PaymentKey": "PK1",
-            "Invoice": "INV-1",
-            "ServiceCode": "ideal",
-            "IsTest": True,
-            "Currency": "EUR",
-            "AmountDebit": 12.50,
-            "AmountCredit": 0,
-            "TransactionType": "C021",
-            "MutationType": 1,
-            "CustomParameters": {"a": 1},
-            "AdditionalParameters": {"b": 2},
-            "RequestErrors": None,
-            "RelatedTransactions": [],
-            "ConsumerMessage": "Thanks",
-            "Order": "ORD-1",
-            "IssuingCountry": "NL",
-            "StartRecurrent": True,
-            "Recurring": True,
-            "CustomerName": "Jane",
-            "PayerHash": "hash",
-        },
-    })
+    resp = PaymentResponse(
+        {
+            "status_code": 200,
+            "success": True,
+            "headers": {"X-Test": "1"},
+            "transaction_key": "txkey",
+            "buckaroo_status_code": 190,
+            "buckaroo_status_message": "Success",
+            "redirect_url": "https://legacy.example/",
+            "data": {
+                "Key": "KEY1",
+                "PaymentKey": "PK1",
+                "Invoice": "INV-1",
+                "ServiceCode": "ideal",
+                "IsTest": True,
+                "Currency": "EUR",
+                "AmountDebit": 12.50,
+                "AmountCredit": 0,
+                "TransactionType": "C021",
+                "MutationType": 1,
+                "CustomParameters": {"a": 1},
+                "AdditionalParameters": {"b": 2},
+                "RequestErrors": None,
+                "RelatedTransactions": [],
+                "ConsumerMessage": "Thanks",
+                "Order": "ORD-1",
+                "IssuingCountry": "NL",
+                "StartRecurrent": True,
+                "Recurring": True,
+                "CustomerName": "Jane",
+                "PayerHash": "hash",
+            },
+        }
+    )
     assert resp.status_code == 200
     assert resp.success is True
     assert resp.headers == {"X-Test": "1"}
@@ -294,6 +310,7 @@ def test_payment_response_parses_basic_fields():
 
 # --- Status predicates parametrised over enum ---
 
+
 @pytest.mark.parametrize("code", PENDING_CODES)
 def test_is_pending_true_for_pending_codes(code):
     resp = _response_with_status_code(code)
@@ -326,12 +343,14 @@ def test_success_code_matches_no_predicate():
 
 
 def test_is_successful_with_190_status_and_success_flag():
-    resp = PaymentResponse({
-        "is_successful_payment": True,
-        "data": {
-            "Status": {"Code": {"Code": 190, "Description": "Success"}},
-        },
-    })
+    resp = PaymentResponse(
+        {
+            "is_successful_payment": True,
+            "data": {
+                "Status": {"Code": {"Code": 190, "Description": "Success"}},
+            },
+        }
+    )
     assert resp.is_successful() is True
     assert resp.is_pending() is False
     assert resp.is_cancelled() is False
@@ -347,91 +366,96 @@ def test_predicates_false_when_no_status():
 
 # --- get_redirect_url ---
 
+
 def test_get_redirect_url_none_without_required_action():
     resp = PaymentResponse({"data": {}})
     assert resp.get_redirect_url() is None
 
 
 def test_get_redirect_url_returns_required_action_url():
-    resp = PaymentResponse({
-        "data": {
-            "RequiredAction": {
-                "RedirectURL": "https://checkout.example/pay/1",
-                "Name": "Redirect",
+    resp = PaymentResponse(
+        {
+            "data": {
+                "RequiredAction": {
+                    "RedirectURL": "https://checkout.example/pay/1",
+                    "Name": "Redirect",
+                }
             }
         }
-    })
+    )
     assert resp.requires_action() is True
     assert resp.get_redirect_url() == "https://checkout.example/pay/1"
 
 
 # --- get_transaction_id / get_service_parameter ---
 
+
 def test_get_transaction_id_returns_value_when_present():
-    resp = PaymentResponse({
-        "data": {
-            "Services": [
-                {
-                    "Name": "ideal",
-                    "Parameters": [
-                        {"Name": "TransactionId", "Value": "TX-123"},
-                    ],
-                }
-            ]
+    resp = PaymentResponse(
+        {
+            "data": {
+                "Services": [
+                    {
+                        "Name": "ideal",
+                        "Parameters": [
+                            {"Name": "TransactionId", "Value": "TX-123"},
+                        ],
+                    }
+                ]
+            }
         }
-    })
+    )
     assert resp.get_transaction_id() == "TX-123"
 
 
 def test_get_transaction_id_none_when_missing():
-    resp = PaymentResponse({
-        "data": {
-            "Services": [
-                {"Name": "ideal", "Parameters": [{"Name": "Other", "Value": "x"}]}
-            ]
-        }
-    })
+    resp = PaymentResponse(
+        {"data": {"Services": [{"Name": "ideal", "Parameters": [{"Name": "Other", "Value": "x"}]}]}}
+    )
     assert resp.get_transaction_id() is None
 
 
 def test_get_service_parameter_case_insensitive():
-    resp = PaymentResponse({
-        "data": {
-            "Services": [
-                {
-                    "Name": "ideal",
-                    "Parameters": [
-                        {"Name": "ConsumerIBAN", "Value": "NL00RABO0123456789"},
-                    ],
-                }
-            ]
+    resp = PaymentResponse(
+        {
+            "data": {
+                "Services": [
+                    {
+                        "Name": "ideal",
+                        "Parameters": [
+                            {"Name": "ConsumerIBAN", "Value": "NL00RABO0123456789"},
+                        ],
+                    }
+                ]
+            }
         }
-    })
+    )
     assert resp.get_service_parameter("consumeriban") == "NL00RABO0123456789"
 
 
 def test_get_service_parameter_returns_none_for_missing_key():
-    resp = PaymentResponse({
-        "data": {
-            "Services": [
-                {"Name": "ideal", "Parameters": [{"Name": "A", "Value": 1}]}
-            ]
-        }
-    })
+    resp = PaymentResponse(
+        {"data": {"Services": [{"Name": "ideal", "Parameters": [{"Name": "A", "Value": 1}]}]}}
+    )
     assert resp.get_service_parameter("NotThere") is None
 
 
 # --- __str__ / __repr__ ---
 
+
 def test_str_includes_status_and_amount():
-    resp = PaymentResponse({
-        "data": {
-            "Key": "K",
-            "Currency": "EUR",
-            "AmountDebit": 9.99,
-            "Status": {"Code": {"Code": int(BuckarooStatusCode.SUCCESS), "Description": "Success"}},
+    resp = PaymentResponse(
+        {
+            "data": {
+                "Key": "K",
+                "Currency": "EUR",
+                "AmountDebit": 9.99,
+                "Status": {
+                    "Code": {"Code": int(BuckarooStatusCode.SUCCESS), "Description": "Success"}
+                },
+            }
         }
-    })
+    )
     s = str(resp)
     assert "PaymentResponse(" in s
     assert "key=K" in s
@@ -445,17 +469,19 @@ def test_str_with_unknown_status():
 
 
 def test_repr_includes_all_fields():
-    resp = PaymentResponse({
-        "status_code": 200,
-        "success": True,
-        "data": {
-            "Key": "K",
-            "PaymentKey": "PK",
-            "IsTest": False,
-            "Currency": "EUR",
-            "AmountDebit": 1.0,
-        },
-    })
+    resp = PaymentResponse(
+        {
+            "status_code": 200,
+            "success": True,
+            "data": {
+                "Key": "K",
+                "PaymentKey": "PK",
+                "IsTest": False,
+                "Currency": "EUR",
+                "AmountDebit": 1.0,
+            },
+        }
+    )
     r = repr(resp)
     assert "key=K" in r
     assert "payment_key=PK" in r
@@ -468,9 +494,12 @@ def test_repr_includes_all_fields():
 
 # --- Helpers ---
 
+
 def _response_with_status_code(code: int) -> PaymentResponse:
-    return PaymentResponse({
-        "data": {
-            "Status": {"Code": {"Code": int(code), "Description": ""}},
+    return PaymentResponse(
+        {
+            "data": {
+                "Status": {"Code": {"Code": int(code), "Description": ""}},
+            }
         }
-    })
+    )

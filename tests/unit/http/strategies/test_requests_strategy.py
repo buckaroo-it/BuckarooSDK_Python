@@ -121,9 +121,7 @@ class TestConfigureWithKwargs:
 
 
 class TestConfigureRetryFallback:
-    def test_falls_back_to_plain_max_retries_when_retry_raises_typeerror(
-        self, monkeypatch
-    ):
+    def test_falls_back_to_plain_max_retries_when_retry_raises_typeerror(self, monkeypatch):
         strategy = RequestsStrategy()
 
         session_instance = MagicMock()
@@ -296,9 +294,7 @@ class TestRequestExceptionMapping:
     def test_timeout_is_wrapped_with_seconds_message(self):
         strategy = RequestsStrategy()
         strategy.session = MagicMock()
-        strategy.session.request.side_effect = rs_module.requests.exceptions.Timeout(
-            "slow"
-        )
+        strategy.session.request.side_effect = rs_module.requests.exceptions.Timeout("slow")
 
         with pytest.raises(Exception) as excinfo:
             strategy.request("GET", "https://example.com", timeout=7)
@@ -308,9 +304,7 @@ class TestRequestExceptionMapping:
     def test_timeout_none_produces_clean_message(self):
         strategy = RequestsStrategy()
         strategy.session = MagicMock()
-        strategy.session.request.side_effect = rs_module.requests.exceptions.Timeout(
-            "slow"
-        )
+        strategy.session.request.side_effect = rs_module.requests.exceptions.Timeout("slow")
 
         with pytest.raises(Exception) as excinfo:
             strategy.request("GET", "https://example.com", timeout=None)
@@ -320,22 +314,18 @@ class TestRequestExceptionMapping:
     def test_connection_error_is_wrapped_with_fixed_message(self):
         strategy = RequestsStrategy()
         strategy.session = MagicMock()
-        strategy.session.request.side_effect = (
-            rs_module.requests.exceptions.ConnectionError("down")
-        )
+        strategy.session.request.side_effect = rs_module.requests.exceptions.ConnectionError("down")
 
         with pytest.raises(Exception) as excinfo:
             strategy.request("GET", "https://example.com")
 
-        assert str(excinfo.value) == (
-            "Connection error - check your internet connection"
-        )
+        assert str(excinfo.value) == ("Connection error - check your internet connection")
 
     def test_generic_request_exception_is_wrapped_with_prefix(self):
         strategy = RequestsStrategy()
         strategy.session = MagicMock()
-        strategy.session.request.side_effect = (
-            rs_module.requests.exceptions.RequestException("boom")
+        strategy.session.request.side_effect = rs_module.requests.exceptions.RequestException(
+            "boom"
         )
 
         with pytest.raises(Exception) as excinfo:

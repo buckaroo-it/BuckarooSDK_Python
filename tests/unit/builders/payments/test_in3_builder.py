@@ -77,4 +77,3 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
     )
 
     assert response.key == "in3-key-456"
-    mock_strategy.assert_all_consumed()

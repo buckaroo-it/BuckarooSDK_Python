@@ -9,8 +9,8 @@ Usage::
     from tests.support.mock_buckaroo import MockBuckaroo
     from tests.support.mock_request import BuckarooMockRequest
 
-    def test_it(mock_buckaroo):
-        mock_buckaroo.queue(
+    def test_it(mock_strategy):
+        mock_strategy.queue(
             BuckarooMockRequest.json(
                 "POST",
                 "*/json/Transaction*",
@@ -18,8 +18,8 @@ Usage::
             )
         )
 
-        # inject mock_buckaroo as the http strategy for your client
-        response = mock_buckaroo.request("POST", "https://x/json/Transaction")
+        # inject mock_strategy as the http strategy for your client
+        response = mock_strategy.request("POST", "https://x/json/Transaction")
         assert response.json()["Status"]["Code"]["Code"] == 190
 """
 
@@ -62,9 +62,7 @@ class MockBuckaroo(HttpStrategy):
     def assert_all_consumed(self) -> None:
         leftover = len(self._queue)
         if leftover > 0:
-            raise AssertionError(
-                f"{leftover} Buckaroo mock request(s) were not consumed"
-            )
+            raise AssertionError(f"{leftover} Buckaroo mock request(s) were not consumed")
 
     def request(
         self,

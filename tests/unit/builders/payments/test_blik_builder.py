@@ -95,4 +95,3 @@ def test_pay_posts_transaction_through_mock_strategy(
 
     assert response.key == "blik-key"
     assert response.status.code.code == 190
-    mock_strategy.assert_all_consumed()

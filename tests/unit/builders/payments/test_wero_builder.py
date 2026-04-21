@@ -46,10 +46,6 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
         )
     )
 
-    response = (
-        populate_required_fields(WeroBuilder(client), amount=25.00)
-        .pay()
-    )
+    response = populate_required_fields(WeroBuilder(client), amount=25.00).pay()
 
     assert response.key == "wero-key-123"
-    mock_strategy.assert_all_consumed()

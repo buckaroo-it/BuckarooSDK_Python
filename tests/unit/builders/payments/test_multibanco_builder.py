@@ -56,9 +56,7 @@ def test_get_service_name_returns_multibanco(client):
     "action",
     ["Pay", "Refund", "Capture", "Authorize", "UnknownAction"],
 )
-def test_get_allowed_service_parameters_returns_empty_dict_for_every_action(
-    client, action
-):
+def test_get_allowed_service_parameters_returns_empty_dict_for_every_action(client, action):
     builder = MultibancoBuilder(client)
 
     assert builder.get_allowed_service_parameters(action) == {}

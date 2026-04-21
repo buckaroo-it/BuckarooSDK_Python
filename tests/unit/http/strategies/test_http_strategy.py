@@ -144,5 +144,3 @@ class TestHttpStrategyAbstract:
         assert strategy.is_available() is True
         assert strategy.get_name() == "fake"
         assert response.status_code == 200
-
-

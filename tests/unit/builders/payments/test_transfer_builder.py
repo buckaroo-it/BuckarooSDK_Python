@@ -13,21 +13,6 @@ from __future__ import annotations
 import pytest
 
 from buckaroo._buckaroo_client import BuckarooClient
-from buckaroo.builders.payments.capabilities.authorize_capture_capable import (
-    AuthorizeCaptureCapable,
-)
-from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
-    BankTransferCapabilities,
-)
-from buckaroo.builders.payments.capabilities.encrypted_pay_capable import (
-    EncryptedPayCapable,
-)
-from buckaroo.builders.payments.capabilities.fast_checkout_capable import (
-    FastCheckoutCapable,
-)
-from buckaroo.builders.payments.capabilities.instant_refund_capable import (
-    InstantRefundCapable,
-)
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.builders.payments.transfer_builder import TransferBuilder
 from tests.support.mock_buckaroo import MockBuckaroo
@@ -109,10 +94,6 @@ def test_pay_dispatches_through_mock_buckaroo(
         )
     )
 
-    response = (
-        populate_required_fields(TransferBuilder(client), amount=25.00)
-        .pay(validate=False)
-    )
+    response = populate_required_fields(TransferBuilder(client), amount=25.00).pay(validate=False)
 
     assert response.key == "transfer-key-1"
-    mock_strategy.assert_all_consumed()

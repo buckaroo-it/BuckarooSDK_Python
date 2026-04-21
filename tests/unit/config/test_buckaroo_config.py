@@ -18,6 +18,7 @@ from buckaroo.config.buckaroo_config import (
 
 # --- Enums ---
 
+
 def test_environment_values():
     assert Environment.TEST.value == "test"
     assert Environment.LIVE.value == "live"
@@ -31,6 +32,7 @@ def test_api_version_values():
 
 
 # --- BuckarooConfig defaults & validation ---
+
 
 def test_defaults():
     cfg = BuckarooConfig()
@@ -46,13 +48,16 @@ def test_defaults():
     assert cfg.max_redirects == 5
 
 
-@pytest.mark.parametrize("kwargs,msg", [
-    ({"timeout": 0}, "Timeout must be greater than 0"),
-    ({"timeout": -1}, "Timeout must be greater than 0"),
-    ({"retry_attempts": -1}, "Retry attempts must be 0 or greater"),
-    ({"retry_delay": -0.1}, "Retry delay must be 0 or greater"),
-    ({"max_redirects": -1}, "Max redirects must be 0 or greater"),
-])
+@pytest.mark.parametrize(
+    "kwargs,msg",
+    [
+        ({"timeout": 0}, "Timeout must be greater than 0"),
+        ({"timeout": -1}, "Timeout must be greater than 0"),
+        ({"retry_attempts": -1}, "Retry attempts must be 0 or greater"),
+        ({"retry_delay": -0.1}, "Retry delay must be 0 or greater"),
+        ({"max_redirects": -1}, "Max redirects must be 0 or greater"),
+    ],
+)
 def test_validation_errors(kwargs, msg):
     with pytest.raises(ValueError, match=msg):
         BuckarooConfig(**kwargs)
@@ -60,10 +65,14 @@ def test_validation_errors(kwargs, msg):
 
 # --- api_endpoint ---
 
-@pytest.mark.parametrize("env,host", [
-    (Environment.TEST, "testcheckout.buckaroo.nl"),
-    (Environment.LIVE, "checkout.buckaroo.nl"),
-])
+
+@pytest.mark.parametrize(
+    "env,host",
+    [
+        (Environment.TEST, "testcheckout.buckaroo.nl"),
+        (Environment.LIVE, "checkout.buckaroo.nl"),
+    ],
+)
 def test_api_endpoint_switches_on_environment(env, host):
     cfg = BuckarooConfig(environment=env)
     assert cfg.api_endpoint.startswith("https://")
@@ -79,12 +88,13 @@ def test_is_test_and_is_live_flags():
     t = BuckarooConfig(environment=Environment.TEST)
     assert t.is_test_environment is True
     assert t.is_live_environment is False
-    l = BuckarooConfig(environment=Environment.LIVE)
-    assert l.is_test_environment is False
-    assert l.is_live_environment is True
+    live = BuckarooConfig(environment=Environment.LIVE)
+    assert live.is_test_environment is False
+    assert live.is_live_environment is True
 
 
 # --- Headers ---
+
 
 def test_get_request_headers_keys_and_values():
     cfg = BuckarooConfig(user_agent="UA/1")
@@ -98,13 +108,24 @@ def test_get_request_headers_keys_and_values():
 
 # --- to_dict / from_dict ---
 
+
 def test_to_dict_contains_documented_keys():
     cfg = BuckarooConfig()
     d = cfg.to_dict()
     for key in (
-        "environment", "api_version", "api_endpoint", "timeout",
-        "retry_attempts", "retry_delay", "logging_enabled", "verify_ssl",
-        "custom_endpoint", "user_agent", "max_redirects", "is_test", "is_live",
+        "environment",
+        "api_version",
+        "api_endpoint",
+        "timeout",
+        "retry_attempts",
+        "retry_delay",
+        "logging_enabled",
+        "verify_ssl",
+        "custom_endpoint",
+        "user_agent",
+        "max_redirects",
+        "is_test",
+        "is_live",
     ):
         assert key in d
 
@@ -136,12 +157,14 @@ def test_from_dict_round_trip_preserves_fields():
 
 
 def test_from_dict_accepts_enum_instances_and_ignores_extras():
-    cfg = BuckarooConfig.from_dict({
-        "environment": Environment.LIVE,
-        "api_version": ApiVersion.V2,
-        "timeout": 12,
-        "bogus_key": "ignored",
-    })
+    cfg = BuckarooConfig.from_dict(
+        {
+            "environment": Environment.LIVE,
+            "api_version": ApiVersion.V2,
+            "timeout": 12,
+            "bogus_key": "ignored",
+        }
+    )
     assert cfg.environment is Environment.LIVE
     assert cfg.api_version is ApiVersion.V2
     assert cfg.timeout == 12
@@ -158,6 +181,7 @@ def test_copy_applies_changes():
 
 
 # --- Presets ---
+
 
 def test_default_config_matches_base_defaults():
     d = DefaultConfig()
@@ -186,6 +210,7 @@ def test_production_config_preset():
 
 
 # --- ConfigBuilder ---
+
 
 def test_config_builder_fluent_chain():
     cfg = (
@@ -225,12 +250,7 @@ def test_config_builder_live_environment_shortcut():
 
 
 def test_config_builder_disable_toggles():
-    cfg = (
-        ConfigBuilder()
-        .disable_logging()
-        .disable_ssl_verification()
-        .build()
-    )
+    cfg = ConfigBuilder().disable_logging().disable_ssl_verification().build()
     assert cfg.logging_enabled is False
     assert cfg.verify_ssl is False
 
@@ -242,6 +262,7 @@ def test_config_builder_empty_build_yields_defaults():
 
 
 # --- Mode helpers ---
+
 
 def test_create_test_config_no_kwargs():
     cfg = create_test_config()
@@ -300,12 +321,15 @@ def test_production_config_environment_is_locked():
     assert p.environment is Environment.LIVE
 
 
-@pytest.mark.parametrize("mode,expected_env,host", [
-    ("test", Environment.TEST, "testcheckout.buckaroo.nl"),
-    ("TEST", Environment.TEST, "testcheckout.buckaroo.nl"),
-    ("live", Environment.LIVE, "checkout.buckaroo.nl"),
-    ("LIVE", Environment.LIVE, "checkout.buckaroo.nl"),
-])
+@pytest.mark.parametrize(
+    "mode,expected_env,host",
+    [
+        ("test", Environment.TEST, "testcheckout.buckaroo.nl"),
+        ("TEST", Environment.TEST, "testcheckout.buckaroo.nl"),
+        ("live", Environment.LIVE, "checkout.buckaroo.nl"),
+        ("LIVE", Environment.LIVE, "checkout.buckaroo.nl"),
+    ],
+)
 def test_create_config_from_mode_valid(mode, expected_env, host):
     cfg = create_config_from_mode(mode)
     assert cfg.environment is expected_env

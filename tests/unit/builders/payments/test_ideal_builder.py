@@ -107,10 +107,7 @@ def test_pay_dispatches_ideal_service_through_mock_buckaroo(client):
         )
     )
 
-    response = (
-        populate_required_fields(IdealBuilder(client))
-        .pay()
-    )
+    response = populate_required_fields(IdealBuilder(client)).pay()
 
     assert response.key == "ideal-key-1"
     mock.assert_all_consumed()

@@ -58,12 +58,8 @@ def test_pay_posts_eps_action_and_parses_response(
         )
     )
 
-    response = (
-        populate_required_fields(builder, amount=12.34)
-        .pay()
-    )
+    response = populate_required_fields(builder, amount=12.34).pay()
 
     assert response.key == "eps-txn-key"
     assert response.services[0].name == "EPS"
     assert response.services[0].action == "Pay"
-    mock_strategy.assert_all_consumed()

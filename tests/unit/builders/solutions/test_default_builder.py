@@ -20,7 +20,6 @@ from __future__ import annotations
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.builders.solutions.default_builder import DefaultBuilder
 from buckaroo.builders.solutions.solution_builder import SolutionBuilder
-from tests.support.mock_request import BuckarooMockRequest
 
 
 def test_construction_with_client_succeeds(client: BuckarooClient) -> None:

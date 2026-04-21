@@ -41,21 +41,15 @@ class TestAllowedServiceParameters:
         assert allowed == VOUCHER_CODE_SPEC
 
     def test_getbalance_action_returns_voucher_code_spec(self, client):
-        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters(
-            "GetBalance"
-        )
+        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters("GetBalance")
         assert allowed == VOUCHER_CODE_SPEC
 
     def test_deactivatevoucher_action_returns_voucher_code_spec(self, client):
-        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters(
-            "DeactivateVoucher"
-        )
+        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters("DeactivateVoucher")
         assert allowed == VOUCHER_CODE_SPEC
 
     def test_createapplication_action_returns_application_spec(self, client):
-        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters(
-            "CreateApplication"
-        )
+        allowed = BuckarooVoucherBuilder(client).get_allowed_service_parameters("CreateApplication")
         assert allowed == {
             "GroupReference": {
                 "type": str,
@@ -90,17 +84,28 @@ class TestAllowedServiceParameters:
 
     @pytest.mark.parametrize(
         "action",
-        ["pay", "PAY", "getbalance", "GETBALANCE", "deactivatevoucher", "createapplication", "CREATEAPPLICATION"],
+        [
+            "pay",
+            "PAY",
+            "getbalance",
+            "GETBALANCE",
+            "deactivatevoucher",
+            "createapplication",
+            "CREATEAPPLICATION",
+        ],
     )
     def test_action_matching_is_case_insensitive(self, client, action):
         """The source lowercases ``action`` so alt-cased inputs hit the same branch."""
         builder = BuckarooVoucherBuilder(client)
         allowed = builder.get_allowed_service_parameters(action)
         canonical_actions = {
-            "pay": "Pay", "PAY": "Pay",
-            "getbalance": "GetBalance", "GETBALANCE": "GetBalance",
+            "pay": "Pay",
+            "PAY": "Pay",
+            "getbalance": "GetBalance",
+            "GETBALANCE": "GetBalance",
             "deactivatevoucher": "DeactivateVoucher",
-            "createapplication": "CreateApplication", "CREATEAPPLICATION": "CreateApplication",
+            "createapplication": "CreateApplication",
+            "CREATEAPPLICATION": "CreateApplication",
         }
         expected = builder.get_allowed_service_parameters(canonical_actions[action])
         assert allowed == expected

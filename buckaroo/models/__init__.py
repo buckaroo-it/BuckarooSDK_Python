@@ -4,13 +4,22 @@ Models package for Buckaroo SDK.
 This package contains all data models and response objects.
 """
 
-from .payment_response import PaymentResponse, Status, StatusCode, RequiredAction, Service, ServiceParameter
+from .payment_response import (
+    BuckarooStatusCode,
+    PaymentResponse,
+    RequiredAction,
+    Service,
+    ServiceParameter,
+    Status,
+    StatusCode,
+)
 
 __all__ = [
-    'PaymentResponse',
-    'Status', 
-    'StatusCode',
-    'RequiredAction',
-    'Service',
-    'ServiceParameter'
+    "BuckarooStatusCode",
+    "PaymentResponse",
+    "RequiredAction",
+    "Service",
+    "ServiceParameter",
+    "Status",
+    "StatusCode",
 ]

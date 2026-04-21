@@ -32,5 +32,3 @@ def test_positional_http_status_round_trip():
     err = BuckarooError("server exploded", 500)
 
     assert err.args == ("server exploded", 500)
-
-

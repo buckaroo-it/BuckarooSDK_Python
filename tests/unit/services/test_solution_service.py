@@ -65,17 +65,13 @@ class TestCreateSolution:
         assert req["Currency"] is None
         assert req["AmountDebit"] is None
 
-    def test_unknown_method_returns_default_builder_and_logs_warning(
-        self, service, caplog
-    ):
+    def test_unknown_method_returns_default_builder_and_logs_warning(self, service, caplog):
         with caplog.at_level(logging.WARNING):
             builder = service.create_solution("nope")
         assert isinstance(builder, DefaultBuilder)
         assert any("Unsupported payment method" in r.message for r in caplog.records)
 
-    def test_unknown_method_with_params_still_populates_default_builder(
-        self, service
-    ):
+    def test_unknown_method_with_params_still_populates_default_builder(self, service):
         params = {
             "currency": "USD",
             "amount": 7.0,
@@ -146,9 +142,7 @@ class TestFactoryDelegation:
     """``get_available_methods`` / ``is_method_supported`` delegate to factory."""
 
     def test_get_available_methods_matches_factory(self, service):
-        assert service.get_available_methods() == (
-            SolutionMethodFactory.get_available_methods()
-        )
+        assert service.get_available_methods() == (SolutionMethodFactory.get_available_methods())
 
     def test_get_available_methods_includes_subscription(self, service):
         assert "subscription" in service.get_available_methods()

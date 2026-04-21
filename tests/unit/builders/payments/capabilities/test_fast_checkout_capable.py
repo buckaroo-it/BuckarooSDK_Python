@@ -46,9 +46,7 @@ def _ready_builder(client, allowed=None):
 class TestPayFastCheckout:
     def test_posts_action_payFastCheckout(self):
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
         builder.payFastCheckout()
@@ -57,9 +55,7 @@ class TestPayFastCheckout:
 
     def test_posts_to_transaction_endpoint(self):
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
         builder.payFastCheckout()
@@ -71,9 +67,7 @@ class TestPayFastCheckout:
 
     def test_posts_expected_service_name(self):
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
         builder.payFastCheckout()
@@ -100,9 +94,7 @@ class TestPayFastCheckout:
     def test_validate_false_skips_parameter_validation(self):
         """With ``validate=False``, unknown parameters pass through to the request."""
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client, allowed={"payFastCheckout": {}})
         builder.add_parameter("someUnknownParam", "value")
 

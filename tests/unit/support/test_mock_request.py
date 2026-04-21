@@ -1,7 +1,5 @@
 """Tests for tests.support.mock_request."""
 
-import pytest
-
 from tests.support.mock_request import BuckarooMockRequest
 
 

@@ -51,10 +51,8 @@ def test_create_subscription_posts_and_parses_response(client, mock_strategy):
         )
     )
 
-    response = (
-        populate_required_fields(SubscriptionBuilder(client), amount=9.99)
-        .createSubscription()
-    )
+    response = populate_required_fields(
+        SubscriptionBuilder(client), amount=9.99
+    ).createSubscription()
 
     assert response.key == "sub-key-456"
-    mock_strategy.assert_all_consumed()

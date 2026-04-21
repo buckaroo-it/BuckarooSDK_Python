@@ -54,14 +54,10 @@ def test_get_allowed_service_parameters_defaults_to_pay_branch(client):
 
 def test_get_allowed_service_parameters_pay_is_case_insensitive(client):
     """The source lower-cases ``action`` before comparison."""
-    assert (
-        VoucherBuilder(client).get_allowed_service_parameters("pay") == ARTICLE_SPEC
-    )
+    assert VoucherBuilder(client).get_allowed_service_parameters("pay") == ARTICLE_SPEC
 
 
-@pytest.mark.parametrize(
-    "action", ["Refund", "Capture", "Authorize", "Cancel", "UnknownAction"]
-)
+@pytest.mark.parametrize("action", ["Refund", "Capture", "Authorize", "Cancel", "UnknownAction"])
 def test_get_allowed_service_parameters_non_pay_returns_empty(client, action):
     assert VoucherBuilder(client).get_allowed_service_parameters(action) == {}
 
@@ -85,4 +81,3 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
     )
 
     assert response.key == "voucher-key-1"
-    mock_strategy.assert_all_consumed()

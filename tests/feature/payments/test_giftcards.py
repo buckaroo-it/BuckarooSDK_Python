@@ -2,14 +2,16 @@
 
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.recording_mock import recorded_action, recorded_service_parameters
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 class TestGiftcardsFeature:
     def test_giftcards_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        TestHelpers.assert_pay_returns_pending_with_redirect(
-            buckaroo, mock_strategy,
-            method="giftcards", invoice="INV-GC-001",
+        Helpers.assert_pay_returns_pending_with_redirect(
+            buckaroo,
+            mock_strategy,
+            method="giftcards",
+            invoice="INV-GC-001",
             payload_overrides={"description": "Test giftcards"},
             service_params={"Cardnumber": "1234567890123456", "PIN": "1234"},
         )
@@ -27,12 +29,12 @@ class TestGiftcardsFeature:
             BuckarooMockRequest.json(
                 "POST",
                 "*/json/transaction*",
-                TestHelpers.pending_redirect_response("giftcards"),
+                Helpers.pending_redirect_response("giftcards"),
             )
         )
         recording_buckaroo.payments.create_payment(
             "giftcards",
-            TestHelpers.standard_payload(
+            Helpers.standard_payload(
                 invoice="INV-GC-WIRE",
                 service_parameters={"Cardnumber": "1234567890123456", "PIN": "1234"},
             ),

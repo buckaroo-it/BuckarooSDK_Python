@@ -67,23 +67,27 @@ def test_registry_has_sanity_floor():
     assert len(REGISTRY) >= 20
 
 
-@pytest.mark.parametrize("method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__)
+@pytest.mark.parametrize(
+    "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
+)
 def test_builder_instantiates_with_client(method_name, builder_class, client):
     builder = builder_class(client)
     assert isinstance(builder, PaymentBuilder)
 
 
-@pytest.mark.parametrize("method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__)
-def test_builder_get_service_name_returns_non_empty_string(
-    method_name, builder_class, client
-):
+@pytest.mark.parametrize(
+    "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
+)
+def test_builder_get_service_name_returns_non_empty_string(method_name, builder_class, client):
     builder = builder_class(client)
     service_name = builder.get_service_name()
     assert isinstance(service_name, str)
     assert service_name != ""
 
 
-@pytest.mark.parametrize("method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__)
+@pytest.mark.parametrize(
+    "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
+)
 def test_builder_get_allowed_service_parameters_pay_returns_dict(
     method_name, builder_class, client
 ):
@@ -113,16 +117,13 @@ def _capability_matrix_params():
     return rows
 
 
-@pytest.mark.parametrize(
-    "capability,method,method_name,builder_class", _capability_matrix_params()
-)
+@pytest.mark.parametrize("capability,method,method_name,builder_class", _capability_matrix_params())
 def test_capability_method_present_and_callable(
     capability, method, method_name, builder_class, client
 ):
     builder = builder_class(client)
     assert hasattr(builder, method), (
-        f"{builder_class.__name__} mixes in {capability.__name__} "
-        f"but is missing method {method!r}"
+        f"{builder_class.__name__} mixes in {capability.__name__} but is missing method {method!r}"
     )
     assert callable(getattr(builder, method))
 
@@ -154,9 +155,7 @@ EXPECTED_CAPABILITIES: Dict[str, set] = {
     "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
 )
 @pytest.mark.parametrize("mixin", KNOWN_MIXINS, ids=lambda c: c.__name__)
-def test_builder_declares_only_expected_capabilities(
-    method_name, builder_class, mixin, client
-):
+def test_builder_declares_only_expected_capabilities(method_name, builder_class, mixin, client):
     expected = EXPECTED_CAPABILITIES.get(method_name, set())
     actual = issubclass(builder_class, mixin)
     assert actual is (mixin in expected), (
@@ -187,9 +186,7 @@ INHERITED_BASE_METHODS: List[str] = [
     "method_name,builder_class", REGISTRY, ids=lambda x: x if isinstance(x, str) else x.__name__
 )
 @pytest.mark.parametrize("base_method", INHERITED_BASE_METHODS)
-def test_inherited_base_builder_methods_callable(
-    method_name, builder_class, base_method, client
-):
+def test_inherited_base_builder_methods_callable(method_name, builder_class, base_method, client):
     builder = builder_class(client)
     assert hasattr(builder, base_method), (
         f"{builder_class.__name__} is missing inherited BaseBuilder method {base_method!r}"

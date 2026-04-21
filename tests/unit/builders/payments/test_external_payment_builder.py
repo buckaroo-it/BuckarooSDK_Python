@@ -17,7 +17,7 @@ from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.models.payment_response import PaymentResponse
 from tests.support.mock_buckaroo import MockBuckaroo
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 @pytest.fixture
@@ -80,9 +80,7 @@ def test_pay_round_trips_through_mock_buckaroo(
             {
                 "Key": "EXT-TXN-1",
                 "Status": {"Code": {"Code": 190, "Description": "Success"}},
-                "Services": [
-                    {"Name": "ExternalPayment", "Action": "Pay", "Parameters": []}
-                ],
+                "Services": [{"Name": "ExternalPayment", "Action": "Pay", "Parameters": []}],
                 "Invoice": "INV-EXT-001",
                 "Currency": "EUR",
                 "AmountDebit": 25.0,
@@ -90,16 +88,17 @@ def test_pay_round_trips_through_mock_buckaroo(
         )
     )
 
-    response = builder.from_dict(TestHelpers.standard_payload(
-        invoice="INV-EXT-001",
-        amount=25.0,
-        description="External pay",
-    )).pay()
+    response = builder.from_dict(
+        Helpers.standard_payload(
+            invoice="INV-EXT-001",
+            amount=25.0,
+            description="External pay",
+        )
+    ).pay()
 
     assert isinstance(response, PaymentResponse)
     assert response.key == "EXT-TXN-1"
     assert response.status.code.code == 190
-    mock_strategy.assert_all_consumed()
 
 
 def test_refund_round_trips_through_mock_buckaroo(
@@ -112,9 +111,7 @@ def test_refund_round_trips_through_mock_buckaroo(
             {
                 "Key": "EXT-REFUND-1",
                 "Status": {"Code": {"Code": 190, "Description": "Success"}},
-                "Services": [
-                    {"Name": "ExternalPayment", "Action": "Refund", "Parameters": []}
-                ],
+                "Services": [{"Name": "ExternalPayment", "Action": "Refund", "Parameters": []}],
                 "Invoice": "INV-EXT-REFUND",
                 "Currency": "EUR",
                 "AmountCredit": 10.0,
@@ -122,14 +119,15 @@ def test_refund_round_trips_through_mock_buckaroo(
         )
     )
 
-    response = builder.from_dict(TestHelpers.standard_payload(
-        invoice="INV-EXT-REFUND",
-        amount=10.0,
-        description="External refund",
-        original_transaction_key="ORIG-EXT-KEY",
-    )).refund()
+    response = builder.from_dict(
+        Helpers.standard_payload(
+            invoice="INV-EXT-REFUND",
+            amount=10.0,
+            description="External refund",
+            original_transaction_key="ORIG-EXT-KEY",
+        )
+    ).refund()
 
     assert isinstance(response, PaymentResponse)
     assert response.key == "EXT-REFUND-1"
     assert response.status.code.code == 190
-    mock_strategy.assert_all_consumed()

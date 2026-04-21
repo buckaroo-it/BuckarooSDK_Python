@@ -60,11 +60,7 @@ def test_pay_end_to_end_through_mock_buckaroo(builder, mock_strategy):
         )
     )
 
-    response = (
-        populate_required_fields(builder, amount=12.34)
-        .pay()
-    )
+    response = populate_required_fields(builder, amount=12.34).pay()
 
     assert response.key == "CTP-KEY"
     assert response.status.code.code == 190
-    mock_strategy.assert_all_consumed()

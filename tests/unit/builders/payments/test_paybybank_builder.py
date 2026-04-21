@@ -61,7 +61,9 @@ def test_get_allowed_service_parameters_is_case_insensitive_for_pay(client):
     """Source lower-cases the action before matching, so "pay" equals "Pay"."""
     builder = PayByBankBuilder(client)
 
-    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
+        "Pay"
+    )
 
 
 def test_get_allowed_service_parameters_defaults_to_pay(client):

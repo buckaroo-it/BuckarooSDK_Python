@@ -103,4 +103,3 @@ def test_pay_dispatches_through_mock_buckaroo(client, mock_strategy):
     ).pay(validate=False)
 
     assert response.key == "p24-key-1"
-    mock_strategy.assert_all_consumed()

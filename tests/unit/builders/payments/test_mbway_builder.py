@@ -66,9 +66,7 @@ def test_get_service_name_returns_mbway(builder):
     "action",
     ["Pay", "Refund", "PayRemainder", "ExtraInfo", "UnknownAction"],
 )
-def test_get_allowed_service_parameters_returns_empty_dict_for_every_action(
-    builder, action
-):
+def test_get_allowed_service_parameters_returns_empty_dict_for_every_action(builder, action):
     assert builder.get_allowed_service_parameters(action) == {}
 
 
@@ -96,10 +94,6 @@ def test_pay_end_to_end_through_mock_buckaroo(builder, mock_strategy):
         )
     )
 
-    response = (
-        populate_required_fields(builder, amount=12.34)
-        .pay()
-    )
+    response = populate_required_fields(builder, amount=12.34).pay()
 
     assert response.key == "MBWAY-KEY"
-    mock_strategy.assert_all_consumed()

@@ -25,9 +25,7 @@ def client():
 
 # Tripwire: all registry keys must be lowercase so create_builder() can find them.
 def test_all_registry_keys_are_lowercase():
-    non_lowercase = {
-        k for k in PaymentMethodFactory._payment_methods if k != k.lower()
-    }
+    non_lowercase = {k for k in PaymentMethodFactory._payment_methods if k != k.lower()}
     assert non_lowercase == set()
 
 
@@ -104,9 +102,7 @@ def test_register_method_overrides_existing_entry(client):
 def test_register_method_lowercases_key(client):
     PaymentMethodFactory.register_method("MiXeD", _CustomBuilder)
     assert PaymentMethodFactory.is_method_supported("mixed") is True
-    assert isinstance(
-        PaymentMethodFactory.create_builder("MIXED", client), _CustomBuilder
-    )
+    assert isinstance(PaymentMethodFactory.create_builder("MIXED", client), _CustomBuilder)
 
 
 def test_detect_from_explicit_method_field():
@@ -152,6 +148,4 @@ def test_detect_unresolvable_payload_returns_default_and_warns(payload, caplog):
     with caplog.at_level(logging.WARNING):
         result = PaymentMethodFactory.detect_method_from_payload(payload)
     assert result == "default"
-    assert any(
-        "Cannot determine payment method" in r.getMessage() for r in caplog.records
-    )
+    assert any("Cannot determine payment method" in r.getMessage() for r in caplog.records)

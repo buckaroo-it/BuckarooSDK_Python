@@ -21,11 +21,13 @@ from buckaroo.services.solution_service import SolutionService
 
 # --- Name-shadow guardrail ---
 
+
 def test_app_buckarooconfig_is_not_sdk_buckarooconfig():
     assert BuckarooConfig is not SdkBuckarooConfig
 
 
 # --- Construction & service exposure ---
+
 
 def test_construct_with_config_exposes_payment_and_solution_services():
     app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss"))
@@ -42,15 +44,14 @@ def test_construct_initialises_logger_by_default():
 
 
 def test_enable_logging_false_skips_logger():
-    app = Buckaroo(
-        BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False)
-    )
+    app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False))
 
     assert app.logger is None
     assert app.get_logger() is None
 
 
 # --- Env-var driven construction ---
+
 
 def test_default_constructor_reads_store_and_secret_from_env(monkeypatch):
     monkeypatch.setenv("BUCKAROO_STORE_KEY", "env_store")
@@ -79,6 +80,7 @@ def test_missing_credentials_raises_authentication_error():
 
 
 # --- Mode handling ---
+
 
 @pytest.mark.parametrize(
     "env_mode,expected_mode,expected_env",
@@ -113,12 +115,9 @@ def test_invalid_mode_raises_value_error(env_credentials):
 
 # --- Timeout & retry settings ---
 
+
 def test_timeout_and_retry_attempts_land_on_app_config():
-    app = Buckaroo(
-        BuckarooConfig(
-            store_key="sk", secret_key="ss", timeout=45, retry_attempts=7
-        )
-    )
+    app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss", timeout=45, retry_attempts=7))
 
     assert app.config.timeout == 45
     assert app.config.retry_attempts == 7
@@ -143,6 +142,7 @@ def test_retry_attempts_env_string_converted_to_int(env_credentials):
 
 
 # --- Logging configuration ---
+
 
 @pytest.mark.parametrize(
     "env_value,expected",
@@ -208,9 +208,7 @@ def test_log_file_env_is_used_as_file_path(env_credentials, tmp_path):
     assert "probe_file_message" in log_path.read_text()
 
 
-def test_log_destination_both_writes_to_file_and_stdout(
-    env_credentials, tmp_path, capsys
-):
+def test_log_destination_both_writes_to_file_and_stdout(env_credentials, tmp_path, capsys):
     log_path = tmp_path / "both.log"
     env_credentials.setenv("BUCKAROO_LOG_DESTINATION", "both")
     env_credentials.setenv("BUCKAROO_LOG_FILE", str(log_path))
@@ -241,6 +239,7 @@ def test_mask_sensitive_env_true_default(env_credentials):
 
 # --- quick_setup classmethod ---
 
+
 def test_quick_setup_returns_buckaroo_instance():
     app = Buckaroo.quick_setup(store_key="sk", secret_key="ss")
 
@@ -253,9 +252,7 @@ def test_quick_setup_returns_buckaroo_instance():
 
 def test_quick_setup_with_live_mode_and_file_logging(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
-    app = Buckaroo.quick_setup(
-        store_key="sk", secret_key="ss", mode="live", log_to_stdout=False
-    )
+    app = Buckaroo.quick_setup(store_key="sk", secret_key="ss", mode="live", log_to_stdout=False)
 
     assert app.config.mode == "live"
     assert app.config.log_destination is LogDestination.FILE
@@ -263,6 +260,7 @@ def test_quick_setup_with_live_mode_and_file_logging(monkeypatch, tmp_path):
 
 
 # --- Log helper methods ---
+
 
 def test_log_helpers_write_via_logger(env_credentials, tmp_path):
     log_path = tmp_path / "helpers.log"
@@ -286,9 +284,7 @@ def test_log_helpers_write_via_logger(env_credentials, tmp_path):
 
 
 def test_log_helpers_no_op_when_logging_disabled():
-    app = Buckaroo(
-        BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False)
-    )
+    app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False))
 
     # All helpers must be safe no-ops when logger is None.
     app.log_debug("x")
@@ -301,6 +297,7 @@ def test_log_helpers_no_op_when_logging_disabled():
 
 
 # --- Accessors ---
+
 
 def test_get_client_returns_underlying_client():
     app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss"))
@@ -328,14 +325,13 @@ def test_create_child_logger_returns_child_observer():
 
 
 def test_create_child_logger_returns_none_when_logging_disabled():
-    app = Buckaroo(
-        BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False)
-    )
+    app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False))
 
     assert app.create_child_logger({"request_id": "abc"}) is None
 
 
 # --- Context manager ---
+
 
 def test_context_manager_exposes_app_inside_block():
     with Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss")) as app:
@@ -358,18 +354,14 @@ def test_context_manager_logs_exception_on_failure_path(env_credentials, tmp_pat
 
 
 def test_context_manager_works_when_logging_disabled():
-    app = Buckaroo(
-        BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False)
-    )
+    app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False))
 
     with app as ctx:
         assert ctx is app
 
 
 def test_context_manager_propagates_exception_when_logging_disabled():
-    app = Buckaroo(
-        BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False)
-    )
+    app = Buckaroo(BuckarooConfig(store_key="sk", secret_key="ss", enable_logging=False))
 
     with pytest.raises(RuntimeError, match="no_logger_boom"):
         with app:
@@ -377,6 +369,7 @@ def test_context_manager_propagates_exception_when_logging_disabled():
 
 
 # --- Edge-case branches ---
+
 
 def test_missing_credentials_with_logging_disabled_still_raises():
     with pytest.raises(AuthenticationError):
@@ -401,6 +394,7 @@ def test_client_setup_exception_is_logged_and_reraised(env_credentials, tmp_path
 
 def test_client_setup_exception_reraises_without_logger(env_credentials):
     """The exception propagates when enable_logging=False (logger is None)."""
+
     def _boom(*args, **kwargs):
         raise RuntimeError("silent_boom")
 
@@ -410,7 +404,7 @@ def test_client_setup_exception_reraises_without_logger(env_credentials):
     assert config.enable_logging is False
 
     with pytest.raises(RuntimeError, match="silent_boom"):
-        app = Buckaroo(config)
+        Buckaroo(config)
 
     # Verify we actually took the logger-is-None branch: the Buckaroo
     # constructor sets self.logger before _setup_client, so we can't inspect

@@ -72,9 +72,7 @@ def test_request_url_mismatch_raises_with_expected_and_actual():
 def test_request_with_exception_raises_that_exception():
     mock = MockBuckaroo()
     err = RuntimeError("boom")
-    mock.queue(
-        BuckarooMockRequest.json("POST", "https://x/a", {}).with_exception(err)
-    )
+    mock.queue(BuckarooMockRequest.json("POST", "https://x/a", {}).with_exception(err))
     with pytest.raises(RuntimeError) as ei:
         mock.request("POST", "https://x/a")
     assert ei.value is err
@@ -87,10 +85,12 @@ def test_assert_all_consumed_passes_on_empty():
 
 def test_assert_all_consumed_raises_with_leftover_count():
     mock = MockBuckaroo()
-    mock.queue_many([
-        BuckarooMockRequest.json("POST", "https://x/a", {}),
-        BuckarooMockRequest.json("POST", "https://x/b", {}),
-    ])
+    mock.queue_many(
+        [
+            BuckarooMockRequest.json("POST", "https://x/a", {}),
+            BuckarooMockRequest.json("POST", "https://x/b", {}),
+        ]
+    )
     with pytest.raises(AssertionError) as ei:
         mock.assert_all_consumed()
     assert "2" in str(ei.value)
@@ -105,10 +105,12 @@ def test_reset_clears_queue():
 
 def test_requests_consume_in_order():
     mock = MockBuckaroo()
-    mock.queue_many([
-        BuckarooMockRequest.json("POST", "https://x/a", {"n": 1}),
-        BuckarooMockRequest.json("POST", "https://x/b", {"n": 2}),
-    ])
+    mock.queue_many(
+        [
+            BuckarooMockRequest.json("POST", "https://x/a", {"n": 1}),
+            BuckarooMockRequest.json("POST", "https://x/b", {"n": 2}),
+        ]
+    )
     r1 = mock.request("POST", "https://x/a")
     r2 = mock.request("POST", "https://x/b")
     assert r1.json() == {"n": 1}

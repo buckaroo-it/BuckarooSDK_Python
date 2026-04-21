@@ -84,9 +84,7 @@ def test_get_allowed_service_parameters_defaults_to_pay(builder):
     )
 
 
-@pytest.mark.parametrize(
-    "action", ["Refund", "Capture", "Authorize", "ExtraInfo", "UnknownAction"]
-)
+@pytest.mark.parametrize("action", ["Refund", "Capture", "Authorize", "ExtraInfo", "UnknownAction"])
 def test_get_allowed_service_parameters_non_pay_returns_empty(builder, action):
     assert builder.get_allowed_service_parameters(action) == {}
 
@@ -116,4 +114,3 @@ def test_pay_posts_trustly_service_to_transaction_endpoint_and_parses_response(
     )
 
     assert response.key == "trustly-key-1"
-    mock_strategy.assert_all_consumed()

@@ -105,4 +105,3 @@ class BuckarooMockRequest:
             text=text,
             success=200 <= self._status < 300,
         )
-

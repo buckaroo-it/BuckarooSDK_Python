@@ -215,9 +215,7 @@ class TestMroShadowing:
         # The capture the instance resolves is BaseBuilder's (needs auth key).
         assert type(builder).capture.__qualname__ == "BaseBuilder.capture"
         # The mixin's simpler capture is still reachable via the class itself.
-        assert AuthorizeCaptureCapable.capture.__qualname__ == (
-            "AuthorizeCaptureCapable.capture"
-        )
+        assert AuthorizeCaptureCapable.capture.__qualname__ == ("AuthorizeCaptureCapable.capture")
 
     def test_mixin_capture_posts_capture_action_when_invoked_directly(self):
         """Direct-invocation pin on the mixin's ``capture`` body.
@@ -250,9 +248,7 @@ class TestMultiCapabilityBuilder:
         mock, client = wire_recording_http()
         # One queued response per invoked action (six total).
         for _ in range(6):
-            mock.queue(
-                BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-            )
+            mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
 
         def _fresh_builder():
             b = make_test_builder(
@@ -282,9 +278,7 @@ class TestMultiCapabilityBuilder:
             ),
             (
                 "cancelAuthorize",
-                lambda b: b.cancelAuthorize(
-                    original_transaction_key="AUTH-1", validate=False
-                ),
+                lambda b: b.cancelAuthorize(original_transaction_key="AUTH-1", validate=False),
                 "CancelAuthorize",
             ),
         ]
@@ -293,8 +287,7 @@ class TestMultiCapabilityBuilder:
             invoke(_fresh_builder())
 
         observed = [
-            json.loads(c["data"])["Services"]["ServiceList"][0]["Action"]
-            for c in mock.calls
+            json.loads(c["data"])["Services"]["ServiceList"][0]["Action"] for c in mock.calls
         ]
         expected = [action for _, _, action in calls]
         assert observed == expected
@@ -315,7 +308,6 @@ class TestMultiCapabilityBuilder:
         builder.payEncrypted(validate=False)
 
         actions = [
-            json.loads(c["data"])["Services"]["ServiceList"][0]["Action"]
-            for c in mock.calls
+            json.loads(c["data"])["Services"]["ServiceList"][0]["Action"] for c in mock.calls
         ]
         assert actions == ["Authorize", "PayEncrypted"]

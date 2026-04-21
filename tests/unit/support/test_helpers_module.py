@@ -1,32 +1,32 @@
-"""Unit tests for tests.support.test_helpers.TestHelpers."""
+"""Unit tests for tests.support.helpers.Helpers."""
 
 from __future__ import annotations
 
 import re
 
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 class TestGenerateTransactionKey:
     def test_returns_32_char_uppercase_hex(self) -> None:
-        key = TestHelpers.generate_transaction_key()
+        key = Helpers.generate_transaction_key()
 
         assert len(key) == 32
         assert re.fullmatch(r"[0-9A-F]{32}", key) is not None
 
     def test_returns_unique_values(self) -> None:
-        assert TestHelpers.generate_transaction_key() != TestHelpers.generate_transaction_key()
+        assert Helpers.generate_transaction_key() != Helpers.generate_transaction_key()
 
 
 class TestSuccessResponse:
     def test_status_code_is_190(self) -> None:
-        response = TestHelpers.success_response()
+        response = Helpers.success_response()
 
         assert response["Status"]["Code"]["Code"] == 190
         assert response["Status"]["Code"]["Description"] == "Success"
 
     def test_includes_buckaroo_shaped_defaults(self) -> None:
-        response = TestHelpers.success_response()
+        response = Helpers.success_response()
 
         assert response["Status"]["SubCode"] == {
             "Code": "S001",
@@ -44,7 +44,7 @@ class TestSuccessResponse:
         assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", response["Status"]["DateTime"])
 
     def test_overrides_shallow_merge_top_level(self) -> None:
-        response = TestHelpers.success_response(overrides={"Key": "X"})
+        response = Helpers.success_response(overrides={"Key": "X"})
 
         assert response["Key"] == "X"
         # The rest of the dict is untouched.
@@ -53,20 +53,20 @@ class TestSuccessResponse:
 
     def test_overrides_defaults_to_none(self) -> None:
         # Passing None (the default) must behave like no overrides.
-        response = TestHelpers.success_response(overrides=None)
+        response = Helpers.success_response(overrides=None)
 
         assert response["Status"]["Code"]["Code"] == 190
 
 
 class TestFailedResponse:
     def test_status_code_is_490(self) -> None:
-        response = TestHelpers.failed_response()
+        response = Helpers.failed_response()
 
         assert response["Status"]["Code"]["Code"] == 490
         assert response["Status"]["Code"]["Description"] == "Failed"
 
     def test_default_error_message(self) -> None:
-        response = TestHelpers.failed_response()
+        response = Helpers.failed_response()
 
         assert response["Status"]["SubCode"] == {
             "Code": "F001",
@@ -74,13 +74,13 @@ class TestFailedResponse:
         }
 
     def test_custom_error_in_subcode_description(self) -> None:
-        response = TestHelpers.failed_response("oops")
+        response = Helpers.failed_response("oops")
 
         assert response["Status"]["SubCode"]["Description"] == "oops"
         assert response["Status"]["SubCode"]["Code"] == "F001"
 
     def test_inherits_success_response_shape(self) -> None:
-        response = TestHelpers.failed_response("boom")
+        response = Helpers.failed_response("boom")
 
         # Non-Status fields come from success_response.
         assert response["ServiceCode"] == "creditcard"
@@ -89,14 +89,14 @@ class TestFailedResponse:
         assert response["IsTest"] is True
 
     def test_overrides_respected(self) -> None:
-        response = TestHelpers.failed_response("x", overrides={"Currency": "USD"})
+        response = Helpers.failed_response("x", overrides={"Currency": "USD"})
 
         assert response["Currency"] == "USD"
         assert response["Status"]["Code"]["Code"] == 490
         assert response["Status"]["SubCode"]["Description"] == "x"
 
     def test_overrides_defaults_to_none(self) -> None:
-        response = TestHelpers.failed_response("x", overrides=None)
+        response = Helpers.failed_response("x", overrides=None)
 
         assert response["Status"]["Code"]["Code"] == 490
         assert response["Currency"] == "EUR"

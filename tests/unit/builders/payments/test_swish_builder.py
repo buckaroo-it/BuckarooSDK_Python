@@ -61,9 +61,7 @@ def test_get_allowed_service_parameters_defaults_to_pay(builder: SwishBuilder) -
     assert builder.get_allowed_service_parameters() == {}
 
 
-@pytest.mark.parametrize(
-    "action", ["Refund", "Capture", "Authorize", "ExtraInfo", "UnknownAction"]
-)
+@pytest.mark.parametrize("action", ["Refund", "Capture", "Authorize", "ExtraInfo", "UnknownAction"])
 def test_get_allowed_service_parameters_non_pay_returns_empty_dict(
     builder: SwishBuilder, action: str
 ) -> None:
@@ -117,4 +115,3 @@ def test_pay_posts_transaction_and_parses_response(
 
     assert response.key == "swish-key-123"
     assert response.status.code.code == 190
-    mock_strategy.assert_all_consumed()

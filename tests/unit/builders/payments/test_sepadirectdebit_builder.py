@@ -38,9 +38,7 @@ def test_instantiates_as_payment_builder(builder: SepaDirectDebitBuilder) -> Non
     assert isinstance(builder, PaymentBuilder)
 
 
-def test_construction_binds_client(
-    builder: SepaDirectDebitBuilder, client: BuckarooClient
-) -> None:
+def test_construction_binds_client(builder: SepaDirectDebitBuilder, client: BuckarooClient) -> None:
     assert builder._client is client
 
 
@@ -111,19 +109,15 @@ def test_get_allowed_service_parameters_default_action_matches_pay(
     builder: SepaDirectDebitBuilder,
 ) -> None:
     # Covers the ``action: str = "Pay"`` default-argument branch.
-    assert (
-        builder.get_allowed_service_parameters()
-        == builder.get_allowed_service_parameters("Pay")
-    )
+    assert builder.get_allowed_service_parameters() == builder.get_allowed_service_parameters("Pay")
 
 
 def test_get_allowed_service_parameters_pay_case_insensitive(
     builder: SepaDirectDebitBuilder,
 ) -> None:
     # The source branches on ``action.lower() in ["pay"]`` — pin lowercase too.
-    assert (
-        builder.get_allowed_service_parameters("pay")
-        == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
+        "Pay"
     )
 
 

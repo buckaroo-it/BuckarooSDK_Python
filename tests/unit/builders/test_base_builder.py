@@ -128,9 +128,7 @@ def test_continue_on_incomplete_setter_returns_self_and_appears_in_request():
 def test_push_url_setters_return_self_and_appear_in_request():
     builder = populate_required_fields(_make_builder(), amount=10.50)
     assert builder.push_url("https://example.com/push") is builder
-    assert (
-        builder.push_url_failure("https://example.com/push-fail") is builder
-    )
+    assert builder.push_url_failure("https://example.com/push-fail") is builder
     request = builder.build(validate=False).to_dict()
     assert request["PushURL"] == "https://example.com/push"
     assert request["PushURLFailure"] == "https://example.com/push-fail"
@@ -201,9 +199,7 @@ def test_from_dict_service_parameters_top_level_scalar():
 
 def test_from_dict_service_parameters_nested_dict_becomes_grouped_parameters():
     builder = populate_required_fields(_make_builder(), amount=10.50)
-    builder.from_dict(
-        {"service_parameters": {"customer": {"firstName": "Jane"}}}
-    )
+    builder.from_dict({"service_parameters": {"customer": {"firstName": "Jane"}}})
     request = builder.build(validate=False).to_dict()
     service = request["Services"]["ServiceList"][0]
     assert service["Parameters"] == [
@@ -250,9 +246,7 @@ def test_add_parameter_flat_capitalizes_name_and_stringifies_value():
 
 def test_add_parameter_grouped_sets_group_type_and_group_id():
     builder = populate_required_fields(_make_builder(), amount=10.50)
-    builder.add_parameter(
-        "firstName", "Jane", group_type="customer", group_id="7"
-    )
+    builder.add_parameter("firstName", "Jane", group_type="customer", group_id="7")
 
     request = builder.build(validate=False).to_dict()
     service = request["Services"]["ServiceList"][0]
@@ -376,9 +370,7 @@ def test_build_raises_when_required_field_missing():
 
 
 def test_is_parameter_allowed_delegates_to_validator():
-    builder = _make_builder(
-        allowed={"Pay": {"issuer": {"type": str, "required": False}}}
-    )
+    builder = _make_builder(allowed={"Pay": {"issuer": {"type": str, "required": False}}})
     assert builder.is_parameter_allowed("issuer", "Pay") is True
     assert builder.is_parameter_allowed("nope", "Pay") is False
 
@@ -390,9 +382,7 @@ def test_get_parameter_info_returns_allowed_params_for_action():
 
 
 def test_get_normalized_parameter_name_returns_canonical_name():
-    builder = _make_builder(
-        allowed={"Pay": {"issuer": {"type": str, "required": False}}}
-    )
+    builder = _make_builder(allowed={"Pay": {"issuer": {"type": str, "required": False}}})
     assert builder.get_normalized_parameter_name("Issuer", "Pay") == "issuer"
     assert builder.get_normalized_parameter_name("unknown", "Pay") == ""
 
@@ -501,9 +491,7 @@ def test_refund_full_swaps_debit_to_credit_and_adds_transaction_key():
 def test_refund_partial_uses_refund_amount_and_removes_debit():
     client, http = _client_returning({"Status": "ok"})
     builder = populate_required_fields(_make_builder(client=client), amount=10.50)
-    builder.from_dict(
-        {"original_transaction_key": "TXN-9", "refund_amount": 3.25}
-    )
+    builder.from_dict({"original_transaction_key": "TXN-9", "refund_amount": 3.25})
 
     builder.refund()
 
@@ -533,9 +521,7 @@ def test_capture_uses_key_argument_and_sets_original_transaction_key():
 def test_capture_reads_authorization_key_from_payload():
     client, http = _client_returning({})
     builder = populate_required_fields(_make_builder(client=client), amount=10.50)
-    builder.from_dict(
-        {"authorization_key": "AUTH-2", "capture_amount": 7.5}
-    )
+    builder.from_dict({"authorization_key": "AUTH-2", "capture_amount": 7.5})
 
     builder.capture()
 

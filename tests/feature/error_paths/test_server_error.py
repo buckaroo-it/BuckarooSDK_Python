@@ -4,7 +4,7 @@ import pytest
 
 from buckaroo.http.client import BuckarooApiError
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 def _error_body():
@@ -27,18 +27,19 @@ class TestServerError:
             (502, {}, "TEST-502"),
         ],
     )
-    def test_5xx_response_raises_api_error(
-        self, buckaroo, mock_strategy, status, body, invoice
-    ):
+    def test_5xx_response_raises_api_error(self, buckaroo, mock_strategy, status, body, invoice):
         mock_strategy.queue(
             BuckarooMockRequest.json("POST", "*/json/transaction", body, status=status)
         )
 
         with pytest.raises(BuckarooApiError, match=str(status)) as exc_info:
-            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
-                invoice=invoice,
-                description=f"Server error {status} test",
-            )).pay()
+            buckaroo.payments.create_payment(
+                "ideal",
+                Helpers.standard_payload(
+                    invoice=invoice,
+                    description=f"Server error {status} test",
+                ),
+            ).pay()
 
         err = exc_info.value
         assert err.status_code == status
@@ -50,10 +51,13 @@ class TestServerError:
         )
 
         with pytest.raises(BuckarooApiError) as exc_info:
-            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
-                invoice="TEST-500-SUCCESS",
-                description="Success flag test",
-            )).pay()
+            buckaroo.payments.create_payment(
+                "ideal",
+                Helpers.standard_payload(
+                    invoice="TEST-500-SUCCESS",
+                    description="Success flag test",
+                ),
+            ).pay()
 
         assert exc_info.value.response.success is False
         assert exc_info.value.response.status_code == 500

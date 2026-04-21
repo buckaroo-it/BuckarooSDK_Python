@@ -44,13 +44,21 @@ def test_get_allowed_service_parameters_pay_is_case_insensitive(client):
 
 def test_get_allowed_service_parameters_payEncrypted_snapshot(client):
     assert BancontactBuilder(client).get_allowed_service_parameters("payEncrypted") == {
-        "encryptedCardData": {"type": str, "required": True, "description": "Encrypted card data for payment"},
+        "encryptedCardData": {
+            "type": str,
+            "required": True,
+            "description": "Encrypted card data for payment",
+        },
     }
 
 
 def test_get_allowed_service_parameters_completePayment_snapshot(client):
     assert BancontactBuilder(client).get_allowed_service_parameters("completePayment") == {
-        "encryptedCardData": {"type": str, "required": True, "description": "Encrypted card data for payment"},
+        "encryptedCardData": {
+            "type": str,
+            "required": True,
+            "description": "Encrypted card data for payment",
+        },
     }
 
 
@@ -72,10 +80,6 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
         )
     )
 
-    response = (
-        populate_required_fields(BancontactBuilder(client), amount=25.00)
-        .pay()
-    )
+    response = populate_required_fields(BancontactBuilder(client), amount=25.00).pay()
 
     assert response.key == "bancontact-key-456"
-    mock_strategy.assert_all_consumed()

@@ -96,24 +96,18 @@ class TestIsSuccessfulPayment:
 
     @pytest.mark.parametrize("code", [190, 490, 491, 492, 790, 791, 792, 793])
     def test_true_for_each_buckaroo_success_code(self, code):
-        response = BuckarooResponse(
-            make_response(text=f'{{"Status": {{"Code": {code}}}}}')
-        )
+        response = BuckarooResponse(make_response(text=f'{{"Status": {{"Code": {code}}}}}'))
 
         assert response.is_successful_payment() is True
 
     def test_false_for_non_success_buckaroo_code(self):
-        response = BuckarooResponse(
-            make_response(text='{"Status": {"Code": 491000}}')
-        )
+        response = BuckarooResponse(make_response(text='{"Status": {"Code": 491000}}'))
 
         assert response.is_successful_payment() is False
 
     def test_handles_nested_code_dict_shape(self):
         response = BuckarooResponse(
-            make_response(
-                text='{"Status": {"Code": {"Code": 190, "Description": "Success"}}}'
-            )
+            make_response(text='{"Status": {"Code": {"Code": 190, "Description": "Success"}}}')
         )
 
         assert response.is_successful_payment() is True
@@ -131,9 +125,7 @@ class TestIsSuccessfulPayment:
         assert response.is_successful_payment() is True
 
     def test_false_when_code_is_unknown_type(self):
-        response = BuckarooResponse(
-            make_response(text='{"Status": {"Code": "oops"}}')
-        )
+        response = BuckarooResponse(make_response(text='{"Status": {"Code": "oops"}}'))
 
         assert response.is_successful_payment() is False
 
@@ -152,17 +144,13 @@ class TestIsSuccessfulPayment:
 
 class TestGetStatusCode:
     def test_returns_simple_int_code(self):
-        response = BuckarooResponse(
-            make_response(text='{"Status": {"Code": 190}}')
-        )
+        response = BuckarooResponse(make_response(text='{"Status": {"Code": 190}}'))
 
         assert response.get_status_code() == 190
 
     def test_flattens_nested_code_dict(self):
         response = BuckarooResponse(
-            make_response(
-                text='{"Status": {"Code": {"Code": 490, "Description": "Failed"}}}'
-            )
+            make_response(text='{"Status": {"Code": {"Code": 490, "Description": "Failed"}}}')
         )
 
         assert response.get_status_code() == 490
@@ -188,9 +176,7 @@ class TestGetStatusCode:
         assert response.get_status_code() is None
 
     def test_returns_none_for_unknown_code_type(self):
-        response = BuckarooResponse(
-            make_response(text='{"Status": {"Code": "string-code"}}')
-        )
+        response = BuckarooResponse(make_response(text='{"Status": {"Code": "string-code"}}'))
 
         assert response.get_status_code() is None
 
@@ -278,9 +264,7 @@ class TestGetTransactionKey:
         assert response.get_transaction_key() == "txn-1"
 
     def test_returns_key_from_services_dict_service_list(self):
-        body = (
-            '{"Services": {"ServiceList": [{"TransactionKey": "txn-dict"}]}}'
-        )
+        body = '{"Services": {"ServiceList": [{"TransactionKey": "txn-dict"}]}}'
         response = BuckarooResponse(make_response(text=body))
 
         assert response.get_transaction_key() == "txn-dict"
@@ -327,9 +311,7 @@ class TestGetRedirectUrl:
         assert response.get_redirect_url() is None
 
     def test_returns_none_when_required_action_has_no_redirect_url(self):
-        response = BuckarooResponse(
-            make_response(text='{"RequiredAction": {"Other": 1}}')
-        )
+        response = BuckarooResponse(make_response(text='{"RequiredAction": {"Other": 1}}'))
 
         assert response.get_redirect_url() is None
 

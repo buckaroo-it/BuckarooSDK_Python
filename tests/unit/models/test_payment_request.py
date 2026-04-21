@@ -116,9 +116,7 @@ class TestService:
         assert service.parameters == [Parameter(name="amount", value="5.00")]
 
     def test_add_parameter_appends_to_existing_list(self):
-        service = Service(
-            name="idealqr", parameters=[Parameter(name="a", value="1")]
-        )
+        service = Service(name="idealqr", parameters=[Parameter(name="a", value="1")])
         service.add_parameter({"name": "b", "value": "2"})
         assert service.parameters == [
             Parameter(name="a", value="1"),
@@ -127,12 +125,14 @@ class TestService:
 
     def test_add_parameter_prefers_buckaroo_cased_keys(self):
         service = Service(name="idealqr")
-        service.add_parameter({
-            "Name": "amount",
-            "Value": "5.00",
-            "GroupType": "Order",
-            "GroupID": "1",
-        })
+        service.add_parameter(
+            {
+                "Name": "amount",
+                "Value": "5.00",
+                "GroupType": "Order",
+                "GroupID": "1",
+            }
+        )
         assert service.parameters == [
             Parameter(name="amount", value="5.00", group_type="Order", group_id="1")
         ]
@@ -140,6 +140,7 @@ class TestService:
     def test_add_parameter_raises_on_dict_form_parameters(self):
         service = Service(name="ideal", parameters={"Issuer": "ABNANL2A"})
         import pytest
+
         with pytest.raises(TypeError, match="simple key-value parameters"):
             service.add_parameter(Parameter(name="x", value="y"))
 
@@ -207,9 +208,7 @@ class TestPaymentRequest:
     def test_to_dict_includes_services_when_set(self):
         services = ServiceList(services=[Service(name="ideal")])
         result = _make_request(services=services).to_dict()
-        assert result["Services"] == {
-            "ServiceList": [{"Name": "ideal", "Action": "Pay"}]
-        }
+        assert result["Services"] == {"ServiceList": [{"Name": "ideal", "Action": "Pay"}]}
 
     def test_to_dict_omits_services_when_absent(self):
         assert "Services" not in _make_request().to_dict()

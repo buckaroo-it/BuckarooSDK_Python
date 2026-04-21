@@ -18,7 +18,6 @@ specific action methods would otherwise fail ``_validate_required_fields``.
 
 from __future__ import annotations
 
-import pytest
 
 from buckaroo.builders.payments.klarnakp_builder import KlarnaKPBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
@@ -64,9 +63,7 @@ class TestGetAllowedServiceParameters:
         }
 
     def test_cancel_reservation_returns_reservation_number_spec(self, client):
-        assert KlarnaKPBuilder(client).get_allowed_service_parameters(
-            "CancelReservation"
-        ) == {
+        assert KlarnaKPBuilder(client).get_allowed_service_parameters("CancelReservation") == {
             "reservationNumber": {
                 "type": str,
                 "required": True,
@@ -89,9 +86,7 @@ class TestGetAllowedServiceParameters:
         }
 
     def test_extend_reservation_returns_reservation_number_spec(self, client):
-        assert KlarnaKPBuilder(client).get_allowed_service_parameters(
-            "ExtendReservation"
-        ) == {
+        assert KlarnaKPBuilder(client).get_allowed_service_parameters("ExtendReservation") == {
             "reservationNumber": {
                 "type": str,
                 "required": True,
@@ -101,12 +96,12 @@ class TestGetAllowedServiceParameters:
 
     def test_extend_reservation_matches_pay_result(self, client):
         builder = KlarnaKPBuilder(client)
-        assert builder.get_allowed_service_parameters("ExtendReservation") == builder.get_allowed_service_parameters("Pay")
+        assert builder.get_allowed_service_parameters(
+            "ExtendReservation"
+        ) == builder.get_allowed_service_parameters("Pay")
 
     def test_update_reservation_returns_reservation_number_and_article_spec(self, client):
-        assert KlarnaKPBuilder(client).get_allowed_service_parameters(
-            "UpdateReservation"
-        ) == {
+        assert KlarnaKPBuilder(client).get_allowed_service_parameters("UpdateReservation") == {
             "reservationNumber": {
                 "type": str,
                 "required": True,
@@ -120,9 +115,7 @@ class TestGetAllowedServiceParameters:
         }
 
     def test_add_shipping_info_returns_shipping_spec(self, client):
-        assert KlarnaKPBuilder(client).get_allowed_service_parameters(
-            "AddShippingInfo"
-        ) == {
+        assert KlarnaKPBuilder(client).get_allowed_service_parameters("AddShippingInfo") == {
             "originalTransactionKey": {
                 "type": str,
                 "required": True,
@@ -147,7 +140,9 @@ class TestGetAllowedServiceParameters:
 
     def test_defaults_to_pay_when_action_omitted(self, client):
         builder = KlarnaKPBuilder(client)
-        assert builder.get_allowed_service_parameters() == builder.get_allowed_service_parameters("Pay")
+        assert builder.get_allowed_service_parameters() == builder.get_allowed_service_parameters(
+            "Pay"
+        )
 
     def test_unknown_action_returns_empty_dict(self, client):
         assert KlarnaKPBuilder(client).get_allowed_service_parameters("Refund") == {}
@@ -155,8 +150,12 @@ class TestGetAllowedServiceParameters:
     def test_action_matching_is_case_insensitive(self, client):
         """Source lowercases ``action`` before every branch comparison."""
         builder = KlarnaKPBuilder(client)
-        assert builder.get_allowed_service_parameters("reserve") == builder.get_allowed_service_parameters("Reserve")
-        assert builder.get_allowed_service_parameters("PAY") == builder.get_allowed_service_parameters("Pay")
+        assert builder.get_allowed_service_parameters(
+            "reserve"
+        ) == builder.get_allowed_service_parameters("Reserve")
+        assert builder.get_allowed_service_parameters(
+            "PAY"
+        ) == builder.get_allowed_service_parameters("Pay")
 
 
 # ---------------------------------------------------------------------------

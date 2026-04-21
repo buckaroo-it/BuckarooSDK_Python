@@ -22,7 +22,7 @@ from buckaroo.builders.payments.default_builder import DefaultBuilder
 from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from tests.support.builders import populate_required_fields
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 def test_construction_with_client_succeeds(client):
@@ -86,13 +86,9 @@ def test_pay_posts_transaction_and_parses_response(client, mock_strategy):
         )
     )
 
-    response = (
-        populate_required_fields(DefaultBuilder(client))
-        .pay()
-    )
+    response = populate_required_fields(DefaultBuilder(client)).pay()
 
     assert response.key == "default-key-42"
-    mock_strategy.assert_all_consumed()
 
 
 def test_pay_uses_method_from_payload_as_service_name(client, mock_strategy):
@@ -104,12 +100,17 @@ def test_pay_uses_method_from_payload_as_service_name(client, mock_strategy):
         )
     )
 
-    response = DefaultBuilder(client).from_dict(TestHelpers.standard_payload(
-        invoice="INV-DEF-2",
-        amount=5.55,
-        description="via from_dict",
-        method="obscuremethod",
-    )).pay()
+    response = (
+        DefaultBuilder(client)
+        .from_dict(
+            Helpers.standard_payload(
+                invoice="INV-DEF-2",
+                amount=5.55,
+                description="via from_dict",
+                method="obscuremethod",
+            )
+        )
+        .pay()
+    )
 
     assert response.key == "default-key-99"
-    mock_strategy.assert_all_consumed()

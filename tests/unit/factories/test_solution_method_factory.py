@@ -93,18 +93,22 @@ def test_register_method_lowercases_and_overrides(client):
 
 
 def test_detect_method_from_payload_returns_method_lowercased():
-    assert SolutionMethodFactory.detect_method_from_payload({"method": "subscription"}) == "subscription"
+    assert (
+        SolutionMethodFactory.detect_method_from_payload({"method": "subscription"})
+        == "subscription"
+    )
 
 
 def test_detect_method_from_payload_lowercases_uppercase_method():
-    assert SolutionMethodFactory.detect_method_from_payload({"method": "SUBSCRIPTION"}) == "subscription"
+    assert (
+        SolutionMethodFactory.detect_method_from_payload({"method": "SUBSCRIPTION"})
+        == "subscription"
+    )
 
 
 # SolutionMethodFactory.detect_method_from_payload deliberately does NOT warn
 # on fallback — diverges from PaymentMethodFactory. Locked in here.
-@pytest.mark.parametrize(
-    "payload", [{}, {"other": "thing"}], ids=["empty", "missing_method_key"]
-)
+@pytest.mark.parametrize("payload", [{}, {"other": "thing"}], ids=["empty", "missing_method_key"])
 def test_detect_method_from_payload_fallback_is_silent(payload, caplog):
     with caplog.at_level(logging.WARNING):
         result = SolutionMethodFactory.detect_method_from_payload(payload)

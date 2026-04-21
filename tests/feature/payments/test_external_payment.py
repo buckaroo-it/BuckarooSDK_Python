@@ -3,7 +3,7 @@
 from buckaroo.builders.payments.external_payment_builder import ExternalPaymentBuilder
 from buckaroo.factories.payment_method_factory import PaymentMethodFactory
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 class TestExternalPaymentFeature:
@@ -12,14 +12,15 @@ class TestExternalPaymentFeature:
         assert isinstance(builder, ExternalPaymentBuilder)
 
     def test_external_payment_pay(self, buckaroo, mock_strategy):
-        response_body = TestHelpers.pending_redirect_response("ExternalPayment")
-        mock_strategy.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction", response_body)
+        response_body = Helpers.pending_redirect_response("ExternalPayment")
+        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
+        builder = buckaroo.payments.create_payment(
+            "externalPayment",
+            Helpers.standard_payload(
+                invoice="INV-EXT-001",
+                description="Test external payment",
+            ),
         )
-        builder = buckaroo.payments.create_payment("externalPayment", TestHelpers.standard_payload(
-            invoice="INV-EXT-001",
-            description="Test external payment",
-        ))
         assert isinstance(builder, ExternalPaymentBuilder)
         response = builder.pay()
         assert response.is_pending()

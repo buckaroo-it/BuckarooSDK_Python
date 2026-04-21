@@ -49,9 +49,7 @@ def _ready_builder(client, allowed=None):
 class TestInstantRefund:
     def test_posts_action_instantRefund(self):
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
         builder.instantRefund(validate=False)
@@ -60,9 +58,7 @@ class TestInstantRefund:
 
     def test_posts_to_transaction_endpoint(self):
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
         builder.instantRefund(validate=False)
@@ -74,9 +70,7 @@ class TestInstantRefund:
 
     def test_posts_expected_service_name(self):
         mock, client = wire_recording_http()
-        mock.queue(
-            BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"})
-        )
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
         builder.instantRefund(validate=False)

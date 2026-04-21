@@ -58,8 +58,12 @@ def test_get_allowed_service_parameters_pay_case_insensitive(
     builder: RivertyBuilder,
 ) -> None:
     # Source lowercases the action before comparing.
-    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters("Pay")
-    assert builder.get_allowed_service_parameters("PAY") == builder.get_allowed_service_parameters("Pay")
+    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
+        "Pay"
+    )
+    assert builder.get_allowed_service_parameters("PAY") == builder.get_allowed_service_parameters(
+        "Pay"
+    )
 
 
 @pytest.mark.parametrize("action", ["Refund", "Authorize", "Capture", "CancelAuthorize", ""])
@@ -93,7 +97,12 @@ def test_pay_end_to_end_via_mock_buckaroo(
                     "billingCustomer": {"firstName": "Jane", "lastName": "Doe"},
                     "shippingCustomer": {"firstName": "Jane", "lastName": "Doe"},
                     "article": [
-                        {"identifier": "SKU-1", "description": "Widget", "quantity": 1, "price": 79.50},
+                        {
+                            "identifier": "SKU-1",
+                            "description": "Widget",
+                            "quantity": 1,
+                            "price": 79.50,
+                        },
                     ],
                 }
             }
@@ -102,4 +111,3 @@ def test_pay_end_to_end_via_mock_buckaroo(
     )
 
     assert response.key == "riverty-key"
-    mock_strategy.assert_all_consumed()

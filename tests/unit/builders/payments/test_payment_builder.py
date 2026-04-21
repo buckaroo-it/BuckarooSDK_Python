@@ -28,7 +28,9 @@ from tests.support.recording_mock import recorded_request, wire_recording_http
 
 
 def test_build_pay_sets_service_name_and_action():
-    builder = populate_required_fields(make_test_builder(object(), service_name="ideal"), amount=10.50)
+    builder = populate_required_fields(
+        make_test_builder(object(), service_name="ideal"), amount=10.50
+    )
 
     request = builder.build("Pay", validate=False).to_dict()
 
@@ -112,7 +114,9 @@ def test_pay_posts_build_pay_request_to_transaction_endpoint():
         )
     )
 
-    builder = populate_required_fields(make_test_builder(client, service_name="ideal"), amount=10.50)
+    builder = populate_required_fields(
+        make_test_builder(client, service_name="ideal"), amount=10.50
+    )
     response = builder.pay(validate=False)
 
     assert mock.calls[0]["method"] == "POST"
@@ -137,7 +141,9 @@ def test_post_transaction_uses_injected_client_and_returns_parsed_payment_respon
         )
     )
 
-    builder = populate_required_fields(make_test_builder(client, service_name="ideal"), amount=10.50)
+    builder = populate_required_fields(
+        make_test_builder(client, service_name="ideal"), amount=10.50
+    )
     request = builder.build("Pay", validate=False)
 
     response = builder._post_transaction(request.to_dict())
@@ -154,12 +160,12 @@ def test_post_transaction_uses_injected_client_and_returns_parsed_payment_respon
 def test_post_transaction_propagates_buckaroo_error_from_http_client():
     mock, client = wire_recording_http()
     mock.queue(
-        BuckarooMockRequest.json(
-            "POST", "*/json/transaction*", {"error": "boom"}, status=500
-        )
+        BuckarooMockRequest.json("POST", "*/json/transaction*", {"error": "boom"}, status=500)
     )
 
-    builder = populate_required_fields(make_test_builder(client, service_name="ideal"), amount=10.50)
+    builder = populate_required_fields(
+        make_test_builder(client, service_name="ideal"), amount=10.50
+    )
 
     with pytest.raises(BuckarooApiError):
         builder.pay(validate=False)
@@ -218,9 +224,7 @@ def test_add_parameter_flat_returns_self_and_capitalizes_name():
 
     request = builder.build(validate=False).to_dict()
     params = request["Services"]["ServiceList"][0]["Parameters"]
-    assert params == [
-        {"Name": "Issuer", "GroupType": "", "GroupID": "", "Value": "INGBNL2A"}
-    ]
+    assert params == [{"Name": "Issuer", "GroupType": "", "GroupID": "", "Value": "INGBNL2A"}]
 
 
 def test_add_parameter_grouped_sets_group_type_and_group_id():
@@ -363,9 +367,7 @@ def test_from_dict_service_parameters_top_level_scalar_becomes_flat_parameter():
 
 def test_from_dict_service_parameters_nested_dict_becomes_grouped_parameters():
     builder = populate_required_fields(make_test_builder(object()), amount=10.50)
-    builder.from_dict(
-        {"service_parameters": {"customer": {"firstName": "Jane"}}}
-    )
+    builder.from_dict({"service_parameters": {"customer": {"firstName": "Jane"}}})
     request = builder.build(validate=False).to_dict()
     service = request["Services"]["ServiceList"][0]
     assert service["Parameters"] == [
@@ -403,9 +405,7 @@ def test_refund_requires_original_transaction_key():
 
 def test_refund_full_swaps_debit_to_credit_and_adds_transaction_key():
     mock, client = wire_recording_http()
-    mock.queue(
-        BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "R-1"})
-    )
+    mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "R-1"}))
     builder = populate_required_fields(make_test_builder(client), amount=10.50)
     builder.from_dict({"original_transaction_key": "TXN-123"})
 
@@ -420,13 +420,9 @@ def test_refund_full_swaps_debit_to_credit_and_adds_transaction_key():
 
 def test_refund_partial_uses_refund_amount_and_removes_debit():
     mock, client = wire_recording_http()
-    mock.queue(
-        BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "R-1"})
-    )
+    mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "R-1"}))
     builder = populate_required_fields(make_test_builder(client), amount=10.50)
-    builder.from_dict(
-        {"original_transaction_key": "TXN-9", "refund_amount": 3.25}
-    )
+    builder.from_dict({"original_transaction_key": "TXN-9", "refund_amount": 3.25})
 
     builder.refund(validate=False)
 
@@ -598,9 +594,7 @@ def test_partial_refund_restores_pre_existing_payload_keys():
 
 def test_post_data_request_posts_to_data_request_endpoint_and_parses_response():
     mock, client = wire_recording_http()
-    mock.queue(
-        BuckarooMockRequest.json("POST", "*/json/DataRequest*", {"Key": "D-1"})
-    )
+    mock.queue(BuckarooMockRequest.json("POST", "*/json/DataRequest*", {"Key": "D-1"}))
     builder = populate_required_fields(make_test_builder(client), amount=10.50)
     request_data = builder.build(validate=False).to_dict()
 
@@ -645,11 +639,7 @@ def test_post_data_request_returns_empty_payment_response_when_client_returns_no
 
 def test_execute_action_posts_with_requested_action_name():
     mock, client = wire_recording_http()
-    mock.queue(
-        BuckarooMockRequest.json(
-            "POST", "*/json/transaction*", {"Key": "X-1"}
-        )
-    )
+    mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "X-1"}))
     builder = populate_required_fields(make_test_builder(client), amount=10.50)
 
     response = builder.execute_action("DummyAction", validate=False)

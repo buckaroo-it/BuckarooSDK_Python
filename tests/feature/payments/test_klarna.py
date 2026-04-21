@@ -1,13 +1,15 @@
 """Feature test: klarna pay() round-trip through full stack with MockBuckaroo."""
 
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 class TestKlarnaFeature:
     def test_klarna_pay_returns_pending_with_redirect(self, buckaroo, mock_strategy):
-        response = TestHelpers.assert_pay_returns_pending_with_redirect(
-            buckaroo, mock_strategy,
-            method="klarna", invoice="INV-KLARNA-001",
+        response = Helpers.assert_pay_returns_pending_with_redirect(
+            buckaroo,
+            mock_strategy,
+            method="klarna",
+            invoice="INV-KLARNA-001",
             payload_overrides={"amount": 25.00, "description": "Test klarna"},
             service_params={
                 "article": [

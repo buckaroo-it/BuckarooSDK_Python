@@ -83,18 +83,14 @@ class TestBuildCurlCommand:
     def test_adds_insecure_when_verify_ssl_false(self):
         strategy = CurlStrategy()
 
-        cmd = strategy._build_curl_command(
-            method="GET", url="https://x", verify_ssl=False
-        )
+        cmd = strategy._build_curl_command(method="GET", url="https://x", verify_ssl=False)
 
         assert "--insecure" in cmd
 
     def test_omits_insecure_when_verify_ssl_true(self):
         strategy = CurlStrategy()
 
-        cmd = strategy._build_curl_command(
-            method="GET", url="https://x", verify_ssl=True
-        )
+        cmd = strategy._build_curl_command(method="GET", url="https://x", verify_ssl=True)
 
         assert "--insecure" not in cmd
 
@@ -126,9 +122,7 @@ class TestBuildCurlCommand:
     def test_data_attached_for_write_methods(self, method):
         strategy = CurlStrategy()
 
-        cmd = strategy._build_curl_command(
-            method=method, url="https://x", data='{"a":1}'
-        )
+        cmd = strategy._build_curl_command(method=method, url="https://x", data='{"a":1}')
 
         assert "--data" in cmd
         assert cmd[cmd.index("--data") + 1] == '{"a":1}'
@@ -137,9 +131,7 @@ class TestBuildCurlCommand:
     def test_data_omitted_for_read_methods(self, method):
         strategy = CurlStrategy()
 
-        cmd = strategy._build_curl_command(
-            method=method, url="https://x", data='{"a":1}'
-        )
+        cmd = strategy._build_curl_command(method=method, url="https://x", data='{"a":1}')
 
         assert "--data" not in cmd
 
@@ -176,11 +168,7 @@ class TestParseCurlOutput:
     def test_splits_on_crlf_crlf_and_parses_status_and_headers(self):
         strategy = CurlStrategy()
         stdout = (
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: application/json\r\n"
-            "X-Req-Id: abc\r\n"
-            "\r\n"
-            '{"ok": true}'
+            'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nX-Req-Id: abc\r\n\r\n{"ok": true}'
         )
 
         response = strategy._parse_curl_output(_completed(stdout=stdout, returncode=0))
@@ -205,9 +193,7 @@ class TestParseCurlOutput:
     def test_no_separator_treats_all_output_as_body(self):
         strategy = CurlStrategy()
 
-        response = strategy._parse_curl_output(
-            _completed(stdout="just-a-body", returncode=0)
-        )
+        response = strategy._parse_curl_output(_completed(stdout="just-a-body", returncode=0))
 
         assert response.status_code == 200
         assert response.headers == {}
@@ -217,9 +203,7 @@ class TestParseCurlOutput:
     def test_no_separator_with_nonzero_returncode_uses_returncode_as_status(self):
         strategy = CurlStrategy()
 
-        response = strategy._parse_curl_output(
-            _completed(stdout="garbled", returncode=7)
-        )
+        response = strategy._parse_curl_output(_completed(stdout="garbled", returncode=7))
 
         assert response.status_code == 7
         assert response.headers == {}
@@ -270,13 +254,7 @@ class TestParseCurlOutput:
 
     def test_header_lines_without_colon_are_skipped(self):
         strategy = CurlStrategy()
-        stdout = (
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/plain\r\n"
-            "NotAHeaderLine\r\n"
-            "\r\n"
-            "body"
-        )
+        stdout = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nNotAHeaderLine\r\n\r\nbody"
 
         response = strategy._parse_curl_output(_completed(stdout=stdout, returncode=0))
 
@@ -286,9 +264,7 @@ class TestParseCurlOutput:
     def test_empty_stdout_returns_response_with_returncode_as_status(self):
         strategy = CurlStrategy()
 
-        response = strategy._parse_curl_output(
-            _completed(stdout="", stderr="", returncode=0)
-        )
+        response = strategy._parse_curl_output(_completed(stdout="", stderr="", returncode=0))
 
         assert isinstance(response, HttpResponse)
         assert response.status_code == 0
@@ -299,9 +275,7 @@ class TestParseCurlOutput:
     def test_empty_stdout_with_nonzero_returncode_is_unsuccessful(self):
         strategy = CurlStrategy()
 
-        response = strategy._parse_curl_output(
-            _completed(stdout="", stderr="boom", returncode=2)
-        )
+        response = strategy._parse_curl_output(_completed(stdout="", stderr="boom", returncode=2))
 
         assert response.status_code == 2
         assert response.text == ""
@@ -322,9 +296,7 @@ class TestParseCurlOutput:
         strategy = CurlStrategy()
         stdout = "HTTP/1.1 000 \r\n\r\n"
 
-        response = strategy._parse_curl_output(
-            _completed(stdout=stdout, stderr="", returncode=6)
-        )
+        response = strategy._parse_curl_output(_completed(stdout=stdout, stderr="", returncode=6))
 
         assert response.text == "Curl failed with exit code 6"
 
@@ -423,9 +395,7 @@ class TestRequestRetryLoop:
         strategy = CurlStrategy()
         strategy.configure(retry_attempts=2)
 
-        with patch(
-            "subprocess.run", side_effect=RuntimeError("weird thing")
-        ) as run_mock:
+        with patch("subprocess.run", side_effect=RuntimeError("weird thing")) as run_mock:
             with pytest.raises(Exception) as excinfo:
                 strategy.request(method="GET", url="https://x")
 

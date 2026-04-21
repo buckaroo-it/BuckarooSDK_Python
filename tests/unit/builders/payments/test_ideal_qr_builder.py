@@ -89,13 +89,17 @@ def test_get_allowed_service_parameters_generate_snapshot(client):
 
 def test_pay_and_generate_snapshots_are_distinct(client):
     builder = IdealQrBuilder(client)
-    assert builder.get_allowed_service_parameters("Pay") != builder.get_allowed_service_parameters("Generate")
+    assert builder.get_allowed_service_parameters("Pay") != builder.get_allowed_service_parameters(
+        "Generate"
+    )
 
 
 def test_get_allowed_service_parameters_is_case_insensitive_for_generate(client):
     """Source lower-cases the action before matching, so "generate" equals "Generate"."""
     builder = IdealQrBuilder(client)
-    assert builder.get_allowed_service_parameters("generate") == builder.get_allowed_service_parameters("Generate")
+    assert builder.get_allowed_service_parameters(
+        "generate"
+    ) == builder.get_allowed_service_parameters("Generate")
 
 
 def test_get_allowed_service_parameters_unsupported_action_returns_empty(client):

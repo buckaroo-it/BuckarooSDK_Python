@@ -69,9 +69,7 @@ class TestCreatePayment:
         with pytest.raises(ValueError, match="Missing required fields"):
             builder.build("Pay", validate=False)
 
-    def test_unknown_method_returns_default_builder_and_logs_warning(
-        self, service, caplog
-    ):
+    def test_unknown_method_returns_default_builder_and_logs_warning(self, service, caplog):
         with caplog.at_level(logging.WARNING):
             builder = service.create_payment("nope")
         assert isinstance(builder, DefaultBuilder)
@@ -120,9 +118,7 @@ class TestCreateAutoDetect:
         with caplog.at_level(logging.WARNING):
             builder = service.create({})
         assert isinstance(builder, DefaultBuilder)
-        assert any(
-            "Cannot determine payment method" in r.message for r in caplog.records
-        )
+        assert any("Cannot determine payment method" in r.message for r in caplog.records)
 
 
 class TestFactoryDelegation:

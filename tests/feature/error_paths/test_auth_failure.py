@@ -2,7 +2,7 @@ import pytest
 
 from buckaroo.exceptions._authentication_error import AuthenticationError
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.test_helpers import TestHelpers
+from tests.support.helpers import Helpers
 
 
 class TestAuthFailure:
@@ -18,19 +18,29 @@ class TestAuthFailure:
     def test_auth_failure_raises_authentication_error(
         self, buckaroo, mock_strategy, status, match, invoice
     ):
-        mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", {
-            "Key": None,
-            "Status": {
-                "Code": {"Code": 491, "Description": "Validation failure"},
-                "SubCode": {"Code": "S001", "Description": "Authentication failed"},
-                "DateTime": "2024-01-01T00:00:00",
-            },
-            "RequiredAction": None,
-            "Services": [],
-        }, status=status))
+        mock_strategy.queue(
+            BuckarooMockRequest.json(
+                "POST",
+                "*/json/transaction",
+                {
+                    "Key": None,
+                    "Status": {
+                        "Code": {"Code": 491, "Description": "Validation failure"},
+                        "SubCode": {"Code": "S001", "Description": "Authentication failed"},
+                        "DateTime": "2024-01-01T00:00:00",
+                    },
+                    "RequiredAction": None,
+                    "Services": [],
+                },
+                status=status,
+            )
+        )
 
         with pytest.raises(AuthenticationError, match=match):
-            buckaroo.payments.create_payment("ideal", TestHelpers.standard_payload(
-                invoice=invoice,
-                description=f"Auth failure {status} test",
-            )).pay()
+            buckaroo.payments.create_payment(
+                "ideal",
+                Helpers.standard_payload(
+                    invoice=invoice,
+                    description=f"Auth failure {status} test",
+                ),
+            ).pay()

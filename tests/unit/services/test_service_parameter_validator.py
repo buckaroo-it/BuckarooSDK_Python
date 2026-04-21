@@ -46,8 +46,8 @@ def _stub_builder(allowed: Dict[str, Dict[str, Any]], service_name: str = "stub"
     """Minimal fake builder exposing the two hooks the validator needs."""
     builder = MagicMock()
     builder.get_service_name.return_value = service_name
-    builder.get_allowed_service_parameters.side_effect = (
-        lambda action="Pay": allowed.get(action, {})
+    builder.get_allowed_service_parameters.side_effect = lambda action="Pay": allowed.get(
+        action, {}
     )
     return builder
 
@@ -111,9 +111,7 @@ def test_validate_parameter_type_skips_list_and_dict_expected_types(structured):
 def test_validate_parameter_type_string_mismatch_raises():
     validator = _validator_for(IdealBuilder)
     with pytest.raises(ParameterValidationError) as exc:
-        validator.validate_parameter_type(
-            "issuer", 1234, {"type": str}
-        )
+        validator.validate_parameter_type("issuer", 1234, {"type": str})
     assert "issuer" in str(exc.value)
     assert exc.value.parameter_name == "issuer"
     assert exc.value.service_name == "ideal"
@@ -144,19 +142,13 @@ def test_validate_parameter_type_bool_non_string_non_bool_raises():
 
 def test_validate_parameter_type_tuple_accepts_any_matching_type():
     validator = _validator_for(SofortBuilder)
-    validator.validate_parameter_type(
-        "savetoken", True, {"type": (str, bool)}
-    )
-    validator.validate_parameter_type(
-        "savetoken", "opaque", {"type": (str, bool)}
-    )
+    validator.validate_parameter_type("savetoken", True, {"type": (str, bool)})
+    validator.validate_parameter_type("savetoken", "opaque", {"type": (str, bool)})
 
 
 def test_validate_parameter_type_tuple_with_bool_accepts_true_false_string():
     validator = _validator_for(SofortBuilder)
-    validator.validate_parameter_type(
-        "savetoken", "true", {"type": (str, bool)}
-    )
+    validator.validate_parameter_type("savetoken", "true", {"type": (str, bool)})
 
 
 def test_validate_parameter_type_tuple_with_bool_rejects_non_boolean_string():
@@ -164,9 +156,7 @@ def test_validate_parameter_type_tuple_with_bool_rejects_non_boolean_string():
     # 'true'/'false' strings via the bool-in-tuple path.
     validator = _validator_for(SofortBuilder)
     with pytest.raises(ParameterValidationError) as exc:
-        validator.validate_parameter_type(
-            "flag", "nope", {"type": (int, bool)}
-        )
+        validator.validate_parameter_type("flag", "nope", {"type": (int, bool)})
     msg = str(exc.value)
     assert "flag" in msg
     assert "one of types" in msg or "'true'/'false'" in msg
@@ -184,9 +174,7 @@ def test_validate_parameter_type_tuple_with_bool_no_str_accepts_true_string():
 def test_validate_parameter_type_tuple_without_bool_rejects_mismatch():
     validator = _validator_for(SofortBuilder)
     with pytest.raises(ParameterValidationError) as exc:
-        validator.validate_parameter_type(
-            "count", "not-an-int", {"type": (int, float)}
-        )
+        validator.validate_parameter_type("count", "not-an-int", {"type": (int, float)})
     assert "count" in str(exc.value)
     assert "got str" in str(exc.value)
 
@@ -288,9 +276,7 @@ def test_filter_drops_unknown_keys_and_preserves_known_ones():
     good = Parameter(name="Issuer", value="INGBNL2A")
     garbage = Parameter(name="NotARealParam", value="nope")
 
-    result = validator.validate_and_filter_parameters(
-        [good, garbage], action="Pay"
-    )
+    result = validator.validate_and_filter_parameters([good, garbage], action="Pay")
 
     assert good in result
     assert garbage not in result
@@ -307,18 +293,14 @@ def test_filter_drops_unknown_sofort_key():
     ok = Parameter(name="SaveToken", value="true")
     bad_type = Parameter(name="customerbic", value="INGBNL2A")  # not in allowed
 
-    result = validator.validate_and_filter_parameters(
-        [ok, bad_type], action="Pay"
-    )
+    result = validator.validate_and_filter_parameters([ok, bad_type], action="Pay")
     assert ok in result
     assert bad_type not in result
 
 
 def test_filter_preserves_grouped_parameters_when_group_type_is_allowed():
     validator = _validator_for(KlarnaBuilder)
-    article = Parameter(
-        name="Identifier", value="SKU-1", group_type="article", group_id="1"
-    )
+    article = Parameter(name="Identifier", value="SKU-1", group_type="article", group_id="1")
     result = validator.validate_and_filter_parameters([article], action="Pay")
     assert article in result
 
@@ -326,9 +308,7 @@ def test_filter_preserves_grouped_parameters_when_group_type_is_allowed():
 def test_filter_drops_grouped_parameters_when_group_type_is_not_allowed():
     validator = _validator_for(IdealBuilder)
     # iDEAL Pay has no grouped params at all; ``article`` is an unknown group.
-    article = Parameter(
-        name="Identifier", value="SKU-1", group_type="article", group_id="1"
-    )
+    article = Parameter(name="Identifier", value="SKU-1", group_type="article", group_id="1")
     result = validator.validate_and_filter_parameters([article], action="Pay")
     assert article not in result
 
@@ -337,9 +317,7 @@ def test_filter_drops_service_params_marker_when_rule_is_top_level():
     # ``issuer`` is a top-level rule on iDEAL; providing it via the
     # service_parameters marker must be dropped.
     validator = _validator_for(IdealBuilder)
-    misplaced = Parameter(
-        name="Issuer", value="INGBNL2A", group_type="__from_service_params__"
-    )
+    misplaced = Parameter(name="Issuer", value="INGBNL2A", group_type="__from_service_params__")
     result = validator.validate_and_filter_parameters([misplaced], action="Pay")
     assert misplaced not in result
 
@@ -369,18 +347,14 @@ def test_filter_accepts_dot_notation_param_when_from_service_params():
     )
     validator = ServiceParameterValidator(builder)
 
-    ok = Parameter(
-        name="Issuer", value="INGBNL2A", group_type="__from_service_params__"
-    )
+    ok = Parameter(name="Issuer", value="INGBNL2A", group_type="__from_service_params__")
     result = validator.validate_and_filter_parameters([ok], action="Pay")
     assert ok in result
 
 
 def test_filter_drops_parameter_whose_value_fails_type_check():
     # A rule with type=int should reject a non-numeric string value.
-    builder = _stub_builder(
-        {"Pay": {"count": {"type": int, "required": False}}}
-    )
+    builder = _stub_builder({"Pay": {"count": {"type": int, "required": False}}})
     validator = ServiceParameterValidator(builder)
 
     # Parameter.value is a string; normalize_parameter_value returns it
@@ -397,10 +371,7 @@ def test_filter_drops_parameter_whose_value_fails_type_check():
 def test_validate_all_strict_returns_params_on_success():
     validator = _validator_for(IdealBuilder)
     params = [Parameter(name="Issuer", value="INGBNL2A")]
-    assert (
-        validator.validate_all_parameters(params, action="Pay", strict=True)
-        == params
-    )
+    assert validator.validate_all_parameters(params, action="Pay", strict=True) == params
 
 
 def test_validate_all_strict_raises_on_required_missing():
@@ -423,9 +394,7 @@ def test_validate_all_strict_raises_on_unknown_param():
 
 def test_validate_all_strict_raises_on_type_mismatch_for_known_param():
     # Numeric-typed rule with a string value that cannot round-trip to bool.
-    builder = _stub_builder(
-        {"Pay": {"count": {"type": int, "required": False}}}
-    )
+    builder = _stub_builder({"Pay": {"count": {"type": int, "required": False}}})
     validator = ServiceParameterValidator(builder)
     with pytest.raises(ParameterValidationError):
         validator.validate_all_parameters(
@@ -439,9 +408,7 @@ def test_validate_all_non_strict_filters_invalid_and_checks_required(capsys):
     validator = _validator_for(IdealBuilder)
     good = Parameter(name="Issuer", value="INGBNL2A")
     bad = Parameter(name="Rogue", value="x")
-    result = validator.validate_all_parameters(
-        [good, bad], action="Pay", strict=False
-    )
+    result = validator.validate_all_parameters([good, bad], action="Pay", strict=False)
     assert result == [good]
     # Filter prints a warning; drain it so it doesn't pollute other captures.
     capsys.readouterr()
@@ -522,9 +489,7 @@ def test_every_allowed_param_name_roundtrips_through_is_parameter_allowed(builde
 def test_every_required_param_missing_triggers_required_error(builder_cls):
     validator = _validator_for(builder_cls)
     required = {
-        name
-        for name, cfg in validator.get_parameter_info("Pay").items()
-        if cfg.get("required")
+        name for name, cfg in validator.get_parameter_info("Pay").items() if cfg.get("required")
     }
     assert required, f"{builder_cls.__name__} should have required Pay params"
 

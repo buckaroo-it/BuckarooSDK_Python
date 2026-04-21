@@ -26,12 +26,27 @@ def _observer(mask: bool = True) -> BuckarooLoggingObserver:
 
 # --- Sensitive-field set ---
 
-@pytest.mark.parametrize("field", [
-    "secret_key", "password", "token", "authorization", "cvv",
-    "cardnumber", "card_number", "iban", "account_number",
-    # New Buckaroo-specific entries added in this issue:
-    "cvc", "bic", "pan", "expirydate", "encryptedcarddata",
-])
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "secret_key",
+        "password",
+        "token",
+        "authorization",
+        "cvv",
+        "cardnumber",
+        "card_number",
+        "iban",
+        "account_number",
+        # New Buckaroo-specific entries added in this issue:
+        "cvc",
+        "bic",
+        "pan",
+        "expirydate",
+        "encryptedcarddata",
+    ],
+)
 def test_sensitive_fields_contains_expected_entries(field):
     obs = _observer()
     assert field in obs._sensitive_fields
@@ -39,10 +54,22 @@ def test_sensitive_fields_contains_expected_entries(field):
 
 # --- Masking matrix ---
 
-@pytest.mark.parametrize("key", [
-    "cvc", "bic", "pan", "expirydate", "encryptedcarddata",
-    "CVC", "Bic", "PAN", "ExpiryDate", "EncryptedCardData",
-])
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "cvc",
+        "bic",
+        "pan",
+        "expirydate",
+        "encryptedcarddata",
+        "CVC",
+        "Bic",
+        "PAN",
+        "ExpiryDate",
+        "EncryptedCardData",
+    ],
+)
 def test_new_sensitive_keys_are_masked_top_level(key):
     obs = _observer()
     masked = obs._mask_sensitive_data({key: "raw-value"})
@@ -51,19 +78,19 @@ def test_new_sensitive_keys_are_masked_top_level(key):
 
 def test_nested_dict_masks_sensitive_key():
     obs = _observer()
-    result = obs._mask_sensitive_data({
-        "outer": {"cvc": "123", "description": "ok"}
-    })
+    result = obs._mask_sensitive_data({"outer": {"cvc": "123", "description": "ok"}})
     assert result["outer"]["cvc"] == "***MASKED***"
     assert result["outer"]["description"] == "ok"
 
 
 def test_list_of_dicts_masks_sensitive_key():
     obs = _observer()
-    result = obs._mask_sensitive_data([
-        {"bic": "ABNANL2A", "amount": 10},
-        {"pan": "4111...", "currency": "EUR"},
-    ])
+    result = obs._mask_sensitive_data(
+        [
+            {"bic": "ABNANL2A", "amount": 10},
+            {"pan": "4111...", "currency": "EUR"},
+        ]
+    )
     assert result[0]["bic"] == "***MASKED***"
     assert result[0]["amount"] == 10
     assert result[1]["pan"] == "***MASKED***"
@@ -84,9 +111,7 @@ def test_deep_buckaroo_shape_parameters_list():
             "ServiceList": [
                 {
                     "Name": "creditcard",
-                    "Parameters": [
-                        {"Name": "encryptedCardData", "Value": "CARD-SECRET"}
-                    ],
+                    "Parameters": [{"Name": "encryptedCardData", "Value": "CARD-SECRET"}],
                 }
             ]
         },
@@ -109,9 +134,7 @@ def test_deep_buckaroo_shape_parameters_value_is_masked():
             "ServiceList": [
                 {
                     "Name": "creditcard",
-                    "Parameters": [
-                        {"Name": "encryptedCardData", "Value": "CARD-SECRET"}
-                    ],
+                    "Parameters": [{"Name": "encryptedCardData", "Value": "CARD-SECRET"}],
                 }
             ]
         },
@@ -136,6 +159,7 @@ def test_name_value_pair_with_non_string_name_passes_through():
 
 
 # --- JSON string input ---
+
 
 def test_format_json_parses_json_string_and_masks():
     obs = _observer()
@@ -176,10 +200,17 @@ def test_format_json_non_serialisable_falls_back_to_str():
 
 # --- Case-insensitive substring matching ---
 
-@pytest.mark.parametrize("key", [
-    "Authorization", "AUTHORIZATION", "card_Number", "EncryptedCardData",
-    "X-Authorization-Header",  # substring match
-])
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "Authorization",
+        "AUTHORIZATION",
+        "card_Number",
+        "EncryptedCardData",
+        "X-Authorization-Header",  # substring match
+    ],
+)
 def test_case_insensitive_substring_match(key):
     obs = _observer()
     result = obs._mask_sensitive_data({key: "secret"})
@@ -188,11 +219,15 @@ def test_case_insensitive_substring_match(key):
 
 # --- Sentinel non-sensitive fields pass through ---
 
-@pytest.mark.parametrize("key,value", [
-    ("description", "Order 42"),
-    ("amount", 100.50),
-    ("currency", "EUR"),
-])
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("description", "Order 42"),
+        ("amount", 100.50),
+        ("currency", "EUR"),
+    ],
+)
 def test_non_sensitive_fields_pass_through(key, value):
     obs = _observer()
     result = obs._mask_sensitive_data({key: value})
@@ -200,6 +235,7 @@ def test_non_sensitive_fields_pass_through(key, value):
 
 
 # --- String values with sensitive keyword ---
+
 
 def test_string_with_sensitive_keyword_is_redacted():
     obs = _observer()
@@ -215,6 +251,7 @@ def test_string_without_sensitive_keyword_passes_through():
 
 # --- Disable masking ---
 
+
 def test_masking_disabled_returns_data_unchanged():
     obs = _observer(mask=False)
     data = {"cvc": "999", "password": "hunter2", "encryptedCardData": "x"}
@@ -222,6 +259,7 @@ def test_masking_disabled_returns_data_unchanged():
 
 
 # --- log_request ---
+
 
 def test_log_request_emits_one_info_record_with_method_url_masked_headers_and_body(caplog):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
@@ -245,16 +283,20 @@ def test_log_request_emits_one_info_record_with_method_url_masked_headers_and_bo
 
 # --- log_response ---
 
-@pytest.mark.parametrize("status,expected_level", [
-    (200, logging.INFO),
-    (201, logging.INFO),
-    (299, logging.INFO),
-    (400, logging.WARNING),
-    (404, logging.WARNING),
-    (499, logging.WARNING),
-    (500, logging.ERROR),
-    (503, logging.ERROR),
-])
+
+@pytest.mark.parametrize(
+    "status,expected_level",
+    [
+        (200, logging.INFO),
+        (201, logging.INFO),
+        (299, logging.INFO),
+        (400, logging.WARNING),
+        (404, logging.WARNING),
+        (499, logging.WARNING),
+        (500, logging.ERROR),
+        (503, logging.ERROR),
+    ],
+)
 def test_log_response_level_matches_status_code(caplog, status, expected_level):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
     obs = _observer()
@@ -284,6 +326,7 @@ def test_log_response_omits_duration_when_not_provided(caplog):
 
 # --- log_exception ---
 
+
 def test_log_exception_emits_error(caplog):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
     obs = _observer()
@@ -298,7 +341,9 @@ def test_log_exception_emits_error(caplog):
 
 def test_log_exception_includes_stack_trace_when_logger_at_debug(caplog):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
-    obs = BuckarooLoggingObserver(LogConfig(level=LogLevel.DEBUG, destination=LogDestination.STDOUT))
+    obs = BuckarooLoggingObserver(
+        LogConfig(level=LogLevel.DEBUG, destination=LogDestination.STDOUT)
+    )
     try:
         raise RuntimeError("kaboom")
     except RuntimeError as exc:
@@ -342,12 +387,17 @@ def test_log_exception_omits_stack_trace_when_logger_above_debug(caplog):
 
 # --- log_payment_operation / log_config_change / log_info family ---
 
+
 def test_log_payment_operation_masks_sensitive_kwargs(caplog):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
     obs = _observer()
     obs.log_payment_operation(
-        "execute", "creditcard", amount=42.0, currency="EUR",
-        cvc="999", token="tok-123",
+        "execute",
+        "creditcard",
+        amount=42.0,
+        currency="EUR",
+        cvc="999",
+        token="tok-123",
     )
     rec = [r for r in caplog.records if r.name == "buckaroo_sdk"][0]
     assert rec.levelno == logging.INFO
@@ -380,15 +430,20 @@ def test_log_config_change_with_extra_context(caplog):
     assert "env" in rec.message
 
 
-@pytest.mark.parametrize("method,expected_level", [
-    ("log_info", logging.INFO),
-    ("log_debug", logging.DEBUG),
-    ("log_warning", logging.WARNING),
-    ("log_error", logging.ERROR),
-])
+@pytest.mark.parametrize(
+    "method,expected_level",
+    [
+        ("log_info", logging.INFO),
+        ("log_debug", logging.DEBUG),
+        ("log_warning", logging.WARNING),
+        ("log_error", logging.ERROR),
+    ],
+)
 def test_log_info_family_masks_sensitive_kwargs(caplog, method, expected_level):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
-    obs = BuckarooLoggingObserver(LogConfig(level=LogLevel.DEBUG, destination=LogDestination.STDOUT))
+    obs = BuckarooLoggingObserver(
+        LogConfig(level=LogLevel.DEBUG, destination=LogDestination.STDOUT)
+    )
     getattr(obs, method)("processing", cvc="999", request_id="req-1")
     rec = [r for r in caplog.records if r.name == "buckaroo_sdk"][0]
     assert rec.levelno == expected_level
@@ -408,6 +463,7 @@ def test_log_info_without_kwargs_has_no_context_block(caplog):
 
 # --- LogConfig defaults ---
 
+
 def test_log_config_defaults():
     cfg = LogConfig()
     assert cfg.level is LogLevel.INFO
@@ -419,6 +475,7 @@ def test_log_config_defaults():
 
 
 # --- LogDestination handler installation ---
+
 
 def test_destination_stdout_installs_only_stream_handler():
     obs = BuckarooLoggingObserver(LogConfig(destination=LogDestination.STDOUT))
@@ -443,14 +500,17 @@ def test_destination_both_installs_stream_and_rotating_file_handlers(tmp_path):
     handler_types = {type(h) for h in obs.logger.handlers}
     assert RotatingFileHandler in handler_types
     # The non-rotating handler is a StreamHandler pointed at stdout.
-    stream_handlers = [h for h in obs.logger.handlers
-                       if isinstance(h, logging.StreamHandler)
-                       and not isinstance(h, RotatingFileHandler)]
+    stream_handlers = [
+        h
+        for h in obs.logger.handlers
+        if isinstance(h, logging.StreamHandler) and not isinstance(h, RotatingFileHandler)
+    ]
     assert len(stream_handlers) == 1
     assert stream_handlers[0].stream is sys.stdout
 
 
 # --- create_logger ---
+
 
 def test_create_logger_builds_configured_observer(tmp_path):
     log_path = str(tmp_path / "configured.log")
@@ -474,6 +534,7 @@ def test_create_logger_passes_through_extra_kwargs(tmp_path):
 
 
 # --- create_logger_from_env ---
+
 
 # Kept despite autouse _clean_buckaroo_env — returns monkeypatch for .setenv() chaining in tests.
 @pytest.fixture
@@ -529,14 +590,17 @@ def test_create_logger_from_env_mask_false_disables_masking(clean_env):
 
 # --- File rotation ---
 
+
 def test_rotating_file_handler_rolls_at_max_file_size(tmp_path):
     log_path = tmp_path / "rotate.log"
-    obs = BuckarooLoggingObserver(LogConfig(
-        destination=LogDestination.FILE,
-        log_file=str(log_path),
-        max_file_size=512,
-        backup_count=3,
-    ))
+    obs = BuckarooLoggingObserver(
+        LogConfig(
+            destination=LogDestination.FILE,
+            log_file=str(log_path),
+            max_file_size=512,
+            backup_count=3,
+        )
+    )
     # Each log line is well over a few hundred bytes once the formatter is
     # applied; write enough to roll past 512 bytes.
     for i in range(50):
@@ -549,6 +613,7 @@ def test_rotating_file_handler_rolls_at_max_file_size(tmp_path):
 
 
 # --- create_child_observer / ContextualLoggingObserver ---
+
 
 def test_create_child_observer_returns_contextual_observer():
     parent = _observer()
@@ -607,15 +672,20 @@ def test_child_log_payment_operation_merges_context(caplog):
     assert "ideal" in rec.message
 
 
-@pytest.mark.parametrize("method,expected_level", [
-    ("log_info", logging.INFO),
-    ("log_debug", logging.DEBUG),
-    ("log_warning", logging.WARNING),
-    ("log_error", logging.ERROR),
-])
+@pytest.mark.parametrize(
+    "method,expected_level",
+    [
+        ("log_info", logging.INFO),
+        ("log_debug", logging.DEBUG),
+        ("log_warning", logging.WARNING),
+        ("log_error", logging.ERROR),
+    ],
+)
 def test_child_log_info_family_merges_context(caplog, method, expected_level):
     caplog.set_level(logging.DEBUG, logger="buckaroo_sdk")
-    parent = BuckarooLoggingObserver(LogConfig(level=LogLevel.DEBUG, destination=LogDestination.STDOUT))
+    parent = BuckarooLoggingObserver(
+        LogConfig(level=LogLevel.DEBUG, destination=LogDestination.STDOUT)
+    )
     child = parent.create_child_observer({"transaction_id": "abc"})
     getattr(child, method)("hello")
     rec = [r for r in caplog.records if r.name == "buckaroo_sdk"][0]

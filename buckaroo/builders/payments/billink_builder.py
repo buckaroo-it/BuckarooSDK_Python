@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from .payment_builder import PaymentBuilder
 
+
 class BillinkBuilder(PaymentBuilder):
     """Builder for Billink payments with buy-now-pay-later capabilities."""
 
@@ -13,8 +14,16 @@ class BillinkBuilder(PaymentBuilder):
 
         if action.lower() in ["pay"]:
             return {
-                "billingCustomer": {"type": list, "required": True, "description": "Billing customer information"},
-                "shippingCustomer": {"type": list, "required": True, "description": "Shipping customer information"},
+                "billingCustomer": {
+                    "type": list,
+                    "required": True,
+                    "description": "Billing customer information",
+                },
+                "shippingCustomer": {
+                    "type": list,
+                    "required": True,
+                    "description": "Shipping customer information",
+                },
                 "article": {"type": list, "required": True, "description": "Billink articles"},
             }
 

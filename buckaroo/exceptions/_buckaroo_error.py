@@ -1,4 +1,5 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
+
 
 class BuckarooError(Exception):
     _message: Optional[str]
@@ -8,4 +9,4 @@ class BuckarooError(Exception):
     headers: Optional[Dict[str, str]]
     code: Optional[str]
     request_id: Optional[str]
-    error: Optional["ErrorObject"]
+    error: Optional[Any]

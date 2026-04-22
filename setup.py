@@ -10,7 +10,7 @@ long_description = open(os.path.join(ROOT_DIR, "README.md"), encoding="utf-8").r
 version_contents = {}
 with open(os.path.join(ROOT_DIR, "buckaroo", "_version.py"), encoding="utf-8") as f:
     exec(f.read(), version_contents)
-    
+
 setup(
     name="buckaroo-sdk-python",
     version=version_contents["VERSION"],
@@ -26,13 +26,10 @@ setup(
     package_data={"buckaroo": ["data/ca-certificates.crt", "py.typed"]},
     zip_safe=False,
     install_requires=[
-        'typing_extensions <= 4.2.0, > 3.7.2; python_version < "3.7"',
-        # The best typing support comes from 4.5.0+ but we can support down to
-        # 3.7.2 without throwing exceptions.
-        'typing_extensions >= 4.5.0; python_version >= "3.7"',
-        'requests >= 2.20; python_version >= "3.0"',
+        "typing_extensions >= 4.5.0",
+        "requests >= 2.20",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     project_urls={
         "Bug Tracker": "https://github.com/buckaroo-it/BuckarooSDK_Python/issues",
         "Changes": "https://github.com/buckaroo-it/BuckarooSDK_Python//blob/master/CHANGELOG.md",
@@ -47,13 +44,12 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Software Development :: Libraries :: Python Modules",

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Payment capability mixins for specific payment features.
 
@@ -7,7 +5,10 @@ This module provides mixins that can be selectively applied to payment builders
 based on their actual capabilities, rather than giving all methods to all builders.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from ....models.payment_response import PaymentResponse
 
 if TYPE_CHECKING:
@@ -16,17 +17,17 @@ if TYPE_CHECKING:
 
 class InstantRefundCapable:
     """Mixin for payment methods that support instant refunds (iDEAL, Sofort, PayConiq)."""
-    
-    def instantRefund(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+
+    def instantRefund(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
         """
         Initiate an instant refund.
-        
+
         Available for: iDEAL, Sofort, PayConiq
         Not available for: Credit Card, PayPal (use regular refund instead)
-        
+
         Args:
             validate (bool): Whether to validate service parameters before building
-        
+
         Returns:
             PaymentResponse: The instant refund response
         """

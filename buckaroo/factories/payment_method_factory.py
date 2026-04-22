@@ -1,4 +1,4 @@
-from typing import Dict, Type, Any
+from typing import Dict, Type
 import logging
 
 from .builder_factory import BuilderFactory
@@ -42,9 +42,10 @@ from buckaroo.builders.payments.mbway_builder import MBWayBuilder
 from buckaroo.builders.payments.paypal_builder import PaypalBuilder
 from buckaroo.builders.payments.paybybank_builder import PayByBankBuilder
 
+
 class PaymentMethodFactory(BuilderFactory):
     """Factory for creating payment method builders."""
-    
+
     # Registry of available payment methods
     _payment_methods: Dict[str, Type[PaymentBuilder]] = {
         "alipay": AlipayBuilder,
@@ -58,7 +59,7 @@ class PaymentMethodFactory(BuilderFactory):
         "clicktopay": ClickToPayBuilder,
         "creditcard": CreditcardBuilder,
         "default": DefaultBuilder,
-        "externalPayment": ExternalPaymentBuilder,
+        "externalpayment": ExternalPaymentBuilder,
         "eps": EpsBuilder,
         "giftcards": GiftcardsBuilder,
         "googlepay": GooglePayBuilder,
@@ -86,24 +87,24 @@ class PaymentMethodFactory(BuilderFactory):
         "wechatpay": WeChatPayBuilder,
         "wero": WeroBuilder,
     }
-    
+
     @classmethod
     def create_builder(cls, method: str, client) -> PaymentBuilder:
         """
         Create a payment builder for the specified method.
-        
+
         Args:
             method (str): The payment method name (e.g., 'ideal', 'creditcard', 'paypal')
             client: The Buckaroo client instance
-            
+
         Returns:
             PaymentBuilder: A builder instance for the specified payment method
-            
+
         Raises:
             ValueError: If the payment method is not supported
         """
         method = method.lower()
-        
+
         if method not in cls._payment_methods:
             available_methods = ", ".join(cls._payment_methods.keys())
             logging.warning(
@@ -113,76 +114,76 @@ class PaymentMethodFactory(BuilderFactory):
             )
             # Use DefaultBuilder as fallback
             return DefaultBuilder(client)
-        
+
         builder_class = cls._payment_methods[method]
         return builder_class(client)
-    
+
     @classmethod
     def register_method(cls, method: str, builder_class: Type[PaymentBuilder]) -> None:
         """
         Register a new payment method builder.
-        
+
         Args:
             method (str): The payment method name
             builder_class (Type[PaymentBuilder]): The builder class for this method
         """
         cls._payment_methods[method.lower()] = builder_class
-    
+
     @classmethod
     def get_available_methods(cls) -> list:
         """
         Get a list of all available payment methods.
-        
+
         Returns:
             list: List of available payment method names
         """
         return list(cls._payment_methods.keys())
-    
+
     @classmethod
     def is_method_supported(cls, method: str) -> bool:
         """
         Check if a payment method is supported.
-        
+
         Args:
             method (str): The payment method name
-            
+
         Returns:
             bool: True if the method is supported, False otherwise
         """
         return method.lower() in cls._payment_methods
-    
+
     @classmethod
     def detect_method_from_payload(cls, payload: Dict) -> str:
         """
         Detect the payment method from payload parameters.
-        
+
         Args:
             payload (Dict): Payment parameters dictionary
-            
+
         Returns:
             str: Detected payment method name
-            
+
         Raises:
             ValueError: If payment method cannot be determined from payload
         """
         # Check for explicit payment method in payload
-        if 'method' in payload:
-            return payload['method'].lower()
-        
+        if "method" in payload:
+            return payload["method"].lower()
+
         # Check Services.ServiceList for payment method detection
-        services = payload.get('Services', {})
-        service_list = services.get('ServiceList', [])
-        
+        services = payload.get("Services", {})
+        service_list = services.get("ServiceList", [])
+
         if service_list:
             for service in service_list:
-                service_name = service.get('Name', '').lower()
+                service_name = service.get("Name", "").lower()
                 if service_name in cls._payment_methods:
                     return service_name
-            
+
         # Default fallback - could be configurable
         logging.warning(
             "Cannot determine payment method from payload. "
             "Please include 'method' or specify service in Services.ServiceList. "
             "Using 'default' as fallback method."
         )
-        return 'default'
+        return "default"

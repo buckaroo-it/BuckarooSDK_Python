@@ -6,8 +6,4 @@ This module contains HTTP client functionality for communicating with the Buckar
 
 from .client import BuckarooHttpClient, BuckarooResponse, BuckarooApiError
 
-__all__ = [
-    'BuckarooHttpClient',
-    'BuckarooResponse', 
-    'BuckarooApiError'
-]
+__all__ = ["BuckarooHttpClient", "BuckarooResponse", "BuckarooApiError"]

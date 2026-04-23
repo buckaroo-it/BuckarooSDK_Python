@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Payment capability mixins for specific payment features.
 
@@ -7,12 +5,16 @@ This module provides mixins that can be selectively applied to payment builders
 based on their actual capabilities, rather than giving all methods to all builders.
 """
 
+from __future__ import annotations
+
 from typing import Optional, TYPE_CHECKING
+
 from ....models.payment_response import PaymentResponse
 from ....models.transaction_context import TransactionContext
 
 if TYPE_CHECKING:
     from ..payment_builder import PaymentBuilder
+
 
 class AuthorizeCaptureCapable:
     """Mixin for payment methods that support authorization (Credit Card)."""

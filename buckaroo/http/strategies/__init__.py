@@ -10,9 +10,9 @@ from .curl_strategy import CurlStrategy
 from .strategy_factory import HttpStrategyFactory
 
 __all__ = [
-    'HttpStrategy',
-    'HttpResponse', 
-    'RequestsStrategy',
-    'CurlStrategy',
-    'HttpStrategyFactory'
+    "HttpStrategy",
+    "HttpResponse",
+    "RequestsStrategy",
+    "CurlStrategy",
+    "HttpStrategyFactory",
 ]

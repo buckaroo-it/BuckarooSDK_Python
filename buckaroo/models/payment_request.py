@@ -36,31 +36,27 @@ class Parameter:
 @dataclass
 class ClientIP:
     """Model for client IP information."""
+
     type: int = 0
     address: str = "0.0.0.0"
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API request."""
-        return {
-            "Type": self.type,
-            "Address": self.address
-        }
+        return {"Type": self.type, "Address": self.address}
 
 
 @dataclass
 class Service:
     """Model for a payment service."""
+
     name: str
     action: str = "Pay"
     parameters: Optional[Union[Dict[str, Any], List[Parameter]]] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API request."""
-        service_dict = {
-            "Name": self.name,
-            "Action": self.action
-        }
-        
+        service_dict = {"Name": self.name, "Action": self.action}
+
         if self.parameters:
             if isinstance(self.parameters, list):
                 # Parameters array format (for methods like IdealQr)
@@ -68,20 +64,42 @@ class Service:
             elif isinstance(self.parameters, dict):
                 # Simple key-value format (for methods like ideal, creditcard)
                 service_dict.update(self.parameters)
-                
+
         return service_dict
+
+    def add_parameter(self, parameter: Union[Dict[str, Any], Parameter]) -> "Service":
+        """Append a Parameter or coerced dict; rejects dict-form parameters."""
+        if isinstance(self.parameters, dict):
+            raise TypeError(
+                "Service uses simple key-value parameters; add_parameter requires list form"
+            )
+        if isinstance(parameter, dict):
+            parameter = Parameter(
+                name=parameter.get("Name", parameter.get("name", "")),
+                value=parameter.get("Value", parameter.get("value", "")),
+                group_type=parameter.get("GroupType", parameter.get("group_type", "")),
+                group_id=parameter.get("GroupID", parameter.get("group_id", "")),
+            )
+        if self.parameters is None:
+            self.parameters = []
+        self.parameters.append(parameter)
+        return self
 
 
 @dataclass
 class ServiceList:
     """Model for list of services."""
+
     services: List[Service]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API request."""
-        return {
-            "ServiceList": [service.to_dict() for service in self.services]
-        }
+        return {"ServiceList": [service.to_dict() for service in self.services]}
+
+    def add(self, service: Service) -> "ServiceList":
+        """Append a service; returns self for chaining."""
+        self.services.append(service)
+        return self
 
 
 @dataclass

@@ -17,6 +17,7 @@ class HttpResponse:
 
     This provides a consistent interface across different HTTP implementations.
     """
+
     status_code: int
     headers: Dict[str, str]
     text: str

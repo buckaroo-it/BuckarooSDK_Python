@@ -1,0 +1,3 @@
+# Normalize line endings to LF on checkout + commit regardless of host platform.
+* text=auto eol=lf
+*.py text eol=lf

@@ -106,7 +106,7 @@ class BaseBuilder(ABC):
     
     def add_parameter(self, key: str, value: Any, group_type: Optional[str] = None, group_id: Optional[str] = None) -> Self:
         """Add a custom parameter to the service.
-        
+
         Args:
             key: Parameter name
             value: Parameter value (will be converted to string unless it's a list/dict)
@@ -119,16 +119,20 @@ class BaseBuilder(ABC):
                 if isinstance(item, dict):
                     # Each item in the list becomes a group
                     for item_key, item_value in item.items():
-                        str_value = str(item_value).lower() if isinstance(item_value, bool) else str(item_value)
+                        str_value = (
+                            str(item_value).lower()
+                            if isinstance(item_value, bool)
+                            else str(item_value)
+                        )
                         parameter = Parameter(
                             name=item_key.capitalize(),
                             value=str_value,
                             group_type=key.capitalize(),  # e.g., "articles"
-                            group_id=str(index + 1)  # 1-based index
+                            group_id=str(index + 1),  # 1-based index
                         )
                         self._service_parameters.append(parameter)
             return self
-        
+
         # Handle regular parameters
         # Convert value to string for API compatibility
         str_value = str(value).lower() if isinstance(value, bool) else str(value)
@@ -142,29 +146,31 @@ class BaseBuilder(ABC):
 
         self._service_parameters.append(parameter)
         return self
-    
+
     # Validation convenience methods
     def is_parameter_allowed(self, param_name: str, action: str = "Pay") -> bool:
         """Check if a parameter is allowed for the given action."""
         return self._validator.is_parameter_allowed(param_name, action)
-    
+
     def get_parameter_info(self, action: str = "Pay") -> Dict[str, Any]:
         """Get information about allowed parameters for an action."""
         return self._validator.get_parameter_info(action)
-    
+
     def get_normalized_parameter_name(self, param_name: str, action: str = "Pay") -> str:
         """Get the official parameter name that matches the input."""
         return self._validator.get_normalized_parameter_name(param_name, action)
-    
-    def _validate_and_filter_service_parameters(self, action: str = "Pay", strict: bool = False) -> None:
+
+    def _validate_and_filter_service_parameters(
+        self, action: str = "Pay", strict: bool = False
+    ) -> None:
         """
         Validate and filter service parameters just before building.
-        
+
         Args:
             action (str): The action being performed
             strict (bool): If True, throws exceptions for missing required parameters.
                           If False, filters invalid parameters and only warns.
-                          
+
         Raises:
             RequiredParameterMissingError: If required parameters are missing (when strict=True)
             ParameterValidationError: If parameters are invalid (when strict=True)
@@ -176,13 +182,13 @@ class BaseBuilder(ABC):
     def from_dict(self, data: Dict[str, Any]) -> Self:
         """
         Populate the builder from a dictionary of parameters.
-        
+
         Args:
             data (Dict[str, Any]): Dictionary containing payment parameters
-            
+
         Returns:
             BaseBuilder: Self for method chaining
-            
+
         Supported keys:
             - currency: Payment currency (e.g., 'EUR', 'USD')
             - amount: Payment amount (float)
@@ -197,106 +203,106 @@ class BaseBuilder(ABC):
             - service_parameters: Additional service-specific parameters (dict)
         """
         # Map dictionary keys to builder methods
-        if 'currency' in data:
-            self.currency(data['currency'])
-            
-        if 'amount' in data:
-            self.amount(data['amount'])
-            
-        if 'description' in data:
-            self.description(data['description'])
-            
-        if 'invoice' in data:
-            self.invoice(data['invoice'])
-            
-        if 'return_url' in data:
-            self.return_url(data['return_url'])
-            
-        if 'return_url_cancel' in data:
-            self.return_url_cancel(data['return_url_cancel'])
-            
-        if 'return_url_error' in data:
-            self.return_url_error(data['return_url_error'])
-            
-        if 'return_url_reject' in data:
-            self.return_url_reject(data['return_url_reject'])
-            
-        if 'continue_on_incomplete' in data:
-            self.continue_on_incomplete(data['continue_on_incomplete'])
+        if "currency" in data:
+            self.currency(data["currency"])
 
-        if 'push_url' in data:
-            self.push_url(data['push_url'])
-        if 'push_url_failure' in data:
-            self.push_url_failure(data['push_url_failure'])
+        if "amount" in data:
+            self.amount(data["amount"])
 
-        if 'client_ip' in data:
-            client_ip_data = data['client_ip']
+        if "description" in data:
+            self.description(data["description"])
+
+        if "invoice" in data:
+            self.invoice(data["invoice"])
+
+        if "return_url" in data:
+            self.return_url(data["return_url"])
+
+        if "return_url_cancel" in data:
+            self.return_url_cancel(data["return_url_cancel"])
+
+        if "return_url_error" in data:
+            self.return_url_error(data["return_url_error"])
+
+        if "return_url_reject" in data:
+            self.return_url_reject(data["return_url_reject"])
+
+        if "continue_on_incomplete" in data:
+            self.continue_on_incomplete(data["continue_on_incomplete"])
+
+        if "push_url" in data:
+            self.push_url(data["push_url"])
+        if "push_url_failure" in data:
+            self.push_url_failure(data["push_url_failure"])
+
+        if "client_ip" in data:
+            client_ip_data = data["client_ip"]
             if isinstance(client_ip_data, str):
                 self.client_ip(client_ip_data)
             elif isinstance(client_ip_data, dict):
-                address = client_ip_data.get('address', '0.0.0.0')
-                ip_type = client_ip_data.get('type', 0)
+                address = client_ip_data.get("address", "0.0.0.0")
+                ip_type = client_ip_data.get("type", 0)
                 self.client_ip(address, ip_type)
-                
-        if 'service_parameters' in data:
-            service_params = data['service_parameters']
- 
+
+        if "service_parameters" in data:
+            service_params = data["service_parameters"]
+
             for key, value in service_params.items():
-                if isinstance(value, dict): 
+                if isinstance(value, dict):
                     for sub_key, sub_value in value.items():
                         self.add_parameter(sub_key, sub_value, key)
                 else:
                     self.add_parameter(key, value)
-        
+
         # Store the original payload for later use
         self._payload = data.copy()
-        
+
         return self
-    
+
     @abstractmethod
     def get_service_name(self) -> str:
         """Get the service name for this payment method."""
-        pass
-    
+        raise NotImplementedError
+
     @abstractmethod
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """
         Get the allowed service parameters for this payment method and action.
-        
+
         Args:
             action (str): The action being performed (Pay, Authorize, Refund, etc.)
-        
+
         Returns:
             Dict[str, Any]: Dictionary where keys are parameter names and values are
                           parameter metadata (type, required, etc.)
         """
-        pass
-    
+        raise NotImplementedError
+
     def required_fields(self, action: str = "Pay") -> Dict[str, Any]:
         """
         Get the required fields for this payment method and action.
         Can be overridden by specific payment builders to customize required fields based on action.
-        
+
         Args:
             action (str): The action being performed (Pay, Authorize, Refund, Capture, etc.)
-        
+
         Returns:
             Dict[str, Any]: Dictionary mapping field names to their current values
         """
         return {
-            'currency': self._currency,
-            'amount_debit': self._amount_debit,
-            'description': self._description,
-            'invoice': self._invoice,
-            'return_url': self._return_url,
-            'return_url_cancel': self._return_url_cancel,
-            'return_url_error': self._return_url_error,
-            'return_url_reject': self._return_url_reject,
+            "currency": self._currency,
+            "amount_debit": self._amount_debit,
+            "description": self._description,
+            "invoice": self._invoice,
+            "return_url": self._return_url,
+            "return_url_cancel": self._return_url_cancel,
+            "return_url_error": self._return_url_error,
+            "return_url_reject": self._return_url_reject,
         }
-    
+
     def _validate_required_fields(self, action: str = "Pay") -> None:
         """Validate that all required fields are set.
-        
+
         Args:
             action (str): The action being performed (Pay, Authorize, Refund, Capture, etc.)
         """
@@ -310,34 +316,34 @@ class BaseBuilder(ABC):
     
     def build(self, action: str = "Pay", validate: bool = True, strict_validation: bool = False) -> PaymentRequest:
         """Build the payment request.
-        
+
         Args:
             action (str): The action to perform (Pay, Authorize, Refund, etc.)
             validate (bool): Whether to validate and filter service parameters
             strict_validation (bool): If True, throws exceptions for missing required parameters.
                                     If False, filters invalid parameters and only warns.
-                                    
+
         Raises:
             ValueError: If required payment fields are missing
             RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
             ParameterValidationError: If service parameters are invalid (when strict_validation=True)
         """
         self._validate_required_fields(action)
-        
+
         # Validate and filter service parameters if enabled
         if validate:
             self._validate_and_filter_service_parameters(action, strict=strict_validation)
-        
+
         # Create service with parameters
         service = Service(
             name=self.get_service_name(),
             action=action,
-            parameters=self._service_parameters if self._service_parameters else None
+            parameters=self._service_parameters if self._service_parameters else None,
         )
-        
+
         # Create service list
         service_list = ServiceList(services=[service])
-        
+
         # Build payment request
         payment_request = PaymentRequest(
             currency=self._currency,
@@ -352,9 +358,9 @@ class BaseBuilder(ABC):
             push_url=self._push_url,
             push_url_failure=self._push_url_failure,
             client_ip=self._client_ip,
-            services=service_list
+            services=service_list,
         )
-        
+
         return payment_request
 
     def _post_data_request(self, request_data: Dict[str, Any]) -> PaymentResponse:

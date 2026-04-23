@@ -15,13 +15,13 @@ from .sofort_builder import SofortBuilder
 from .payconiq_builder import PayconiqBuilder
 
 __all__ = [
-    'PaymentBuilder',
-    'AuthorizeCaptureCapable',
-    'InstantRefundCapable',
-    'FastCheckoutCapable', 
-    'BankTransferCapabilities',
-    'IdealBuilder',
-    'CreditcardBuilder',
-    'SofortBuilder',
-    'PayconiqBuilder'
+    "PaymentBuilder",
+    "AuthorizeCaptureCapable",
+    "InstantRefundCapable",
+    "FastCheckoutCapable",
+    "BankTransferCapabilities",
+    "IdealBuilder",
+    "CreditcardBuilder",
+    "SofortBuilder",
+    "PayconiqBuilder",
 ]

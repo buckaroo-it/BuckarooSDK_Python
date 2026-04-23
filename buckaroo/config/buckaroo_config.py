@@ -13,12 +13,14 @@ from enum import Enum
 
 class Environment(Enum):
     """Buckaroo API environment options."""
+
     TEST = "test"
     LIVE = "live"
 
 
 class ApiVersion(Enum):
     """Supported Buckaroo API versions."""
+
     V1 = "v1"
     V2 = "v2"
 
@@ -27,10 +29,10 @@ class ApiVersion(Enum):
 class BuckarooConfig:
     """
     Configuration class for Buckaroo SDK.
-    
+
     This class manages all configuration settings for the Buckaroo SDK,
     including API endpoints, timeouts, retry logic, and authentication settings.
-    
+
     Attributes:
         environment (Environment): The API environment (test/live).
         api_version (ApiVersion): The API version to use.
@@ -42,7 +44,7 @@ class BuckarooConfig:
         custom_endpoint (Optional[str]): Custom API endpoint URL.
         user_agent (str): User agent string for HTTP requests.
         max_redirects (int): Maximum number of HTTP redirects to follow.
-        
+
     Example:
         >>> config = BuckarooConfig(
         ...     environment=Environment.LIVE,
@@ -51,7 +53,7 @@ class BuckarooConfig:
         ... )
         >>> client = BuckarooClient("store_key", "secret_key", config=config)
     """
-    
+
     environment: Environment = Environment.TEST
     api_version: ApiVersion = ApiVersion.V1
     timeout: int = 30
@@ -62,70 +64,70 @@ class BuckarooConfig:
     custom_endpoint: Optional[str] = None
     user_agent: str = "BuckarooSDK-Python/1.0.0"
     max_redirects: int = 5
-    
+
     def __post_init__(self):
         """Validate configuration after initialization."""
         self._validate_config()
-    
+
     def _validate_config(self) -> None:
         """
         Validate configuration parameters.
-        
+
         Raises:
             ValueError: If configuration parameters are invalid.
         """
         if self.timeout <= 0:
             raise ValueError("Timeout must be greater than 0")
-            
+
         if self.retry_attempts < 0:
             raise ValueError("Retry attempts must be 0 or greater")
-            
+
         if self.retry_delay < 0:
             raise ValueError("Retry delay must be 0 or greater")
-            
+
         if self.max_redirects < 0:
             raise ValueError("Max redirects must be 0 or greater")
-    
+
     @property
     def api_endpoint(self) -> str:
         """
         Get the API endpoint URL based on environment.
-        
+
         Returns:
             str: The API endpoint URL.
         """
         if self.custom_endpoint:
             return self.custom_endpoint
-            
+
         if self.environment == Environment.TEST:
             return "https://testcheckout.buckaroo.nl"
         else:  # LIVE
             return "https://checkout.buckaroo.nl"
-    
+
     @property
     def is_test_environment(self) -> bool:
         """
         Check if currently in test environment.
-        
+
         Returns:
             bool: True if in test environment, False if live.
         """
         return self.environment == Environment.TEST
-    
+
     @property
     def is_live_environment(self) -> bool:
         """
         Check if currently in live environment.
-        
+
         Returns:
             bool: True if in live environment, False if test.
         """
         return self.environment == Environment.LIVE
-    
+
     def get_request_headers(self) -> Dict[str, str]:
         """
         Get default HTTP headers for API requests.
-        
+
         Returns:
             Dict[str, str]: Dictionary of HTTP headers.
         """
@@ -134,11 +136,11 @@ class BuckarooConfig:
             "Accept": "application/json",
             "User-Agent": self.user_agent,
         }
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert configuration to dictionary.
-        
+
         Returns:
             Dict[str, Any]: Configuration as dictionary.
         """
@@ -157,15 +159,15 @@ class BuckarooConfig:
             "is_test": self.is_test_environment,
             "is_live": self.is_live_environment,
         }
-    
+
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> 'BuckarooConfig':
+    def from_dict(cls, config_dict: Dict[str, Any]) -> "BuckarooConfig":
         """
         Create configuration from dictionary.
-        
+
         Args:
             config_dict (Dict[str, Any]): Configuration dictionary.
-            
+
         Returns:
             BuckarooConfig: New configuration instance.
         """
@@ -173,31 +175,38 @@ class BuckarooConfig:
         if "environment" in config_dict:
             if isinstance(config_dict["environment"], str):
                 config_dict["environment"] = Environment(config_dict["environment"])
-                
+
         if "api_version" in config_dict:
             if isinstance(config_dict["api_version"], str):
                 config_dict["api_version"] = ApiVersion(config_dict["api_version"])
-        
+
         # Filter out extra keys
         valid_keys = {
-            "environment", "api_version", "timeout", "retry_attempts",
-            "retry_delay", "logging_enabled", "verify_ssl", "custom_endpoint",
-            "user_agent", "max_redirects"
+            "environment",
+            "api_version",
+            "timeout",
+            "retry_attempts",
+            "retry_delay",
+            "logging_enabled",
+            "verify_ssl",
+            "custom_endpoint",
+            "user_agent",
+            "max_redirects",
         }
         filtered_dict = {k: v for k, v in config_dict.items() if k in valid_keys}
-        
+
         return cls(**filtered_dict)
-    
-    def copy(self, **changes) -> 'BuckarooConfig':
+
+    def copy(self, **changes) -> "BuckarooConfig":
         """
         Create a copy of the configuration with optional changes.
-        
+
         Args:
             **changes: Configuration parameters to change.
-            
+
         Returns:
             BuckarooConfig: New configuration instance with changes applied.
-            
+
         Example:
             >>> new_config = config.copy(timeout=60, environment=Environment.LIVE)
         """
@@ -206,50 +215,54 @@ class BuckarooConfig:
         return self.from_dict(config_dict)
 
 
+class DefaultConfig(BuckarooConfig):
+    """
+    Default configuration for Buckaroo SDK.
+
+    This class provides sensible defaults for most use cases.
+    """
+
+    pass
+
+
 class TestConfig(BuckarooConfig):
-    """
-    Configuration optimized for testing.
-    
-    This configuration uses test environment with more aggressive timeouts
-    and retries for faster test execution.
-    """
-    
-    def __init__(self):
-        super().__init__(
-            environment=Environment.TEST,
+    """Test preset: short timeouts, no logging. Environment locked to TEST."""
+
+    def __init__(self, **overrides):
+        defaults = dict(
             timeout=10,
             retry_attempts=1,
             retry_delay=0.5,
-            logging_enabled=False
+            logging_enabled=False,
         )
+        defaults.update(overrides)
+        defaults["environment"] = Environment.TEST
+        super().__init__(**defaults)
 
 
 class ProductionConfig(BuckarooConfig):
-    """
-    Configuration optimized for production use.
-    
-    This configuration uses live environment with conservative timeouts
-    and retry settings for production reliability.
-    """
-    
-    def __init__(self):
-        super().__init__(
-            environment=Environment.LIVE,
+    """Production preset: conservative timeouts, logging on. Environment locked to LIVE."""
+
+    def __init__(self, **overrides):
+        defaults = dict(
             timeout=60,
             retry_attempts=5,
             retry_delay=2.0,
             logging_enabled=True,
-            verify_ssl=True
+            verify_ssl=True,
         )
+        defaults.update(overrides)
+        defaults["environment"] = Environment.LIVE
+        super().__init__(**defaults)
 
 
 class ConfigBuilder:
     """
     Builder class for creating Buckaroo configurations.
-    
+
     This class provides a fluent interface for building configurations
     with method chaining.
-    
+
     Example:
         >>> config = (ConfigBuilder()
         ...     .environment(Environment.LIVE)
@@ -258,59 +271,59 @@ class ConfigBuilder:
         ...     .enable_logging()
         ...     .build())
     """
-    
+
     def __init__(self):
         self._config_dict = {}
-    
-    def environment(self, env: Environment) -> 'ConfigBuilder':
+
+    def environment(self, env: Environment) -> "ConfigBuilder":
         """Set the environment."""
         self._config_dict["environment"] = env
         return self
-    
-    def test_environment(self) -> 'ConfigBuilder':
+
+    def test_environment(self) -> "ConfigBuilder":
         """Set test environment."""
         return self.environment(Environment.TEST)
-    
-    def live_environment(self) -> 'ConfigBuilder':
+
+    def live_environment(self) -> "ConfigBuilder":
         """Set live environment."""
         return self.environment(Environment.LIVE)
-    
-    def api_version(self, version: ApiVersion) -> 'ConfigBuilder':
+
+    def api_version(self, version: ApiVersion) -> "ConfigBuilder":
         """Set the API version."""
         self._config_dict["api_version"] = version
         return self
-    
-    def timeout(self, seconds: int) -> 'ConfigBuilder':
+
+    def timeout(self, seconds: int) -> "ConfigBuilder":
         """Set request timeout."""
         self._config_dict["timeout"] = seconds
         return self
-    
-    def retry_attempts(self, attempts: int) -> 'ConfigBuilder':
+
+    def retry_attempts(self, attempts: int) -> "ConfigBuilder":
         """Set retry attempts."""
         self._config_dict["retry_attempts"] = attempts
         return self
-    
-    def retry_delay(self, delay: float) -> 'ConfigBuilder':
+
+    def retry_delay(self, delay: float) -> "ConfigBuilder":
         """Set retry delay."""
         self._config_dict["retry_delay"] = delay
         return self
-    
-    def enable_logging(self) -> 'ConfigBuilder':
+
+    def enable_logging(self) -> "ConfigBuilder":
         """Enable logging."""
         self._config_dict["logging_enabled"] = True
         return self
-    
-    def disable_logging(self) -> 'ConfigBuilder':
+
+    def disable_logging(self) -> "ConfigBuilder":
         """Disable logging."""
         self._config_dict["logging_enabled"] = False
         return self
-    
-    def enable_ssl_verification(self) -> 'ConfigBuilder':
+
+    def enable_ssl_verification(self) -> "ConfigBuilder":
         """Enable SSL verification."""
         self._config_dict["verify_ssl"] = True
         return self
-    
-    def disable_ssl_verification(self) -> 'ConfigBuilder':
+
+    def disable_ssl_verification(self) -> "ConfigBuilder":
         """Disable SSL verification (not recommended for production)."""
         warnings.warn(
             "SSL verification is disabled. This exposes the connection to "
@@ -320,26 +333,26 @@ class ConfigBuilder:
         )
         self._config_dict["verify_ssl"] = False
         return self
-    
-    def custom_endpoint(self, endpoint: str) -> 'ConfigBuilder':
+
+    def custom_endpoint(self, endpoint: str) -> "ConfigBuilder":
         """Set custom API endpoint."""
         self._config_dict["custom_endpoint"] = endpoint
         return self
-    
-    def user_agent(self, agent: str) -> 'ConfigBuilder':
+
+    def user_agent(self, agent: str) -> "ConfigBuilder":
         """Set custom user agent."""
         self._config_dict["user_agent"] = agent
         return self
-    
-    def max_redirects(self, redirects: int) -> 'ConfigBuilder':
+
+    def max_redirects(self, redirects: int) -> "ConfigBuilder":
         """Set maximum redirects."""
         self._config_dict["max_redirects"] = redirects
         return self
-    
+
     def build(self) -> BuckarooConfig:
         """
         Build the configuration.
-        
+
         Returns:
             BuckarooConfig: The built configuration.
         """
@@ -350,10 +363,10 @@ class ConfigBuilder:
 def create_test_config(**kwargs) -> BuckarooConfig:
     """
     Create a test configuration with optional overrides.
-    
+
     Args:
         **kwargs: Configuration overrides.
-        
+
     Returns:
         BuckarooConfig: Test configuration.
     """
@@ -366,10 +379,10 @@ def create_test_config(**kwargs) -> BuckarooConfig:
 def create_production_config(**kwargs) -> BuckarooConfig:
     """
     Create a production configuration with optional overrides.
-    
+
     Args:
         **kwargs: Configuration overrides.
-        
+
     Returns:
         BuckarooConfig: Production configuration.
     """
@@ -382,10 +395,10 @@ def create_production_config(**kwargs) -> BuckarooConfig:
 def create_config_from_mode(mode: str) -> BuckarooConfig:
     """
     Create configuration from mode string (for backward compatibility).
-    
+
     Args:
         mode (str): Mode string ("test" or "live").
-        
+
     Returns:
         BuckarooConfig: Configuration for the specified mode.
     """

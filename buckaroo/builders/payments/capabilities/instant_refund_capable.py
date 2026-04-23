@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Payment capability mixins for specific payment features.
 
@@ -7,7 +5,10 @@ This module provides mixins that can be selectively applied to payment builders
 based on their actual capabilities, rather than giving all methods to all builders.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from ....models.payment_response import PaymentResponse
 
 if TYPE_CHECKING:

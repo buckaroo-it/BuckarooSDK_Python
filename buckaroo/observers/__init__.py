@@ -12,15 +12,15 @@ from .logging_observer import (
     LogLevel,
     LogDestination,
     create_logger,
-    create_logger_from_env
+    create_logger_from_env,
 )
 
 __all__ = [
-    'BuckarooLoggingObserver',
-    'ContextualLoggingObserver', 
-    'LogConfig',
-    'LogLevel',
-    'LogDestination',
-    'create_logger',
-    'create_logger_from_env'
+    "BuckarooLoggingObserver",
+    "ContextualLoggingObserver",
+    "LogConfig",
+    "LogLevel",
+    "LogDestination",
+    "create_logger",
+    "create_logger_from_env",
 ]

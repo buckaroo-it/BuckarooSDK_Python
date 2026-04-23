@@ -10,8 +10,8 @@ from .fast_checkout_capable import FastCheckoutCapable
 from .bank_transfer_capabilities import BankTransferCapabilities
 
 __all__ = [
-    'AuthorizeCaptureCapable',
-    'InstantRefundCapable',
-    'FastCheckoutCapable',
-    'BankTransferCapabilities'
+    "AuthorizeCaptureCapable",
+    "InstantRefundCapable",
+    "FastCheckoutCapable",
+    "BankTransferCapabilities",
 ]

@@ -12,7 +12,7 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
 
     def get_service_name(self) -> str:
         """Get the service name for Creditcard payments."""
-        return self._payload.get('brand', 'CreditCard')
+        return self._payload.get("brand", "CreditCard")
 
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """Get the allowed service parameters for Credit Card payments based on action."""

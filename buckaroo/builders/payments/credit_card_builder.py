@@ -10,6 +10,8 @@ from ...models.payment_response import PaymentResponse
 class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCapable):
     """Builder for Credit Card payments with authorization capabilities."""
 
+    _serviceName = "creditcard"
+
     def get_service_name(self) -> str:
         """Get the service name for Creditcard payments."""
         return self._payload.get("brand", "CreditCard")
@@ -29,11 +31,11 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
 
         return {}
 
-    def pay_with_security_code(self, validate: bool = True) -> PaymentResponse:
+    def payWithSecurityCode(self, validate: bool = True) -> PaymentResponse:
         """Process a payment with a security code."""
         return self.execute_action("PayWithSecurityCode", validate=validate)
 
-    def pay_with_token(self, validate: bool = True) -> PaymentResponse:
+    def payWithToken(self, validate: bool = True) -> PaymentResponse:
         """Process a payment using a Hosted Fields session token.
 
         Set the SessionId parameter via add_parameter('SessionId', token) before calling.
@@ -42,7 +44,7 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
         """
         return self.execute_action("PayWithToken", validate=validate)
 
-    def authorize_with_token(self, validate: bool = True) -> PaymentResponse:
+    def authorizeWithToken(self, validate: bool = True) -> PaymentResponse:
         """Authorize a payment using a Hosted Fields session token.
 
         Set the SessionId parameter via add_parameter('SessionId', token) before calling.
@@ -50,6 +52,6 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
         """
         return self.execute_action("AuthorizeWithToken", validate=validate)
 
-    def pay_recurrent(self, validate: bool = True) -> PaymentResponse:
+    def payRecurrent(self, validate: bool = True) -> PaymentResponse:
         """Execute a recurring payment against a previously stored token."""
         return self.execute_action("PayRecurrent", validate=validate)

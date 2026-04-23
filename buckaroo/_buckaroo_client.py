@@ -121,8 +121,6 @@ class BuckarooClient(object):
         try:
             response = self.http_client.get("/json/Transaction/Specification/ideal")
             return response.success
-        except BuckarooError:
-            raise
         except Exception as e:
             logging.warning(
                 "confirm_credential: unexpected error during credential check "

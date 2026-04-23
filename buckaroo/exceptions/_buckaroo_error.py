@@ -12,7 +12,12 @@ class BuckarooError(Exception):
         code: Optional[str] = None,
         request_id: Optional[str] = None,
     ):
-        super().__init__(message)
+        if message is None:
+            super().__init__()
+        elif http_body is None:
+            super().__init__(message)
+        else:
+            super().__init__(message, http_body)
         self._message = message
         self.http_body = http_body
         self.http_status = http_status

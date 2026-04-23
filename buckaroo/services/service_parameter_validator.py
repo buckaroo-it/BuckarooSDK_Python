@@ -3,7 +3,7 @@ Service parameter validation for payment builders.
 """
 
 import logging
-from typing import Callable, Dict, Any, List
+from typing import Any, Dict, List
 from buckaroo.models.payment_request import Parameter
 from buckaroo.exceptions._parameter_validation_error import (
     ParameterValidationError,
@@ -14,19 +14,14 @@ from buckaroo.exceptions._parameter_validation_error import (
 class ServiceParameterValidator:
     """Handles validation and filtering of service parameters for payment methods."""
 
-    def __init__(
-        self,
-        get_allowed_params: Callable[[str], Dict[str, Any]],
-        get_service_name: Callable[[], str],
-    ):
+    def __init__(self, builder) -> None:
         """
         Args:
-            get_allowed_params: Callable that returns the allowed parameters dict
-                for a given action string.
-            get_service_name: Callable that returns the service name string.
+            builder: A builder object that exposes ``get_allowed_service_parameters(action)``
+                     and ``get_service_name()`` methods.
         """
-        self._get_allowed_params = get_allowed_params
-        self._get_service_name = get_service_name
+        self._get_allowed_params = builder.get_allowed_service_parameters
+        self._get_service_name = builder.get_service_name
     
     def normalize_parameter_name(self, param_name: str) -> str:
         """Normalize parameter name to lowercase and remove underscores for matching.

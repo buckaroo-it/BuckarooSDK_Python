@@ -57,6 +57,7 @@ class RequestsStrategy(HttpStrategy):
                 "Please install it with: pip install requests"
             )
 
+        self._apply_defaults(**kwargs)
         self._retry_attempts = kwargs.get("retry_attempts", 3)
         self._retry_delay = kwargs.get("retry_delay", 1.0)
 

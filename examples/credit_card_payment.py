@@ -4,10 +4,10 @@ Credit card payment examples.
 
 Covers:
   - Pay with encrypted card data  (most common server-side flow)
-  - Pay with Hosted Fields token  (pay_with_token)
+  - Pay with Hosted Fields token  (payWithToken)
   - Authorize then capture        (two-step flow)
   - Authorize then cancel         (cancel_authorize)
-  - Recurring payment             (pay_recurrent)
+  - Recurring payment             (payRecurrent)
   - Refund
 
 The credit card service name is dynamic: it reflects the card brand
@@ -78,7 +78,7 @@ def example_pay_encrypted(encrypted_card_data: str):
     response = (
         base_builder()
         .add_parameter("encryptedCardData", encrypted_card_data)
-        .pay_encrypted()
+        .payEncrypted()
     )
     print_response("Pay encrypted (Visa)", response)
     return response
@@ -99,7 +99,7 @@ def example_pay_with_token(session_id: str):
     response = (
         base_builder()
         .add_parameter("sessionId", session_id)
-        .pay_with_token()
+        .payWithToken()
     )
     print_response("Pay with Hosted Fields token", response)
     return response
@@ -150,8 +150,7 @@ def example_authorize_and_cancel(encrypted_card_data: str):
         print("  No transaction key returned — cannot cancel.")
         return
 
-    ctx = TransactionContext(original_transaction_key=auth_key)
-    cancel_response = builder.cancel_authorize(ctx)
+    cancel_response = builder.cancelAuthorize(original_transaction_key=auth_key)
     print_response("Cancel authorize", cancel_response)
 
     return cancel_response
@@ -167,7 +166,7 @@ def example_pay_recurrent(original_transaction_key: str):
     response = (
         base_builder()
         .add_parameter("originalTransactionKey", original_transaction_key)
-        .pay_recurrent()
+        .payRecurrent()
     )
     print_response("Recurring payment", response)
     return response

@@ -35,9 +35,15 @@ class RequiredParameterMissingError(ParameterValidationError):
         service_name: Optional[str] = None,
         **kwargs,
     ):
-        service_info = f" for {service_name}" if service_name else ""
-        action_info = f" {action} action" if action else ""
-        message = f"Required parameter '{parameter_name}' is missing{service_info}{action_info}"
+        if service_name and action:
+            context = f" for {service_name} {action} action"
+        elif action:
+            context = f" for {action} action"
+        elif service_name:
+            context = f" for {service_name}"
+        else:
+            context = ""
+        message = f"Required parameter '{parameter_name}' is missing{context}"
         super().__init__(
             message=message,
             parameter_name=parameter_name,

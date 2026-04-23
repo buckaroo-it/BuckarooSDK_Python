@@ -18,6 +18,6 @@ if TYPE_CHECKING:
 class InstantRefundCapable:
     """Mixin for payment methods that support instant refunds (iDEAL, Sofort, PayConiq)."""
 
-    def instant_refund(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+    def instantRefund(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
         """Initiate an instant refund (iDEAL, Sofort, PayConiq only)."""
         return self.execute_action("instantRefund", validate=validate)

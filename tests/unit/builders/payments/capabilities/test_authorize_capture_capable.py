@@ -87,7 +87,7 @@ class TestAuthorizeEncrypted:
 # ---------------------------------------------------------------------------
 # capture()
 #
-# AuthorizeCaptureCapable.capture is dead code: BaseBuilder.capture shadows
+# AuthorizeCaptureCapable.capture is dead code: PaymentBuilder.capture shadows
 # it through the MRO on every real builder (see TestMroShadowing below). Any
 # test calling the mixin method directly would only exercise unreachable code.
 #
@@ -212,8 +212,8 @@ class TestMroShadowing:
         _, client = wire_recording_http()
         builder = _ready_builder(client)
 
-        # The capture the instance resolves is BaseBuilder's (needs auth key).
-        assert type(builder).capture.__qualname__ == "BaseBuilder.capture"
+        # The capture the instance resolves is PaymentBuilder's (needs auth key).
+        assert type(builder).capture.__qualname__ == "PaymentBuilder.capture"
         # The mixin's simpler capture is still reachable via the class itself.
         assert AuthorizeCaptureCapable.capture.__qualname__ == ("AuthorizeCaptureCapable.capture")
 
@@ -240,7 +240,7 @@ class TestMultiCapabilityBuilder:
     def test_all_six_action_methods_invoke_and_post_expected_actions(self):
         """MRO-resolved action methods must each post the right Buckaroo Action.
 
-        ``capture`` resolves to :meth:`BaseBuilder.capture` (needs an auth
+        ``capture`` resolves to :meth:`PaymentBuilder.capture` (needs an auth
         key) - the mixin's ``capture`` is dead code. This test pins both the
         resolution AND the on-wire Action for every method on a composed
         builder.

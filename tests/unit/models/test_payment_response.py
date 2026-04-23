@@ -16,20 +16,18 @@ from buckaroo.models.payment_response import (
 PENDING_CODES = (
     BuckarooStatusCode.PENDING_INPUT,
     BuckarooStatusCode.PENDING_PROCESSING,
-    BuckarooStatusCode.PENDING_CONSUMER,
-    BuckarooStatusCode.AWAITING_TRANSFER,
+    BuckarooStatusCode.AWAITING_CONSUMER,
+    BuckarooStatusCode.ON_HOLD,
 )
 CANCELLED_CODES = (
-    BuckarooStatusCode.CANCELLED_BY_USER,
+    BuckarooStatusCode.CANCELLED_BY_CONSUMER,
     BuckarooStatusCode.CANCELLED_BY_MERCHANT,
 )
 FAILED_CODES = (
-    BuckarooStatusCode.FAILED,
-    BuckarooStatusCode.VALIDATION_FAILURE,
-    BuckarooStatusCode.TECHNICAL_FAILURE,
+    BuckarooStatusCode.PAYMENT_FAILED,
+    BuckarooStatusCode.VALIDATION_FAILED,
+    BuckarooStatusCode.TECHNICAL_ERROR,
     BuckarooStatusCode.REJECTED,
-    BuckarooStatusCode.REJECTED_BY_USER,
-    BuckarooStatusCode.REJECTED_TECHNICAL,
 )
 
 

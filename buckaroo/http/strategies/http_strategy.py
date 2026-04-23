@@ -47,13 +47,17 @@ class HttpStrategy(ABC):
         self._retry_delay: float = 1.0
         self._default_headers: Dict[str, str] = {}
 
+    def _apply_defaults(self, **kwargs) -> None:
+        """Apply configuration kwargs, resetting to defaults for omitted keys."""
+        self._timeout = kwargs.get('timeout', 30)
+        self._verify_ssl = kwargs.get('verify_ssl', True)
+        self._retry_attempts = kwargs.get('retry_attempts', 3)
+        self._retry_delay = kwargs.get('retry_delay', 1.0)
+        self._default_headers = kwargs.get('default_headers', {})
+
+    @abstractmethod
     def configure(self, **kwargs) -> None:
-        """Store common configuration shared by all strategies."""
-        self._timeout = kwargs.get('timeout', self._timeout)
-        self._verify_ssl = kwargs.get('verify_ssl', self._verify_ssl)
-        self._retry_attempts = kwargs.get('retry_attempts', self._retry_attempts)
-        self._retry_delay = kwargs.get('retry_delay', self._retry_delay)
-        self._default_headers = kwargs.get('default_headers', self._default_headers)
+        """Configure this strategy. Subclasses must implement this."""
 
     @abstractmethod
     def request(

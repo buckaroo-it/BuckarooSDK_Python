@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class Parameter:
     """Model for a service parameter (used for both requests and responses)."""
     name: str
-    value: str
+    value: Optional[str]
     group_type: Optional[str] = None
     group_id: Optional[str] = None
 
@@ -27,7 +27,7 @@ class Parameter:
         value = data.get('Value')
         return cls(
             name=data.get('Name', ''),
-            value=str(value) if value is not None else '',
+            value=str(value) if value is not None else None,
             group_type=data.get('GroupType') or None,
             group_id=data.get('GroupID') or None,
         )
@@ -77,8 +77,8 @@ class Service:
             parameter = Parameter(
                 name=parameter.get("Name", parameter.get("name", "")),
                 value=parameter.get("Value", parameter.get("value", "")),
-                group_type=parameter.get("GroupType", parameter.get("group_type", "")),
-                group_id=parameter.get("GroupID", parameter.get("group_id", "")),
+                group_type=parameter.get("GroupType", parameter.get("group_type")) or None,
+                group_id=parameter.get("GroupID", parameter.get("group_id")) or None,
             )
         if self.parameters is None:
             self.parameters = []
@@ -127,13 +127,11 @@ class PaymentRequest:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API request."""
         request_dict: Dict[str, Any] = {
+            "Currency": self.currency,
+            "AmountDebit": self.amount_debit,
             "ContinueOnIncomplete": self.continue_on_incomplete,
         }
 
-        if self.currency is not None:
-            request_dict["Currency"] = self.currency
-        if self.amount_debit is not None:
-            request_dict["AmountDebit"] = self.amount_debit
         if self.description is not None:
             request_dict["Description"] = self.description
         if self.invoice is not None:

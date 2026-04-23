@@ -22,7 +22,7 @@ class CurlStrategy(HttpStrategy):
         super().__init__()
 
     def configure(self, **kwargs) -> None:
-        super().configure(**kwargs)
+        self._apply_defaults(**kwargs)
     
     def request(
         self,
@@ -61,6 +61,8 @@ class CurlStrategy(HttpStrategy):
         )
 
         # Execute curl with retry logic
+        if self._retry_attempts <= 0:
+            raise Exception("Request failed after all retry attempts")
         last_exception = None
         for attempt in range(self._retry_attempts):
             try:

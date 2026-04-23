@@ -340,12 +340,6 @@ class BuckarooResponse:
             "success": self.success,
             "data": self.data,
             "headers": self.headers,
-            "is_successful_payment": self.is_successful_payment(),
-            "payment_key": self.get_payment_key(),
-            "transaction_key": self.get_transaction_key(),
-            "buckaroo_status_code": self.get_status_code(),
-            "buckaroo_status_message": self.get_status_message(),
-            "redirect_url": self.get_redirect_url(),
         }
 
 

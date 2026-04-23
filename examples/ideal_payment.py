@@ -104,7 +104,7 @@ def example_instant_refund():
     Instant refund sends money back immediately without a separate push
     notification cycle.  Buckaroo must have the customer IBAN on file.
     """
-    response = base_builder().instant_refund()
+    response = base_builder().instantRefund()
     print_response("Instant refund", response)
     return response
 

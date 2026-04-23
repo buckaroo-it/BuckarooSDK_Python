@@ -328,7 +328,7 @@ class ConfigBuilder:
         warnings.warn(
             "SSL verification is disabled. This exposes the connection to "
             "man-in-the-middle attacks and must never be used in production.",
-            SecurityWarning,
+            UserWarning,
             stacklevel=2,
         )
         self._config_dict["verify_ssl"] = False

@@ -18,6 +18,6 @@ if TYPE_CHECKING:
 class EncryptedPayCapable:
     """Mixin for payment methods that support encryption (Credit Card)."""
 
-    def pay_encrypted(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
+    def payEncrypted(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
         """Process a payment using encrypted card data (Credit Card only)."""
         return self.execute_action("PayEncrypted", validate=validate)

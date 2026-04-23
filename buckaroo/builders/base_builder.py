@@ -39,10 +39,7 @@ class BaseBuilder(ABC):
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
-        self._validator = ServiceParameterValidator(
-            self.get_allowed_service_parameters,
-            self.get_service_name,
-        )
+        self._validator = ServiceParameterValidator(self)
     
     def currency(self, currency: str) -> Self:
         """Set the currency for the payment."""
@@ -310,8 +307,8 @@ class BaseBuilder(ABC):
         if len(missing_fields) == 1:
             raise RequiredParameterMissingError(missing_fields[0], action=action)
         elif missing_fields:
-            raise ParameterValidationError(
-                f"Missing required fields: {', '.join(missing_fields)}", action=action
+            raise ValueError(
+                f"Missing required fields: {', '.join(missing_fields)}"
             )
     
     def build(self, action: str = "Pay", validate: bool = True, strict_validation: bool = False) -> PaymentRequest:

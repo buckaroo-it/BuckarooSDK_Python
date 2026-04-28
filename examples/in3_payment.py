@@ -15,7 +15,6 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from buckaroo.app import Buckaroo
-from buckaroo.models import TransactionContext
 
 RETURN_BASE = "https://yourshop.com"
 
@@ -119,8 +118,7 @@ def example_refund(original_transaction_key: str):
         "return_url_reject":f"{RETURN_BASE}/reject",
     })
 
-    ctx = TransactionContext(original_transaction_key=original_transaction_key)
-    response = builder.refund(ctx)
+    response = builder.refund(original_transaction_key=original_transaction_key)
     print_response("In3 Refund", response)
     return response
 

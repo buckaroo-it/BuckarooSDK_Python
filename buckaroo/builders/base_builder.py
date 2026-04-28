@@ -8,13 +8,13 @@ from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceL
 from ..models.payment_response import PaymentResponse
 from ..services.service_parameter_validator import ServiceParameterValidator
 from ..services.transaction_service import TransactionExecutor, ITransactionExecutor
-from ..exceptions._parameter_validation_error import ParameterValidationError, RequiredParameterMissingError
+from ..exceptions._parameter_validation_error import RequiredParameterMissingError
 
 
 class BaseBuilder(ABC):
     """Abstract base class for all builders (payments and solutions)."""
 
-    def __init__(self, client, executor: Optional[ITransactionExecutor] = None):
+    def __init__(self, client, executor: Optional[ITransactionExecutor] = None) -> None:
         """Initialize with client instance.
 
         Args:

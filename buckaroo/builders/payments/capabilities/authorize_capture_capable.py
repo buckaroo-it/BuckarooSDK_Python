@@ -42,7 +42,7 @@ class AuthorizeCaptureCapable:
         )
         if not txn_key:
             raise ValueError(
-                "original_transaction_key is required for cancel_authorize"
+                "original_transaction_key is required for cancelAuthorize"
             )
 
         request_data = self._build_keyed_request("CancelAuthorize", txn_key, validate=validate)

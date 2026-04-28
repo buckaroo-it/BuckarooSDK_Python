@@ -18,7 +18,6 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from buckaroo.app import Buckaroo
-from buckaroo.models import TransactionContext
 
 RETURN_BASE = "https://yourshop.com"
 
@@ -81,8 +80,7 @@ def example_full_refund(original_transaction_key: str):
     Refund the full amount of a completed transaction.
     The amount is read from the builder — no need to specify it again.
     """
-    ctx = TransactionContext(original_transaction_key=original_transaction_key)
-    response = base_builder().refund(ctx)
+    response = base_builder().refund(original_transaction_key=original_transaction_key)
     print_response("Full refund", response)
     return response
 
@@ -91,8 +89,7 @@ def example_full_refund(original_transaction_key: str):
 
 def example_partial_refund(original_transaction_key: str):
     """Refund only part of the original amount."""
-    ctx = TransactionContext(original_transaction_key=original_transaction_key, amount=10.00)
-    response = base_builder().partial_refund(ctx)
+    response = base_builder().partial_refund(original_transaction_key=original_transaction_key, amount=10.00)
     print_response("Partial refund (€10.00)", response)
     return response
 

@@ -139,8 +139,6 @@ class Service:
             parameters=parameters
         )
 
-        return cls(name=data.get("Name", ""), action=data.get("Action"), parameters=parameters)
-
 
 class PaymentResponse:
     """

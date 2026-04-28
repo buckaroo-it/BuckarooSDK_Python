@@ -16,7 +16,6 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from buckaroo.app import Buckaroo
-from buckaroo.models import TransactionContext
 
 RETURN_BASE = "https://yourshop.com"
 
@@ -79,8 +78,7 @@ def example_pay():
 
 def example_refund(original_transaction_key: str):
     """Full refund of a completed PayPal payment."""
-    ctx = TransactionContext(original_transaction_key=original_transaction_key)
-    response = base_builder().refund(ctx)
+    response = base_builder().refund(original_transaction_key=original_transaction_key)
     print_response("PayPal Refund", response)
     return response
 
@@ -89,8 +87,7 @@ def example_refund(original_transaction_key: str):
 
 def example_partial_refund(original_transaction_key: str):
     """Refund part of a completed PayPal payment."""
-    ctx = TransactionContext(original_transaction_key=original_transaction_key, amount=10.00)
-    response = base_builder().partial_refund(ctx)
+    response = base_builder().partial_refund(original_transaction_key=original_transaction_key, amount=10.00)
     print_response("PayPal Partial refund (€10.00)", response)
     return response
 

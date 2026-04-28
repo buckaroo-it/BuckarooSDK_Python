@@ -6,7 +6,7 @@ Covers:
   - Pay with encrypted card data  (most common server-side flow)
   - Pay with Hosted Fields token  (payWithToken)
   - Authorize then capture        (two-step flow)
-  - Authorize then cancel         (cancel_authorize)
+  - Authorize then cancel         (cancelAuthorize)
   - Recurring payment             (payRecurrent)
   - Refund
 
@@ -23,7 +23,6 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from buckaroo.app import Buckaroo
-from buckaroo.models import TransactionContext
 
 RETURN_BASE = "https://yourshop.com"
 
@@ -126,8 +125,7 @@ def example_authorize_and_capture(encrypted_card_data: str):
         return
 
     # Step 2 — capture (money moves now)
-    ctx = TransactionContext(original_transaction_key=auth_key)
-    capture_response = builder.capture(ctx)
+    capture_response = builder.capture(original_transaction_key=auth_key)
     print_response("Capture", capture_response)
 
     return capture_response
@@ -176,8 +174,7 @@ def example_pay_recurrent(original_transaction_key: str):
 
 def example_refund(original_transaction_key: str):
     """Full refund of a captured or completed payment."""
-    ctx = TransactionContext(original_transaction_key=original_transaction_key)
-    response = base_builder().refund(ctx)
+    response = base_builder().refund(original_transaction_key=original_transaction_key)
     print_response("Refund", response)
     return response
 

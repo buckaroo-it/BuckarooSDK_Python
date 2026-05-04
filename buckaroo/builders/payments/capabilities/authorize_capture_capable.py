@@ -16,37 +16,34 @@ if TYPE_CHECKING:
 
 
 class AuthorizeCaptureCapable:
-    """Mixin for payment methods that support authorization (Credit Card)."""
+    """Mixin contributing the Authorize / CancelAuthorize action surface.
+
+    ``capture`` lives on :class:`BaseBuilder` with the full
+    ``original_transaction_key`` / ``amount`` signature and is shared by every
+    builder; it is intentionally not duplicated here.
+    """
 
     def authorize(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        Authorize a payment without capturing it.
-
-        Available for: Credit Card
-        Not available for: iDEAL, Sofort, PayConiq (immediate transfer)
+        """Authorize a payment without capturing it.
 
         Args:
-            validate (bool): Whether to validate service parameters before building
+            validate: Whether to validate service parameters before building.
 
         Returns:
-            PaymentResponse: The authorization response
+            PaymentResponse: The authorization response.
         """
         payment_request = self.build("Authorize", validate=validate)
         request_data = payment_request.to_dict()
         return self._post_transaction(request_data)
 
     def authorizeEncrypted(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        Authorize a payment without capturing it.
-
-        Available for: Credit Card
-        Not available for: iDEAL, Sofort, PayConiq (immediate transfer)
+        """Authorize an encrypted-card payment without capturing it.
 
         Args:
-            validate (bool): Whether to validate service parameters before building
+            validate: Whether to validate service parameters before building.
 
         Returns:
-            PaymentResponse: The authorization response
+            PaymentResponse: The authorization response.
         """
         payment_request = self.build("AuthorizeEncrypted", validate=validate)
         request_data = payment_request.to_dict()
@@ -57,8 +54,7 @@ class AuthorizeCaptureCapable:
         original_transaction_key: Optional[str] = None,
         validate: bool = True,
     ) -> PaymentResponse:
-        """
-        Cancel a previously authorized payment.
+        """Cancel a previously authorized payment.
 
         Uses AmountCredit (not AmountDebit) per Buckaroo API requirements.
         """
@@ -82,19 +78,4 @@ class AuthorizeCaptureCapable:
         # since Buckaroo expects AmountCredit for cancel-authorize.
         request_data["AmountCredit"] = request_data.pop("AmountDebit")
 
-        return self._post_transaction(request_data)
-
-    def capture(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        Capture a previously authorized payment.
-
-        Args:
-            validate (bool): Whether to validate service parameters before building
-
-        Returns:
-            PaymentResponse: The capture response
-        """
-
-        payment_request = self.build("Capture", validate=validate)
-        request_data = payment_request.to_dict()
         return self._post_transaction(request_data)

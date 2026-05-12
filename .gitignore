@@ -1,5 +1,19 @@
-Dockerfile
-docker-compose.yml
-.mypy_cache/
-.venv/
-*__pycache__/
+# build artifacts
+/build
+/dist
+/*.egg-info
+*.egg-info/
+/.eggs
+
+# test and local dev artifacts
+/.pytest_cache
+/.coverage
+htmlcov/
+.tox/
+/.idea
+.DS_Store
+__pycache__/
+*.pyc
+.env
+
+*.log

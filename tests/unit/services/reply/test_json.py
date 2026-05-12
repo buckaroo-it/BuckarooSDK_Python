@@ -73,9 +73,7 @@ class TestValidate:
 
     def test_rejects_malformed_header_too_many_parts(self):
         assert (
-            Json(STORE, SECRET).validate(
-                "hmac storekey:hash:nonce:time:extra", "/x", "POST", ""
-            )
+            Json(STORE, SECRET).validate("hmac storekey:hash:nonce:time:extra", "/x", "POST", "")
             is False
         )
 

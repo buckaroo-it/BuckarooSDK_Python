@@ -51,9 +51,7 @@ class Json:
 
         content_b64 = self._md5_b64(body)
         encoded_url = self._encode_url(uri)
-        signing_string = (
-            f"{self.store_key}{method}{encoded_url}{timestamp}{nonce}{content_b64}"
-        )
+        signing_string = f"{self.store_key}{method}{encoded_url}{timestamp}{nonce}{content_b64}"
         expected = base64.b64encode(
             _hmac.new(
                 self.secret_key.encode("utf-8"),

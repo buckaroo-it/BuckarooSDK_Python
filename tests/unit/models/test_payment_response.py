@@ -504,6 +504,7 @@ def _response_with_status_code(code: int) -> PaymentResponse:
         }
     )
 
+
 def test_get_some_error_returns_first_request_error_with_priority():
     """RequestErrors take precedence over ConsumerMessage/Message/SubCode."""
     response = PaymentResponse(
@@ -560,10 +561,7 @@ def test_get_some_error_falls_back_to_top_level_message():
 
 def test_get_some_error_falls_back_to_sub_code_description():
     """Riverty 491 stuffs the ``Authorize rejected. ...`` text here."""
-    riverty_msg = (
-        "Authorize rejected. The following errors occurred: "
-        "File format is not supported."
-    )
+    riverty_msg = "Authorize rejected. The following errors occurred: File format is not supported."
     response = PaymentResponse(
         {
             "data": {
@@ -598,9 +596,7 @@ def test_has_consumer_message_handles_missing_html_text():
 
 
 def test_has_sub_code_message_false_when_description_blank():
-    response = PaymentResponse(
-        {"data": {"Status": {"SubCode": {"Code": "X", "Description": ""}}}}
-    )
+    response = PaymentResponse({"data": {"Status": {"SubCode": {"Code": "X", "Description": ""}}}})
     assert response.has_sub_code_message() is False
     assert response.get_sub_code_message() == ""
 

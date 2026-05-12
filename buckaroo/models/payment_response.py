@@ -364,11 +364,7 @@ class PaymentResponse:
 
     def has_sub_code_message(self) -> bool:
         """Return True when ``Status.SubCode.Description`` is set."""
-        return bool(
-            self.status
-            and self.status.sub_code
-            and self.status.sub_code.description
-        )
+        return bool(self.status and self.status.sub_code and self.status.sub_code.description)
 
     def get_sub_code_message(self) -> str:
         """Return the ``Status.SubCode.Description``, or ``''``."""

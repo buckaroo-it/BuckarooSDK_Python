@@ -16,8 +16,7 @@ def _sign(params: dict, secret: str = SECRET) -> str:
     """Reference SHA-1 signature per Buckaroo's documented algorithm."""
     items = [(k, v) for k, v in params.items() if k.lower() != "brq_signature"]
     filtered = [
-        (k, v) for k, v in items
-        if any(k.lower().startswith(p) for p in ("add_", "brq_", "cust_"))
+        (k, v) for k, v in items if any(k.lower().startswith(p) for p in ("add_", "brq_", "cust_"))
     ]
     sorted_items = sorted(filtered, key=lambda pair: pair[0].lower())
     sign_string = "".join(f"{k}={v if v is not None else ''}" for k, v in sorted_items)
@@ -29,9 +28,10 @@ class TestComputeSignature:
     def test_sorts_keys_case_insensitively(self):
         h = HttpPost(SECRET)
         params = {"brq_b": "2", "BRQ_a": "1"}
-        assert h.compute_signature(params) == sha1(
-            f"BRQ_a=1brq_b=2{SECRET}".encode("utf-8")
-        ).hexdigest()
+        assert (
+            h.compute_signature(params)
+            == sha1(f"BRQ_a=1brq_b=2{SECRET}".encode("utf-8")).hexdigest()
+        )
 
     def test_excludes_brq_signature_field(self):
         h = HttpPost(SECRET)

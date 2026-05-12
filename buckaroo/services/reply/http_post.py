@@ -28,10 +28,7 @@ class HttpPost:
     def validate(self, params: Mapping[str, object]) -> bool:
         """Return True if ``params['brq_signature']`` matches the computed signature."""
         provided = next(
-            (
-                v for k, v in params.items()
-                if k.lower() == self.SIGNATURE_FIELD
-            ),
+            (v for k, v in params.items() if k.lower() == self.SIGNATURE_FIELD),
             None,
         )
         if not provided or not isinstance(provided, str):
@@ -47,12 +44,11 @@ class HttpPost:
             if k.lower() != self.SIGNATURE_FIELD
         ]
         filtered = [
-            (k, v) for k, v in decoded
+            (k, v)
+            for k, v in decoded
             if any(k.lower().startswith(p) for p in self.INCLUDE_PREFIXES)
         ]
         sorted_items = sorted(filtered, key=lambda pair: pair[0].lower())
-        sign_string = "".join(
-            f"{k}={v if v is not None else ''}" for k, v in sorted_items
-        )
+        sign_string = "".join(f"{k}={v if v is not None else ''}" for k, v in sorted_items)
         sign_string += self.secret_key
         return sha1(sign_string.encode("utf-8")).hexdigest()

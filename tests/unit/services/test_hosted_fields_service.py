@@ -125,9 +125,9 @@ class TestGetToken:
 
     def test_raises_on_network_error(self, mock_strategy):
         mock_strategy.queue(
-            BuckarooMockRequest(
-                "POST", HostedFieldsService.OAUTH_TOKEN_URL
-            ).with_exception(Exception("connection refused"))
+            BuckarooMockRequest("POST", HostedFieldsService.OAUTH_TOKEN_URL).with_exception(
+                Exception("connection refused")
+            )
         )
         svc = _make_service(mock_strategy)
 

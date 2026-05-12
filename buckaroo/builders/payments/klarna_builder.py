@@ -86,10 +86,7 @@ class KlarnaBuilder(PaymentBuilder):
         Mirrors :meth:`AuthorizeCaptureCapable.cancelAuthorize` but with the
         ``CancelReservation`` action.
         """
-        txn_key = (
-            original_transaction_key
-            or self._payload.get("original_transaction_key")
-        )
+        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
         if not txn_key:
             raise ValueError(
                 "Original transaction key is required for cancelReservation "

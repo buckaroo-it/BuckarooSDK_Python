@@ -34,7 +34,7 @@ To use the Buckaroo API client, the following things are required:
 
 By far the easiest way to install the Buckaroo SDK is via [pip](https://pip.pypa.io/).
 
-    $ pip install buckaroo-sdk-python
+    $ pip install buckaroo-sdk
 
 Then import the client in your project:
 

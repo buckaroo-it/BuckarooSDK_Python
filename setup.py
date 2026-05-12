@@ -12,7 +12,7 @@ with open(os.path.join(ROOT_DIR, "buckaroo", "_version.py"), encoding="utf-8") a
     exec(f.read(), version_contents)
 
 setup(
-    name="buckaroo-sdk-python",
+    name="buckaroo-sdk",
     version=version_contents["VERSION"],
     description="Python bindings for the Buckaroo API",
     long_description=long_description,

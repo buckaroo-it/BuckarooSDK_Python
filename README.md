@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://www.buckaroo.nl/media/bldbj0zn/python-sdk_icon.png" width="200px" position="center">
+</p>
+
 # Buckaroo Python SDK
 [![Latest release](https://badgen.net/github/release/buckaroo-it/BuckarooSDK_Python)](https://github.com/buckaroo-it/BuckarooSDK_Python/releases)
 

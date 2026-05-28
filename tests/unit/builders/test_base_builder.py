@@ -134,6 +134,13 @@ def test_push_url_setters_return_self_and_appear_in_request():
     assert request["PushURLFailure"] == "https://example.com/push-fail"
 
 
+def test_services_selectable_by_client_setter_returns_self_and_appears_in_request():
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    assert builder.services_selectable_by_client("ideal,bancontact") is builder
+    request = builder.build(validate=False).to_dict()
+    assert request["ServicesSelectableByClient"] == "ideal,bancontact"
+
+
 # ---------------------------------------------------------------------------
 # from_dict
 
@@ -440,6 +447,24 @@ def test_pay_posts_to_transaction_and_returns_payment_response():
 
     assert http.calls[0][0] == "/json/transaction"
     assert response.to_dict()["Status"]["Code"]["Code"] == 190
+
+
+def test_pay_sends_services_selectable_by_client_in_request_body():
+    client, http = _client_returning({"Status": "ok"})
+    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
+
+    builder.services_selectable_by_client("a,b").pay()
+
+    _, sent = http.calls[0]
+    assert sent["ServicesSelectableByClient"] == "a,b"
+
+
+def test_from_dict_roundtrips_services_selectable_by_client():
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    builder.from_dict({"services_selectable_by_client": "a,b"})
+
+    request = builder.build("Pay", validate=False).to_dict()
+    assert request["ServicesSelectableByClient"] == "a,b"
 
 
 def test_post_transaction_returns_empty_response_when_strategy_returns_none():

@@ -22,6 +22,7 @@ class BaseBuilder(ABC):
         self._continue_on_incomplete: str = "1"
         self._push_url: Optional[str] = None
         self._push_url_failure: Optional[str] = None
+        self._services_selectable_by_client: Optional[str] = None
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
@@ -70,6 +71,11 @@ class BaseBuilder(ABC):
     def continue_on_incomplete(self, continue_incomplete: str) -> "BaseBuilder":
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
+        return self
+
+    def services_selectable_by_client(self, services: str) -> "BaseBuilder":
+        """Set the CSV of services the client may pick on Buckaroo's hosted page."""
+        self._services_selectable_by_client = services
         return self
 
     def push_url(self, url: str) -> "BaseBuilder":
@@ -215,6 +221,9 @@ class BaseBuilder(ABC):
         if "continue_on_incomplete" in data:
             self.continue_on_incomplete(data["continue_on_incomplete"])
 
+        if "services_selectable_by_client" in data:
+            self.services_selectable_by_client(data["services_selectable_by_client"])
+
         if "push_url" in data:
             self.push_url(data["push_url"])
         if "push_url_failure" in data:
@@ -344,6 +353,7 @@ class BaseBuilder(ABC):
             push_url_failure=self._push_url_failure,
             client_ip=self._client_ip,
             services=service_list,
+            services_selectable_by_client=self._services_selectable_by_client,
         )
 
         return payment_request

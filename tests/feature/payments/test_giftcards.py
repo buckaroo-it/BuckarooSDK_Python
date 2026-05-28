@@ -12,7 +12,7 @@ class TestGiftcardsFeature:
             mock_strategy,
             method="giftcards",
             invoice="INV-GC-001",
-            payload_overrides={"description": "Test giftcards"},
+            payload_overrides={"description": "Test giftcards", "giftcard_name": "other"},
             service_params={"Cardnumber": "1234567890123456", "PIN": "1234"},
         )
 
@@ -36,6 +36,7 @@ class TestGiftcardsFeature:
             "giftcards",
             Helpers.standard_payload(
                 invoice="INV-GC-WIRE",
+                giftcard_name="other",
                 service_parameters={"Cardnumber": "1234567890123456", "PIN": "1234"},
             ),
         ).pay()
@@ -44,3 +45,29 @@ class TestGiftcardsFeature:
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(recording_mock)}
         assert params.get("Cardnumber") == "1234567890123456"
         assert params.get("Pin") == "1234"
+
+    def test_giftcards_pay_redirect_mode_omits_card_parameters(
+        self, recording_buckaroo, recording_mock
+    ):
+        """Redirect mode: no giftcard_name and no card details — payload reaches
+        the gateway with no Cardnumber/PIN and an empty service-parameter list.
+        Buckaroo's hosted page collects card details there.
+        """
+        recording_mock.queue(
+            BuckarooMockRequest.json(
+                "POST",
+                "*/json/transaction*",
+                Helpers.pending_redirect_response("giftcards"),
+            )
+        )
+        recording_buckaroo.payments.create_payment(
+            "giftcards",
+            Helpers.standard_payload(
+                invoice="INV-GC-REDIRECT",
+                services_selectable_by_client="fashioncheque,intersolve,tcs",
+            ),
+        ).pay()
+
+        assert recorded_action(recording_mock) == "Pay"
+        params = {p["Name"]: p["Value"] for p in recorded_service_parameters(recording_mock)}
+        assert params == {}

@@ -526,6 +526,37 @@ def test_refund_partial_uses_refund_amount_and_removes_debit():
     assert "AmountDebit" not in sent
 
 
+def test_pay_remainder_requires_original_transaction_key():
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    with pytest.raises(ValueError, match="Original transaction key is required"):
+        builder.pay_remainder()
+
+
+def test_pay_remainder_uses_key_argument_and_sets_pay_remainder_action():
+    client, http = _client_returning({"Status": "ok"})
+    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
+
+    builder.pay_remainder(original_transaction_key="GROUP-1")
+
+    _, sent = http.calls[0]
+    assert sent["OriginalTransactionKey"] == "GROUP-1"
+    assert sent["AmountDebit"] == 10.50
+    assert "AmountCredit" not in sent
+    assert sent["Services"]["ServiceList"][0]["Action"] == "PayRemainder"
+
+
+def test_pay_remainder_reads_key_from_payload():
+    client, http = _client_returning({"Status": "ok"})
+    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
+    builder.from_dict({"original_transaction_key": "GROUP-2"})
+
+    builder.pay_remainder()
+
+    _, sent = http.calls[0]
+    assert sent["OriginalTransactionKey"] == "GROUP-2"
+    assert sent["Services"]["ServiceList"][0]["Action"] == "PayRemainder"
+
+
 def test_capture_requires_authorization_key():
     builder = populate_required_fields(_make_builder(), amount=10.50)
     with pytest.raises(ValueError, match="Authorization key is required"):

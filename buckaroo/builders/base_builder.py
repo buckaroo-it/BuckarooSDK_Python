@@ -426,6 +426,40 @@ class BaseBuilder(ABC):
 
         return self._post_transaction(request_data)
 
+    def pay_remainder(
+        self, original_transaction_key: Optional[str] = None, validate: bool = True
+    ) -> PaymentResponse:
+        """
+        Execute a pay-remainder transaction.
+
+        Pays the open remainder of a group transaction (e.g. after a partial
+        giftcard payment) via the PayRemainder action. The original transaction
+        key is the group transaction key that links this payment into the group.
+
+        Args:
+            original_transaction_key (str, optional): Group transaction key of the
+                partial payment. If None, read from the payload.
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The pay-remainder response
+
+        Raises:
+            ValueError: If no original transaction key is available
+        """
+        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
+        if not txn_key:
+            raise ValueError(
+                "Original transaction key is required for pay remainder "
+                "(provide as parameter or in payload)"
+            )
+
+        payment_request = self.build("PayRemainder", validate=validate)
+        request_data = payment_request.to_dict()
+        request_data["OriginalTransactionKey"] = txn_key
+
+        return self._post_transaction(request_data)
+
     def capture(
         self,
         original_transaction_key: Optional[str] = None,

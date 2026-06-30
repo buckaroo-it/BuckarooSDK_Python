@@ -210,9 +210,9 @@ def test_refund_build_keeps_intersolve_email_when_supplied(client):
 
 def test_get_allowed_service_parameters_refund_is_case_insensitive(client):
     builder = GiftcardsBuilder(client).from_dict({"giftcard_name": "intersolve"})
-    assert builder.get_allowed_service_parameters("refund") == builder.get_allowed_service_parameters(
-        "Refund"
-    )
+    assert builder.get_allowed_service_parameters(
+        "refund"
+    ) == builder.get_allowed_service_parameters("Refund")
 
 
 def test_pay_dispatches_giftcards_service_through_mock_buckaroo():

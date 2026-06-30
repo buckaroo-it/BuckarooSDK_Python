@@ -5,13 +5,15 @@ from ...models.payment_response import PaymentResponse
 
 # VVV, webshop, boekenbon, yourgift all run on the Intersolve backend
 # and the gateway requires IntersolveCardnumber/IntersolvePIN for them.
-INTERSOLVE_BRANDS = frozenset({
-    "intersolve",
-    "vvvgiftcard",
-    "webshopgiftcard",
-    "boekenbon",
-    "yourgift",
-})
+INTERSOLVE_BRANDS = frozenset(
+    {
+        "intersolve",
+        "vvvgiftcard",
+        "webshopgiftcard",
+        "boekenbon",
+        "yourgift",
+    }
+)
 
 
 class GiftcardsBuilder(PaymentBuilder):

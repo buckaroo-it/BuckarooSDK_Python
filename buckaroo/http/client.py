@@ -110,9 +110,10 @@ class BuckarooHttpClient:
         endpoint: str,
         data: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
+        culture: Optional[str] = None,
     ) -> "BuckarooResponse":
         """Send a POST request to the Buckaroo API."""
-        return self._make_request("POST", endpoint, data, params)
+        return self._make_request("POST", endpoint, data, params, culture=culture)
 
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> "BuckarooResponse":
         """Send a GET request to the Buckaroo API."""
@@ -124,6 +125,7 @@ class BuckarooHttpClient:
         endpoint: str,
         data: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
+        culture: Optional[str] = None,
     ) -> "BuckarooResponse":
         """Make an HTTP request to the Buckaroo API."""
         # Build full URL
@@ -143,6 +145,11 @@ class BuckarooHttpClient:
 
         # Generate authentication headers
         auth_headers = self._generate_hmac_signature(method, url, content)
+
+        # Culture is sent as a request header (not part of the signed body) so
+        # the gateway can localize templates/consumer messages.
+        if culture:
+            auth_headers["Culture"] = culture
 
         try:
             http_response = self.http_strategy.request(

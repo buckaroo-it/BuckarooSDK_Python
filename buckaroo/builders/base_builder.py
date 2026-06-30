@@ -20,6 +20,7 @@ class BaseBuilder(ABC):
         self._return_url_error: Optional[str] = None
         self._return_url_reject: Optional[str] = None
         self._continue_on_incomplete: str = "1"
+        self._culture: Optional[str] = None
         self._push_url: Optional[str] = None
         self._push_url_failure: Optional[str] = None
         self._services_selectable_by_client: Optional[str] = None
@@ -76,6 +77,16 @@ class BaseBuilder(ABC):
     def services_selectable_by_client(self, services: str) -> "BaseBuilder":
         """Set the CSV of services the client may pick on Buckaroo's hosted page."""
         self._services_selectable_by_client = services
+        return self
+
+    def culture(self, culture: str) -> "BaseBuilder":
+        """Set the culture (language) for the gateway request.
+
+        Sent as the ``Culture`` HTTP request header (e.g. ``nl-NL``); the
+        gateway uses it to localize templates and consumer messages. The
+        gateway ignores a ``Culture`` field placed in the request body.
+        """
+        self._culture = culture
         return self
 
     def push_url(self, url: str) -> "BaseBuilder":
@@ -223,6 +234,9 @@ class BaseBuilder(ABC):
 
         if "services_selectable_by_client" in data:
             self.services_selectable_by_client(data["services_selectable_by_client"])
+
+        if "culture" in data:
+            self.culture(data["culture"])
 
         if "push_url" in data:
             self.push_url(data["push_url"])
@@ -601,8 +615,11 @@ class BaseBuilder(ABC):
 
     def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Helper method to post transaction and handle response."""
-        # Send to Buckaroo API
-        response = self._client.http_client.post("/json/transaction", request_data)
+        # Send to Buckaroo API. Culture (when set) rides as a request header,
+        # not a body field — the gateway only honors it in the header.
+        response = self._client.http_client.post(
+            "/json/transaction", request_data, culture=self._culture
+        )
 
         # Check if response is valid and convert to dict
         if response is None:

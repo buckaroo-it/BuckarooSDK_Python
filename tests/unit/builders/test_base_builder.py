@@ -141,6 +141,19 @@ def test_services_selectable_by_client_setter_returns_self_and_appears_in_reques
     assert request["ServicesSelectableByClient"] == "ideal,bancontact"
 
 
+def test_culture_setter_returns_self():
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    assert builder.culture("nl-NL") is builder
+
+
+def test_culture_never_emitted_in_request_body():
+    # Culture rides in the HTTP header, never the body (the gateway ignores a
+    # body-level Culture).
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    request = builder.culture("nl-NL").build(validate=False).to_dict()
+    assert "Culture" not in request
+
+
 # ---------------------------------------------------------------------------
 # from_dict
 
@@ -178,6 +191,14 @@ def test_from_dict_populates_all_supported_core_fields_and_returns_self():
     assert request["PushURL"] == "https://example.com/push"
     assert request["PushURLFailure"] == "https://example.com/push-fail"
     assert request["ClientIP"] == {"Type": 0, "Address": "198.51.100.9"}
+
+
+def test_from_dict_roundtrips_culture():
+    # from_dict stores culture; it never lands in the request body.
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    builder.from_dict({"culture": "nl-NL"})
+    request = builder.build("Pay", validate=False).to_dict()
+    assert "Culture" not in request
 
 
 def test_from_dict_client_ip_dict_form_uses_address_and_type():
@@ -423,9 +444,11 @@ class _StubHttp:
     def __init__(self, response):
         self.response = response
         self.calls = []
+        self.cultures = []
 
-    def post(self, path, data):
+    def post(self, path, data, culture=None):
         self.calls.append((path, data))
+        self.cultures.append(culture)
         return self.response
 
 
@@ -465,6 +488,24 @@ def test_from_dict_roundtrips_services_selectable_by_client():
 
     request = builder.build("Pay", validate=False).to_dict()
     assert request["ServicesSelectableByClient"] == "a,b"
+
+
+def test_pay_passes_culture_to_http_client_for_header():
+    client, http = _client_returning({"Status": "ok"})
+    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
+
+    builder.culture("nl-NL").pay()
+
+    assert http.cultures[0] == "nl-NL"
+
+
+def test_pay_passes_no_culture_when_unset():
+    client, http = _client_returning({"Status": "ok"})
+    builder = populate_required_fields(_make_builder(client=client), amount=10.50)
+
+    builder.pay()
+
+    assert http.cultures[0] is None
 
 
 def test_post_transaction_returns_empty_response_when_strategy_returns_none():

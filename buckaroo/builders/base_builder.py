@@ -616,10 +616,10 @@ class BaseBuilder(ABC):
     def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Helper method to post transaction and handle response."""
         # Send to Buckaroo API. Culture (when set) rides as a request header,
-        # not a body field — the gateway only honors it in the header.
-        response = self._client.http_client.post(
-            "/json/transaction", request_data, culture=self._culture
-        )
+        # not a body field — the gateway only honors it in the header. Only
+        # passed when present so it stays a no-op for every other request.
+        extra = {"culture": self._culture} if self._culture else {}
+        response = self._client.http_client.post("/json/transaction", request_data, **extra)
 
         # Check if response is valid and convert to dict
         if response is None:

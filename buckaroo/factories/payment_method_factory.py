@@ -41,6 +41,7 @@ from buckaroo.builders.payments.multibanco_builder import MultibancoBuilder
 from buckaroo.builders.payments.mbway_builder import MBWayBuilder
 from buckaroo.builders.payments.paypal_builder import PaypalBuilder
 from buckaroo.builders.payments.paybybank_builder import PayByBankBuilder
+from buckaroo.builders.payments.payperemail_builder import PayPerEmailBuilder
 
 
 class PaymentMethodFactory(BuilderFactory):
@@ -75,6 +76,7 @@ class PaymentMethodFactory(BuilderFactory):
         "payconiq": PayconiqBuilder,
         "paypal": PaypalBuilder,
         "paybybank": PayByBankBuilder,
+        "payperemail": PayPerEmailBuilder,
         "przelewy24": Przelewy24Builder,
         "riverty": RivertyBuilder,
         "sepadirectdebit": SepaDirectDebitBuilder,

@@ -213,6 +213,27 @@ def test_client_ip_setter_returns_self_and_appears_in_request():
     assert request["ClientIP"] == {"Type": 1, "Address": "203.0.113.7"}
 
 
+def test_services_selectable_by_client_setter_returns_self_and_appears_in_request():
+    builder = populate_required_fields(make_test_builder(object()), amount=10.50)
+    assert builder.services_selectable_by_client("a,b") is builder
+    request = builder.build(validate=False).to_dict()
+    assert request["ServicesSelectableByClient"] == "a,b"
+
+
+def test_pay_sends_services_selectable_by_client_in_request_body():
+    mock, client = wire_recording_http()
+    mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "P-1"}))
+
+    builder = populate_required_fields(
+        make_test_builder(client, service_name="ideal"), amount=10.50
+    )
+    builder.services_selectable_by_client("a,b").pay(validate=False)
+
+    sent = recorded_request(mock)
+    assert sent["ServicesSelectableByClient"] == "a,b"
+    mock.assert_all_consumed()
+
+
 # ---------------------------------------------------------------------------
 # add_parameter
 

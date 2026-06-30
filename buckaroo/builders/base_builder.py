@@ -20,8 +20,10 @@ class BaseBuilder(ABC):
         self._return_url_error: Optional[str] = None
         self._return_url_reject: Optional[str] = None
         self._continue_on_incomplete: str = "1"
+        self._culture: Optional[str] = None
         self._push_url: Optional[str] = None
         self._push_url_failure: Optional[str] = None
+        self._services_selectable_by_client: Optional[str] = None
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
@@ -70,6 +72,21 @@ class BaseBuilder(ABC):
     def continue_on_incomplete(self, continue_incomplete: str) -> "BaseBuilder":
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
+        return self
+
+    def services_selectable_by_client(self, services: str) -> "BaseBuilder":
+        """Set the CSV of services the client may pick on Buckaroo's hosted page."""
+        self._services_selectable_by_client = services
+        return self
+
+    def culture(self, culture: str) -> "BaseBuilder":
+        """Set the culture (language) for the gateway request.
+
+        Sent as the ``Culture`` HTTP request header (e.g. ``nl-NL``); the
+        gateway uses it to localize templates and consumer messages. The
+        gateway ignores a ``Culture`` field placed in the request body.
+        """
+        self._culture = culture
         return self
 
     def push_url(self, url: str) -> "BaseBuilder":
@@ -215,6 +232,12 @@ class BaseBuilder(ABC):
         if "continue_on_incomplete" in data:
             self.continue_on_incomplete(data["continue_on_incomplete"])
 
+        if "services_selectable_by_client" in data:
+            self.services_selectable_by_client(data["services_selectable_by_client"])
+
+        if "culture" in data:
+            self.culture(data["culture"])
+
         if "push_url" in data:
             self.push_url(data["push_url"])
         if "push_url_failure" in data:
@@ -344,6 +367,7 @@ class BaseBuilder(ABC):
             push_url_failure=self._push_url_failure,
             client_ip=self._client_ip,
             services=service_list,
+            services_selectable_by_client=self._services_selectable_by_client,
         )
 
         return payment_request
@@ -413,6 +437,40 @@ class BaseBuilder(ABC):
             # Full refund - swap debit to credit
             request_data["AmountCredit"] = request_data["AmountDebit"]
             del request_data["AmountDebit"]
+
+        return self._post_transaction(request_data)
+
+    def pay_remainder(
+        self, original_transaction_key: Optional[str] = None, validate: bool = True
+    ) -> PaymentResponse:
+        """
+        Execute a pay-remainder transaction.
+
+        Pays the open remainder of a group transaction (e.g. after a partial
+        giftcard payment) via the PayRemainder action. The original transaction
+        key is the group transaction key that links this payment into the group.
+
+        Args:
+            original_transaction_key (str, optional): Group transaction key of the
+                partial payment. If None, read from the payload.
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The pay-remainder response
+
+        Raises:
+            ValueError: If no original transaction key is available
+        """
+        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
+        if not txn_key:
+            raise ValueError(
+                "Original transaction key is required for pay remainder "
+                "(provide as parameter or in payload)"
+            )
+
+        payment_request = self.build("PayRemainder", validate=validate)
+        request_data = payment_request.to_dict()
+        request_data["OriginalTransactionKey"] = txn_key
 
         return self._post_transaction(request_data)
 
@@ -557,8 +615,11 @@ class BaseBuilder(ABC):
 
     def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Helper method to post transaction and handle response."""
-        # Send to Buckaroo API
-        response = self._client.http_client.post("/json/transaction", request_data)
+        # Send to Buckaroo API. Culture (when set) rides as a request header,
+        # not a body field — the gateway only honors it in the header. Only
+        # passed when present so it stays a no-op for every other request.
+        extra = {"culture": self._culture} if self._culture else {}
+        response = self._client.http_client.post("/json/transaction", request_data, **extra)
 
         # Check if response is valid and convert to dict
         if response is None:

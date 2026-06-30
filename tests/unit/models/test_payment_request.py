@@ -218,6 +218,18 @@ class TestPaymentRequest:
         request.client_ip = None
         assert "ClientIP" not in request.to_dict()
 
+    def test_to_dict_includes_services_selectable_by_client_when_set(self):
+        request = _make_request(services_selectable_by_client="ideal,bancontact")
+        assert request.to_dict()["ServicesSelectableByClient"] == "ideal,bancontact"
+
+    def test_to_dict_omits_services_selectable_by_client_when_none(self):
+        result = _make_request().to_dict()
+        assert "ServicesSelectableByClient" not in result
+
+    def test_to_dict_omits_services_selectable_by_client_when_empty_string(self):
+        result = _make_request(services_selectable_by_client="").to_dict()
+        assert "ServicesSelectableByClient" not in result
+
 
 class TestServiceUnsupportedParameters:
     def test_to_dict_ignores_parameters_of_unsupported_type(self):

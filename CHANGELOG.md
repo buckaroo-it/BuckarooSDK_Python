@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 
+## [0.1.1]
+- BTI-1091 Send the culture code as the `Culture` request header
+- Add PayPerEmail builder for PaymentInvitation
+- Add pay_remainder action to the base builder
+- Add giftcard redirect mode and Intersolve refund params
+
 ## [0.1.0]
 - BA-510 Initial setup
 - BTI-9 Core SDK setup

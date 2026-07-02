@@ -25,6 +25,13 @@ class In3Builder(PaymentBuilder):
                     "description": "Shipping customer information",
                 },
                 "article": {"type": list, "required": True, "description": "IN3 articles"},
+                "route": {
+                    "type": str,
+                    "required": False,
+                    "description": (
+                        "In3 acquirer route, e.g. 'abn_b2b' for ABN-AMRO Achteraf Betalen"
+                    ),
+                },
             }
 
         return {}

@@ -5,6 +5,7 @@ from .builder_factory import BuilderFactory
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
 from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
 from buckaroo.builders.payments.bancontact_builder import BancontactBuilder
+from buckaroo.builders.payments.banking_builder import BankingBuilder
 from buckaroo.builders.payments.belfius_builder import BelfiusBuilder
 from buckaroo.builders.payments.bizum_builder import BizumBuilder
 from buckaroo.builders.payments.blik_builder import BlikBuilder
@@ -52,6 +53,7 @@ class PaymentMethodFactory(BuilderFactory):
         "alipay": AlipayBuilder,
         "applepay": ApplePayBuilder,
         "bancontact": BancontactBuilder,
+        "banking": BankingBuilder,
         "belfius": BelfiusBuilder,
         "bizum": BizumBuilder,
         "billink": BillinkBuilder,

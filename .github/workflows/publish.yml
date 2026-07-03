@@ -3,16 +3,6 @@ name: Publish
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
-    inputs:
-      target:
-        description: Target repository
-        required: true
-        default: testpypi
-        type: choice
-        options:
-          - testpypi
-          - pypi
 
 concurrency:
   group: publish-${{ github.ref }}
@@ -49,7 +39,6 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: build
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -60,20 +49,3 @@ jobs:
           path: dist/
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-
-  publish-testpypi:
-    name: Publish to TestPyPI
-    needs: build
-    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/

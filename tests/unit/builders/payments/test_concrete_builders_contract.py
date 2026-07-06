@@ -144,6 +144,7 @@ KNOWN_MIXINS: List[Type] = list(CAPABILITY_METHODS.keys())
 EXPECTED_CAPABILITIES: Dict[str, set] = {
     "creditcard": {EncryptedPayCapable, AuthorizeCaptureCapable},
     "riverty": {AuthorizeCaptureCapable},
+    "in3": {AuthorizeCaptureCapable},
     "ideal": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
     "paybybank": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
     "payconiq": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},

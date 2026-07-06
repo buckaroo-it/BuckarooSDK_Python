@@ -54,7 +54,24 @@ def test_get_allowed_service_parameters_pay_is_case_insensitive(client):
     )
 
 
-@pytest.mark.parametrize("action", ["Refund", "Capture", "Authorize", "UnknownAction"])
+def test_get_allowed_service_parameters_authorize_snapshot(client):
+    builder = In3Builder(client)
+
+    authorize = builder.get_allowed_service_parameters("Authorize")
+
+    # Authorize allows every Pay param plus the required Route parameter
+    # (In3 Authorize only exists for the ABN AMRO "Zakelijk op rekening" flow).
+    assert authorize == {
+        **builder.get_allowed_service_parameters("Pay"),
+        "route": {
+            "type": str,
+            "required": True,
+            "description": 'Financing route, e.g. "abn_b2b" for ABN AMRO business',
+        },
+    }
+
+
+@pytest.mark.parametrize("action", ["Refund", "Capture", "UnknownAction"])
 def test_get_allowed_service_parameters_non_pay_returns_empty(client, action):
     assert In3Builder(client).get_allowed_service_parameters(action) == {}
 

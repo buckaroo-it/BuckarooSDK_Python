@@ -109,9 +109,7 @@ class TestIn3Feature:
                     }
                 ],
             )
-            builder.add_parameter(
-                "shippingCustomer", [{"firstName": "John", "lastName": "Doe"}]
-            )
+            builder.add_parameter("shippingCustomer", [{"firstName": "John", "lastName": "Doe"}])
 
         Helpers.assert_action_returns_pending_with_redirect(
             buckaroo,

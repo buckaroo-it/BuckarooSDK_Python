@@ -26,6 +26,47 @@ class TestIn3Feature:
             },
         )
 
+    def test_in3_pay_with_company_and_coc_flows_through_billing_customer(
+        self, buckaroo, mock_strategy
+    ):
+        """Optional B2B fields CompanyName and CocNumber (BTI-715) ride along in
+        the billingCustomer group on the regular In3 Pay flow, reaching the wire
+        as GroupType=Billingcustomer, GroupID=1.
+        """
+        Helpers.assert_pay_returns_pending_with_redirect(
+            buckaroo,
+            mock_strategy,
+            method="in3",
+            invoice="INV-IN3-005",
+            payload_overrides={"amount": 25.00, "description": "Test in3 B2B pay"},
+            service_params={
+                "article": [
+                    {"description": "Widget", "quantity": "2", "GrossUnitPrice": "12.50"},
+                ],
+                "billingCustomer": [
+                    {
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "CompanyName": "Acme B.V.",
+                        "CocNumber": "12345678",
+                    },
+                ],
+                "shippingCustomer": [
+                    {"firstName": "John", "lastName": "Doe"},
+                ],
+            },
+        )
+
+        billing = {
+            param["Name"]: param
+            for param in recorded_service_parameters(mock_strategy)
+            if param["GroupType"] == "Billingcustomer"
+        }
+        assert billing["Companyname"]["Value"] == "Acme B.V."
+        assert billing["Cocnumber"]["Value"] == "12345678"
+        assert billing["Companyname"]["GroupID"] == "1"
+        assert billing["Cocnumber"]["GroupID"] == "1"
+
     def test_in3_authorize_returns_pending_with_redirect(self, buckaroo, mock_strategy):
         def add_service_params(builder):
             builder.add_parameter("route", "AbnB2b")

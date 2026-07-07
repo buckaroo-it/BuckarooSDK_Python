@@ -31,6 +31,13 @@ def demo_pay() -> None:
 
     try:
         app = Buckaroo.from_env()
+
+        # CompanyName and CocNumber are optional billingCustomer fields for B2B
+        # orders. They ride along in the billingCustomer group; omit them for
+        # regular consumer payments.
+        billing = _customer()
+        billing.update({"CompanyName": "Acme B.V.", "CocNumber": "12345678"})
+
         response = app.payments.create_payment(
             "in3",
             {
@@ -46,7 +53,7 @@ def demo_pay() -> None:
                     "article": [
                         {"Description": "Widget", "Quantity": "2", "GrossUnitPrice": "125.00"},
                     ],
-                    "billingCustomer": [_customer()],
+                    "billingCustomer": [billing],
                     "shippingCustomer": [_customer()],
                 },
             },

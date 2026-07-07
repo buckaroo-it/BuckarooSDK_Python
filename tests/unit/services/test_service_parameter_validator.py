@@ -218,26 +218,24 @@ def test_validate_required_parameters_raises_required_missing_for_single_gap():
 
 def test_validate_required_parameters_raises_validation_error_for_multiple_gaps():
     validator = _validator_for(KlarnaBuilder)
-    # Klarna Reserve requires billingCustomer, shippingCustomer, article — all missing.
+    # Klarna Reserve requires article and operatingCountry — both missing.
     with pytest.raises(ParameterValidationError) as exc:
         validator.validate_required_parameters([], action="Reserve")
     # Multiple missing -> plain ParameterValidationError (not Required...),
     # and the message lists each missing name.
     assert not isinstance(exc.value, RequiredParameterMissingError)
     msg = str(exc.value)
-    assert "billingCustomer" in msg
-    assert "shippingCustomer" in msg
     assert "article" in msg
+    assert "operatingCountry" in msg
 
 
 def test_validate_required_parameters_accepts_grouped_group_type_as_satisfying_requirement():
     validator = _validator_for(KlarnaBuilder)
     params = [
-        Parameter(name="FirstName", value="Jane", group_type="billingCustomer"),
-        Parameter(name="FirstName", value="John", group_type="shippingCustomer"),
         Parameter(name="Identifier", value="A1", group_type="article"),
+        Parameter(name="OperatingCountry", value="NL"),
     ]
-    # All three required group_types are present via grouped parameters.
+    # The grouped ``article`` requirement plus the plain operatingCountry are met.
     validator.validate_required_parameters(params, action="Reserve")
 
 

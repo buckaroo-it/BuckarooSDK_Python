@@ -11,6 +11,7 @@
 - [Requirements](#requirements)
 - [Pip Installation](#pip-installation)
 - [Example](#example)
+- [iDIN](#idin)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -92,6 +93,25 @@ response = (
 ```
 
 Find our full documentation online on [docs.buckaroo.io](https://docs.buckaroo.io).
+
+### iDIN
+
+iDIN lets Dutch banks confirm a consumer's identity on your behalf. It carries no amount or currency — only the return URLs plus the `issuerId` (BIC code of the consumer's bank) service parameter. Three actions are available: `identify()`, `verify()` (age 18+), and `login()`.
+
+```python
+response = payments.create_payment("idin", {
+    "return_url": "https://www.buckaroo.nl",
+    "return_url_cancel": "https://www.buckaroo.nl/cancel",
+    "return_url_error": "https://www.buckaroo.nl/error",
+    "return_url_reject": "https://www.buckaroo.nl/reject",
+    "service_parameters": {"issuerId": "BANKNL2Y"},  # sandbox issuer
+}).identify()
+
+print("key:", response.key)
+print("redirect:", response.get_redirect_url())
+```
+
+See [`examples/idin.py`](examples/idin.py) for a runnable demo of all three actions.
 
 ### Contribute
 

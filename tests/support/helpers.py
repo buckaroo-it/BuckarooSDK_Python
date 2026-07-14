@@ -235,6 +235,10 @@ class Helpers:
         assert response.status.code.code == STATUS_SUCCESS
         assert response.key == response_body["Key"]
         _assert_recorded_action(mock_strategy, "instantRefund")
+        sent = json.loads(mock_strategy.calls[-1]["data"])
+        assert sent["OriginalTransactionKey"] == original_transaction_key
+        assert sent["AmountCredit"] == 10.00
+        assert "AmountDebit" not in sent
         return response
 
     @staticmethod

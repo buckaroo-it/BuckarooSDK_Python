@@ -12,6 +12,7 @@
 - [Pip Installation](#pip-installation)
 - [Example](#example)
 - [iDIN](#idin)
+- [Instant Refunds](#instant-refunds)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -112,6 +113,24 @@ print("redirect:", response.get_redirect_url())
 ```
 
 See [`examples/idin.py`](examples/idin.py) for a runnable demo of all three actions.
+
+### Instant Refunds
+
+Instant refunds send money back to the shopper immediately instead of via the regular batch refund process. They are processed as an instant payment rather than a standard refund, and are supported for iDEAL and Payconiq via `instantRefund()`. Pass the `original_transaction_key` of a settled payment; `refund_amount` is optional — omit it for a full refund.
+
+```python
+response = payments.create_payment("ideal", {
+    "currency": "EUR",
+    "description": "ideal instant refund demo",
+    "invoice": "IDEAL-REFUND-DEMO-001",
+    "original_transaction_key": "ORIGINAL-TRANSACTION-KEY",
+    "refund_amount": 12.34,  # optional; omit for a full refund
+}).instantRefund()
+
+print("key:", response.key)
+```
+
+See [`examples/instant_refund.py`](examples/instant_refund.py) for a runnable demo covering both iDEAL and Payconiq.
 
 ### Contribute
 

@@ -13,6 +13,7 @@
 - [Example](#example)
 - [iDIN](#idin)
 - [Instant Refunds](#instant-refunds)
+- [eMandate](#emandate)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -131,6 +132,61 @@ print("key:", response.key)
 ```
 
 See [`examples/instant_refund.py`](examples/instant_refund.py) for a runnable demo covering both iDEAL and Payconiq.
+
+### eMandate
+
+eMandate is a DataRequest-based solution for managing SEPA direct debit mandates, reached through
+`app.solutions` rather than `app.payments`. It comes in two variants that share the same five
+actions — only the service name differs:
+
+- `emandate` — retail (B2C)
+- `emandateb2b` — business (B2B)
+
+```python
+from buckaroo.app import Buckaroo
+
+app = Buckaroo.from_env()
+
+# List available issuers (GetIssuerList — no parameters)
+response = app.solutions.create_solution("emandate").issuer_list()
+
+# Create a mandate (CreateMandate — debtorReference is required)
+response = app.solutions.create_solution(
+    "emandate",
+    {
+        "service_parameters": {
+            "debtorReference": "DEBTOR-001",
+            "debtorBankId": "ABNANL2A",
+            "sequenceType": "1",
+            "purchaseId": "PUR-001",
+            "language": "nl",
+        }
+    },
+).create_mandate()
+mandate_id = response.get_service_parameter("MandateId")
+
+# Look up a mandate's status (GetStatus — mandateId is required)
+response = app.solutions.create_solution(
+    "emandate", {"service_parameters": {"mandateId": mandate_id}}
+).status()
+
+# Modify a mandate (ModifyMandate — mandateId is required)
+response = app.solutions.create_solution(
+    "emandate",
+    {"service_parameters": {"mandateId": mandate_id, "maxAmount": "1000.00"}},
+).modify_mandate()
+
+# Cancel a mandate (CancelMandate — mandateId is required)
+response = app.solutions.create_solution(
+    "emandate",
+    {"service_parameters": {"mandateId": mandate_id, "purchaseId": "PUR-001"}},
+).cancel_mandate()
+```
+
+The B2B variant exposes the same five methods — swap `"emandate"` for `"emandateb2b"`.
+
+See [`examples/emandate.py`](examples/emandate.py) for a runnable demo of all five actions
+against both the B2C and B2B services.
 
 ### Contribute
 

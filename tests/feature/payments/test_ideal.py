@@ -1,5 +1,7 @@
+import pytest
+
 from tests.support.mock_request import BuckarooMockRequest
-from tests.support.recording_mock import recorded_action
+from tests.support.recording_mock import recorded_action, recorded_request
 from tests.support.helpers import Helpers
 
 
@@ -86,6 +88,20 @@ class TestIdealFeature:
         ).instantRefund()
 
         assert recorded_action(recording_mock) == "instantRefund"
+        request = recorded_request(recording_mock)
+        assert request["OriginalTransactionKey"] == "ABC123"
+        assert request["AmountCredit"] == 10.00
+        assert "AmountDebit" not in request
+
+    def test_ideal_instant_refund_raises_without_original_transaction_key(
+        self, recording_buckaroo
+    ):
+        """A missing ``original_transaction_key`` must fail fast, matching ``refund()``."""
+        with pytest.raises(ValueError, match="Original transaction key is required"):
+            recording_buckaroo.payments.create_payment(
+                "ideal",
+                Helpers.standard_payload(invoice="INV-IDEAL-WIRE-IREFUND-NOKEY"),
+            ).instantRefund()
 
     def test_ideal_fast_checkout_sends_action_payfastcheckout_on_the_wire(
         self, recording_buckaroo, recording_mock

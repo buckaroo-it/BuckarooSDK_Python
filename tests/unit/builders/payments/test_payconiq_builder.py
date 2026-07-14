@@ -15,6 +15,7 @@ from buckaroo.builders.payments.capabilities.bank_transfer_capabilities import (
 )
 from tests.support.mock_request import BuckarooMockRequest
 from tests.support.builders import populate_required_fields
+from tests.support.recording_mock import recorded_action, recorded_request
 
 
 def test_construction_with_client_succeeds(client):
@@ -135,8 +136,36 @@ def test_payconiq_instantRefund_works(client, mock_strategy):
         )
     )
     builder = populate_required_fields(PayconiqBuilder(client))
-    response = builder.instantRefund(validate=False)
+    response = builder.instantRefund("ABC123", validate=False)
     assert response is not None
+
+
+def test_payconiq_instantRefund_sends_original_transaction_key_and_amount_credit_on_wire(
+    client, mock_strategy
+):
+    """InstantRefundCapable (inherited via BankTransferCapabilities) must put
+    OriginalTransactionKey + AmountCredit on the wire for Payconiq, action instantRefund."""
+    mock_strategy.queue(
+        BuckarooMockRequest.json(
+            "POST", "*/json/transaction*", {"Key": "pcq-ir-2", "Status": {"Code": {"Code": 190}}}
+        )
+    )
+    builder = populate_required_fields(PayconiqBuilder(client))
+
+    builder.instantRefund("ABC123", validate=False)
+
+    assert recorded_action(mock_strategy) == "instantRefund"
+    request = recorded_request(mock_strategy)
+    assert request["OriginalTransactionKey"] == "ABC123"
+    assert request["AmountCredit"] == 10.0
+    assert "AmountDebit" not in request
+
+
+def test_payconiq_instantRefund_raises_without_original_transaction_key(client, mock_strategy):
+    builder = populate_required_fields(PayconiqBuilder(client))
+
+    with pytest.raises(ValueError, match="Original transaction key is required"):
+        builder.instantRefund(validate=False)
 
 
 def test_pay_end_to_end(client, mock_strategy):

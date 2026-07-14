@@ -93,9 +93,7 @@ class TestIdealFeature:
         assert request["AmountCredit"] == 10.00
         assert "AmountDebit" not in request
 
-    def test_ideal_instant_refund_raises_without_original_transaction_key(
-        self, recording_buckaroo
-    ):
+    def test_ideal_instant_refund_raises_without_original_transaction_key(self, recording_buckaroo):
         """A missing ``original_transaction_key`` must fail fast, matching ``refund()``."""
         with pytest.raises(ValueError, match="Original transaction key is required"):
             recording_buckaroo.payments.create_payment(

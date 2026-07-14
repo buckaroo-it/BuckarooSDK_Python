@@ -137,9 +137,7 @@ class TestPayconiqFeature:
         response_body = Helpers.failed_response(
             "Refund rejected",
             overrides={
-                "Services": [
-                    {"Name": "payconiq", "Action": "InstantRefund", "Parameters": []}
-                ],
+                "Services": [{"Name": "payconiq", "Action": "InstantRefund", "Parameters": []}],
                 "ServiceCode": "payconiq",
                 "AmountCredit": None,
                 "AmountDebit": 10.00,

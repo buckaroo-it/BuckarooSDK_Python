@@ -1,4 +1,5 @@
 import os
+import re
 from setuptools import setup, find_packages
 
 
@@ -12,7 +13,7 @@ with open(os.path.join(ROOT_DIR, "buckaroo", "_version.py"), encoding="utf-8") a
 if not version_match:
     raise RuntimeError("Cannot find VERSION in buckaroo/_version.py")
 version_contents = {"VERSION": version_match.group(1)}
-    
+
 setup(
     name="buckaroo-sdk",
     version=version_contents["VERSION"],

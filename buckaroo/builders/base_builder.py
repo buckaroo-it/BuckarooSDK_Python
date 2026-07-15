@@ -42,47 +42,47 @@ class BaseBuilder(ABC):
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
         self._validator = ServiceParameterValidator(self)
-    
+
     def currency(self, currency: str) -> Self:
         """Set the currency for the payment."""
         self._currency = currency
         return self
-    
+
     def amount(self, amount: float) -> Self:
         """Set the amount for the payment."""
         self._amount_debit = amount
         return self
-    
+
     def description(self, description: str) -> Self:
         """Set the description for the payment."""
         self._description = description
         return self
-    
+
     def invoice(self, invoice: str) -> Self:
         """Set the invoice number for the payment."""
         self._invoice = invoice
         return self
-    
+
     def return_url(self, url: str) -> Self:
         """Set the return URL for successful payment."""
         self._return_url = url
         return self
-    
+
     def return_url_cancel(self, url: str) -> Self:
         """Set the return URL for cancelled payment."""
         self._return_url_cancel = url
         return self
-    
+
     def return_url_error(self, url: str) -> Self:
         """Set the return URL for payment error."""
         self._return_url_error = url
         return self
-    
+
     def return_url_reject(self, url: str) -> Self:
         """Set the return URL for rejected payment."""
         self._return_url_reject = url
         return self
-    
+
     def continue_on_incomplete(self, continue_incomplete: str) -> Self:
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
@@ -117,7 +117,7 @@ class BaseBuilder(ABC):
         """Set the client IP information."""
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
         return self
-    
+
     def add_parameter(self, key: str, value: Any, group_type: Optional[str] = None, group_id: Optional[str] = None) -> Self:
         """Add a custom parameter to the service.
 
@@ -192,7 +192,7 @@ class BaseBuilder(ABC):
         self._service_parameters = self._validator.validate_all_parameters(
             self._service_parameters, action, strict=strict
         )
-    
+
     def from_dict(self, data: Dict[str, Any]) -> Self:
         """
         Populate the builder from a dictionary of parameters.
@@ -333,7 +333,7 @@ class BaseBuilder(ABC):
             raise ValueError(
                 f"Missing required fields: {', '.join(missing_fields)}"
             )
-    
+
     def build(self, action: str = "Pay", validate: bool = True, strict_validation: bool = False) -> PaymentRequest:
         """Build the payment request.
 
@@ -644,3 +644,6 @@ class BaseBuilder(ABC):
         # passed when present so it stays a no-op for every other request.
         extra = {"culture": self._culture} if self._culture else {}
         response = self._client.http_client.post("/json/transaction", request_data, **extra)
+        if response is None:
+            return PaymentResponse({})
+        return PaymentResponse(response.to_dict())

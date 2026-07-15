@@ -1,8 +1,7 @@
 
 import logging
-from typing import Optional, Union
+from typing import Optional
 from .exceptions._authentication_error import AuthenticationError
-from .exceptions._buckaroo_error import BuckarooError
 from .config.buckaroo_config import BuckarooConfig, create_config_from_mode
 from .http.client import BuckarooHttpClient
 

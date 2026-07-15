@@ -502,7 +502,7 @@ def create_logger_from_env() -> BuckarooLoggingObserver:
 
     dest_str = os.getenv("BUCKAROO_LOG_DESTINATION", "both").lower()
     destination = LogDestination(dest_str) if dest_str in [d.value for d in LogDestination] else LogDestination.BOTH
-    
+
     log_file = os.getenv("BUCKAROO_LOG_FILE", "buckaroo_sdk.log")
     mask_sensitive = os.getenv("BUCKAROO_LOG_MASK_SENSITIVE", "true").lower() == "true"
 

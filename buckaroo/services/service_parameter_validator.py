@@ -22,7 +22,7 @@ class ServiceParameterValidator:
         """
         self._get_allowed_params = builder.get_allowed_service_parameters
         self._get_service_name = builder.get_service_name
-    
+
     def normalize_parameter_name(self, param_name: str) -> str:
         """Normalize parameter name to lowercase and remove underscores for matching.
 
@@ -150,7 +150,7 @@ class ServiceParameterValidator:
             RequiredParameterMissingError: If any required parameter is missing
         """
         allowed_params = self._get_allowed_params(action)
-        
+
         # Create a normalized lookup for provided parameters
         # Include both regular parameters and group_types
         provided_params = {}
@@ -207,7 +207,7 @@ class ServiceParameterValidator:
         """
         if not parameters:
             return []
-            
+
         allowed_params = self._get_allowed_params(action)
 
         # Create normalized lookup for allowed parameters
@@ -261,10 +261,10 @@ class ServiceParameterValidator:
                         invalid_params.append(f"{param.name}: {str(e)}")
                 else:
                     invalid_params.append(f"{param.name}: not allowed for {self._get_service_name()} {action} action")
-        
+
         if invalid_params:
             logging.warning("Filtered out invalid service parameters for %s action: %s", action, invalid_params)
-        
+
         return valid_parameters
 
     def validate_all_parameters(
@@ -294,7 +294,7 @@ class ServiceParameterValidator:
                 normalized_param_name = self.normalize_parameter_name(param.name)
                 allowed_params = self._get_allowed_params(action)
                 normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
-                
+
                 if normalized_param_name in normalized_allowed:
                     allowed_param_name = normalized_allowed[normalized_param_name]
                     param_value = self.normalize_parameter_value(param.value)
@@ -325,7 +325,7 @@ class ServiceParameterValidator:
             Dict[str, Any]: Parameter information including types and requirements
         """
         return self._get_allowed_params(action)
-    
+
     def is_parameter_allowed(self, param_name: str, action: str = "Pay") -> bool:
         """
         Check if a parameter is allowed for the given action.

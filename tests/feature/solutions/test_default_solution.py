@@ -1,4 +1,3 @@
-import pytest
 
 from tests.support.helpers import Helpers
 

@@ -23,7 +23,7 @@ class CurlStrategy(HttpStrategy):
 
     def configure(self, **kwargs) -> None:
         self._apply_defaults(**kwargs)
-    
+
     def request(
         self,
         method: str,
@@ -90,7 +90,7 @@ class CurlStrategy(HttpStrategy):
                 last_exception = Exception(f"Request failed: {str(e)}")
                 if attempt == self._retry_attempts - 1:
                     raise last_exception
-    
+
     def _build_curl_command(
         self,
         method: str,

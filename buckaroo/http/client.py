@@ -71,7 +71,7 @@ class BuckarooHttpClient:
             timestamp = str(int(time.time()))
 
         nonce = str(uuid.uuid4())
-    
+
         # Process content following C# implementation pattern.
         # MD5 is mandated by the Buckaroo HMAC authentication specification;
         # the content digest is an input component to HMAC-SHA256 and is not

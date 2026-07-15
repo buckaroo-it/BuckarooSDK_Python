@@ -6,7 +6,6 @@ This module provides response objects for payment transactions.
 
 from typing import Any, Dict, Iterator, List, Optional
 from dataclasses import dataclass
-from datetime import datetime
 from .payment_request import Parameter
 
 

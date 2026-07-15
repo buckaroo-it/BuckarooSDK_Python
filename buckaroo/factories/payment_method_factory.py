@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Any, Dict, Type
 import logging
 
 from .builder_factory import BuilderFactory

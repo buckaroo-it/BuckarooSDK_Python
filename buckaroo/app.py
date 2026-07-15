@@ -15,8 +15,6 @@ from .services.solution_service import SolutionService
 from buckaroo._buckaroo_client import BuckarooClient
 from buckaroo.observers import (
     BuckarooLoggingObserver,
-    create_logger,
-    create_logger_from_env,
     LogLevel,
     LogDestination,
     LogConfig,
@@ -89,7 +87,7 @@ class Buckaroo:
         >>> payment = app.create_ideal_payment(amount=25.50, currency="EUR")
         >>> response = app.execute_payment(payment)
     """
-    
+
     def __init__(self, config: Optional[BuckarooConfig] = None):
         """
         Initialize Buckaroo Application.
@@ -109,7 +107,7 @@ class Buckaroo:
     def from_env(cls) -> "Buckaroo":
         """Create Buckaroo app from environment variables."""
         return cls(BuckarooConfig.from_env())
-    
+
     @classmethod
     def quick_setup(
         cls, store_key: str, secret_key: str, mode: str = "test", log_to_stdout: bool = True

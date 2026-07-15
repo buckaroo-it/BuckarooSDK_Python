@@ -384,32 +384,6 @@ class BaseBuilder(ABC):
 
         return payment_request
 
-    def pay(self, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
-        """
-        Execute the payment operation.
-
-        Args:
-            validate (bool): Whether to validate service parameters before building
-            strict_validation (bool): If True, throws exceptions for missing required parameters
-
-        Returns:
-            PaymentResponse: Structured payment response object
-
-        Raises:
-            ValueError: If required fields are missing
-            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
-            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
-            AuthenticationError: If authentication fails
-            BuckarooApiError: If API returns an error
-        """
-        # Build the payment request
-        payment_request = self.build("Pay", validate=validate, strict_validation=strict_validation)
-
-        # Convert to dictionary for API
-        request_data = payment_request.to_dict()
-
-        return self._post_transaction(request_data)
-
     def _build_refund_request_data(self, action: str, validate: bool = True) -> Dict[str, Any]:
         """
         Build the wire request body shared by refund-style actions.
@@ -457,56 +431,6 @@ class BaseBuilder(ABC):
 
         return request_data
 
-    def refund(self, validate: bool = True) -> PaymentResponse:
-        """
-        Execute a refund transaction.
-
-        Args:
-            validate (bool): Whether to validate service parameters before building
-
-        Returns:
-            PaymentResponse: The refund response
-
-        Raises:
-            ValueError: If required fields are missing
-        """
-        request_data = self._build_refund_request_data("Refund", validate)
-        return self._post_transaction(request_data)
-
-    def pay_remainder(
-        self, original_transaction_key: Optional[str] = None, validate: bool = True
-    ) -> PaymentResponse:
-        """
-        Execute a pay-remainder transaction.
-
-        Pays the open remainder of a group transaction (e.g. after a partial
-        giftcard payment) via the PayRemainder action. The original transaction
-        key is the group transaction key that links this payment into the group.
-
-        Args:
-            original_transaction_key (str, optional): Group transaction key of the
-                partial payment. If None, read from the payload.
-            validate (bool): Whether to validate service parameters before building
-
-        Returns:
-            PaymentResponse: The pay-remainder response
-
-        Raises:
-            ValueError: If no original transaction key is available
-        """
-        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
-        if not txn_key:
-            raise ValueError(
-                "Original transaction key is required for pay remainder "
-                "(provide as parameter or in payload)"
-            )
-
-        payment_request = self.build("PayRemainder", validate=validate)
-        request_data = payment_request.to_dict()
-        request_data["OriginalTransactionKey"] = txn_key
-
-        return self._post_transaction(request_data)
-
     def capture(
         self,
         original_transaction_key: Optional[str] = None,
@@ -552,86 +476,6 @@ class BaseBuilder(ABC):
             request_data["AmountDebit"] = capture_amount
 
         return self._post_transaction(request_data)
-
-    def cancel(self, original_transaction_key: Optional[str] = None) -> PaymentResponse:
-        """
-        Cancel a pending or authorized transaction.
-
-        Args:
-            original_transaction_key (str, optional): The transaction key to cancel.
-                                                     If None, will try to get from payload.
-
-        Returns:
-            PaymentResponse: The cancellation response
-        """
-        # Get transaction key from parameter or payload
-        txn_key = (
-            original_transaction_key
-            or self._payload.get("cancel_key")
-            or self._payload.get("original_transaction_key")
-        )
-        if not txn_key:
-            raise ValueError(
-                "Transaction key is required for cancellations (provide as parameter or in payload)"
-            )
-
-        # Build cancel request; validate=False because cancel only needs
-        # OriginalTransactionKey, not the full Pay required-field set.
-        payment_request = self.build("Cancel", validate=False)
-        request_data = payment_request.to_dict()
-
-        # Set cancellation parameters
-        request_data["OriginalTransactionKey"] = txn_key
-        # Remove amounts for cancellation
-        request_data.pop("AmountDebit", None)
-        request_data.pop("AmountCredit", None)
-
-        return self._post_transaction(request_data)
-
-    def partial_refund(
-        self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None
-    ) -> PaymentResponse:
-        """
-        Execute a partial refund transaction.
-
-        Args:
-            original_transaction_key (str, optional): The transaction key of the original payment.
-                                                     If None, will try to get from payload.
-            amount (float, optional): Amount to refund. If None, will try to get from payload.
-
-        Returns:
-            PaymentResponse: The partial refund response
-
-        Raises:
-            ValueError: If amount is not provided or invalid
-        """
-        refund_amount = (
-            amount
-            or self._payload.get("refund_amount")
-            or self._payload.get("partial_refund_amount")
-        )
-        if not refund_amount or refund_amount <= 0:
-            raise ValueError(
-                "Partial refund amount must be greater than 0 (provide as parameter or in payload)"
-            )
-
-        _MISSING = object()
-        prev_key = self._payload.get("original_transaction_key", _MISSING)
-        prev_amount = self._payload.get("refund_amount", _MISSING)
-        try:
-            if original_transaction_key:
-                self._payload["original_transaction_key"] = original_transaction_key
-            self._payload["refund_amount"] = refund_amount
-            return self.refund()
-        finally:
-            if prev_key is _MISSING:
-                self._payload.pop("original_transaction_key", None)
-            else:
-                self._payload["original_transaction_key"] = prev_key
-            if prev_amount is _MISSING:
-                self._payload.pop("refund_amount", None)
-            else:
-                self._payload["refund_amount"] = prev_amount
 
     def _post_data_request(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Post a data request to the Buckaroo API."""

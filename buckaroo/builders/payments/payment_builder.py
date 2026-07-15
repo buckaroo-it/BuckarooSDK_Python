@@ -9,9 +9,11 @@ from ...models.payment_response import PaymentResponse
 class PaymentBuilder(BaseBuilder):
     """Base class for all payment method builders.
 
-    Adds payment lifecycle methods (pay, refund, capture, cancel, execute_action)
-    that are specific to payment flows.  ``SolutionBuilder`` inherits from
-    ``BaseBuilder`` directly and does NOT get these methods.
+    Adds payment lifecycle methods (pay, refund, partial_refund, pay_remainder,
+    cancel, execute_action) that are specific to payment flows.
+    ``SolutionBuilder`` inherits from ``BaseBuilder`` directly and does NOT get
+    these methods.  ``capture`` is shared by every builder and lives on
+    ``BaseBuilder``.
     """
 
     def pay(self, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
@@ -71,28 +73,28 @@ class PaymentBuilder(BaseBuilder):
             else:
                 self._payload['refund_amount'] = saved_amount
 
-    def capture(
-        self,
-        original_transaction_key: Optional[str] = None,
-        amount: Optional[float] = None,
-        validate: bool = True,
+    def pay_remainder(
+        self, original_transaction_key: Optional[str] = None, validate: bool = True
     ) -> PaymentResponse:
-        """Capture a previously authorized payment."""
-        auth_key = (
-            original_transaction_key
-            or self._payload.get('authorization_key')
-            or self._payload.get('original_transaction_key')
-        )
-        if not auth_key:
-            raise ValueError("Authorization key is required for capture")
+        """Pay the open remainder of a group transaction.
 
-        capture_amount = amount if amount is not None else self._payload.get('capture_amount')
-        request_data = self._build_keyed_request('Capture', auth_key, validate=validate)
+        Uses the PayRemainder action (e.g. after a partial giftcard payment).
+        The original transaction key is the group transaction key that links
+        this payment into the group; read from the payload when not supplied.
+        """
+        txn_key = original_transaction_key or self._payload.get('original_transaction_key')
+        if not txn_key:
+            raise ValueError(
+                "Original transaction key is required for pay remainder "
+                "(provide as parameter or in payload)"
+            )
 
-        if capture_amount is not None:
-            request_data['AmountDebit'] = capture_amount
-
+        request_data = self._build_keyed_request('PayRemainder', txn_key, validate=validate)
         return self._post_transaction(request_data)
+
+    # ``capture`` is intentionally not defined here: it lives on
+    # :class:`BaseBuilder` with the full ``original_transaction_key`` / ``amount``
+    # signature and is shared by every builder.
 
     def cancel(self, original_transaction_key: Optional[str] = None) -> PaymentResponse:
         """Cancel a pending or authorized transaction."""

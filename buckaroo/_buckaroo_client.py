@@ -1,3 +1,5 @@
+
+import logging
 from typing import Optional
 from .exceptions._authentication_error import AuthenticationError
 from .config.buckaroo_config import BuckarooConfig, create_config_from_mode
@@ -118,7 +120,13 @@ class BuckarooClient(object):
         try:
             response = self.http_client.get("/json/Transaction/Specification/ideal")
             return response.success
-        except Exception:
+        except Exception as e:
+            logging.warning(
+                "confirm_credential: unexpected error during credential check "
+                "(network issue or unexpected API response): %s",
+                e,
+                exc_info=True,
+            )
             return False
 
     def get_config_info(self) -> dict:

@@ -6,51 +6,36 @@ This module provides response objects for payment transactions.
 
 from typing import Any, Dict, Iterator, List, Optional
 from dataclasses import dataclass
-from enum import IntEnum
+from .payment_request import Parameter
 
 
-class BuckarooStatusCode(IntEnum):
-    """Canonical Buckaroo transaction status codes."""
-
+# Named constants for Buckaroo transaction status codes
+class BuckarooStatusCode:
+    """Named constants for Buckaroo transaction status codes."""
+    # Success
     SUCCESS = 190
-    FAILED = 490
-    VALIDATION_FAILURE = 491
-    TECHNICAL_FAILURE = 492
-    REJECTED = 690
-    REJECTED_BY_USER = 691
-    REJECTED_TECHNICAL = 692
+
+    # Pending
     PENDING_INPUT = 790
     PENDING_PROCESSING = 791
-    PENDING_CONSUMER = 792
-    AWAITING_TRANSFER = 793
-    CANCELLED_BY_USER = 890
-    CANCELLED_BY_MERCHANT = 891
+    AWAITING_CONSUMER = 792
+    ON_HOLD = 793
 
+    # Failed
+    PAYMENT_FAILED = 490
+    VALIDATION_FAILED = 491
+    TECHNICAL_ERROR = 492
+    REJECTED = 690
+    CANCELLED_BY_MERCHANT = 691
+    CANCELLED_BY_CONSUMER = 692
 
-_PENDING_CODES = frozenset(
-    {
-        BuckarooStatusCode.PENDING_INPUT,
-        BuckarooStatusCode.PENDING_PROCESSING,
-        BuckarooStatusCode.PENDING_CONSUMER,
-        BuckarooStatusCode.AWAITING_TRANSFER,
-    }
-)
-_CANCELLED_CODES = frozenset(
-    {
-        BuckarooStatusCode.CANCELLED_BY_USER,
-        BuckarooStatusCode.CANCELLED_BY_MERCHANT,
-    }
-)
-_FAILED_CODES = frozenset(
-    {
-        BuckarooStatusCode.FAILED,
-        BuckarooStatusCode.VALIDATION_FAILURE,
-        BuckarooStatusCode.TECHNICAL_FAILURE,
-        BuckarooStatusCode.REJECTED,
-        BuckarooStatusCode.REJECTED_BY_USER,
-        BuckarooStatusCode.REJECTED_TECHNICAL,
-    }
-)
+    # Cancelled
+    CANCELLED = 890
+    CANCELLED_BY_CONSUMER_LATE = 891
+
+    PENDING_CODES = {PENDING_INPUT, PENDING_PROCESSING, AWAITING_CONSUMER, ON_HOLD}
+    FAILED_CODES = {PAYMENT_FAILED, VALIDATION_FAILED, TECHNICAL_ERROR, REJECTED}
+    CANCELLED_CODES = {CANCELLED, CANCELLED_BY_CONSUMER_LATE, CANCELLED_BY_MERCHANT, CANCELLED_BY_CONSUMER}
 
 
 @dataclass
@@ -65,18 +50,14 @@ class StatusCode:
         """Create StatusCode from dictionary."""
         if data is None:
             data = {}
-
-        # Handle nested Code structure: {"Code": 490, "Description": "Failed"}
-        if isinstance(data, dict) and "Code" in data and "Description" in data:
-            return cls(code=data.get("Code", 0), description=data.get("Description", ""))
-        # Handle simple structure: {"Code": 490} or just integer
-        elif isinstance(data, dict):
-            return cls(code=data.get("Code", 0), description=data.get("Description", ""))
-        # Handle direct integer
-        elif isinstance(data, int):
-            return cls(code=data, description="")
-        else:
-            return cls(code=0, description="")
+        if isinstance(data, int):
+            return cls(code=data, description='')
+        if isinstance(data, dict):
+            return cls(
+                code=data.get('Code', 0),
+                description=data.get('Description', '')
+            )
+        return cls(code=0, description='')
 
 
 @dataclass
@@ -129,19 +110,8 @@ class RequiredAction:
         )
 
 
-@dataclass
-class ServiceParameter:
-    """Represents a service parameter."""
-
-    name: str
-    value: Any
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ServiceParameter":
-        """Create ServiceParameter from dictionary."""
-        if data is None:
-            data = {}
-        return cls(name=data.get("Name", ""), value=data.get("Value"))
+# Backward-compatible alias: ServiceParameter was the old name for Parameter in responses
+ServiceParameter = Parameter
 
 
 @dataclass
@@ -150,7 +120,7 @@ class Service:
 
     name: str
     action: Optional[str]
-    parameters: List[ServiceParameter]
+    parameters: List[Parameter]
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Service":
@@ -159,10 +129,14 @@ class Service:
             data = {}
 
         parameters = []
-        if "Parameters" in data and data["Parameters"]:
-            parameters = [ServiceParameter.from_dict(param) for param in data["Parameters"]]
+        if 'Parameters' in data and data['Parameters']:
+            parameters = [Parameter.from_dict(param) for param in data['Parameters']]
 
-        return cls(name=data.get("Name", ""), action=data.get("Action"), parameters=parameters)
+        return cls(
+            name=data.get('Name', ''),
+            action=data.get('Action'),
+            parameters=parameters
+        )
 
 
 class PaymentResponse:
@@ -248,7 +222,7 @@ class PaymentResponse:
     def is_pending(self) -> bool:
         """Check if the payment is pending."""
         if self.status and self.status.code:
-            return self.status.code.code in _PENDING_CODES
+            return self.status.code.code in BuckarooStatusCode.PENDING_CODES
         return False
 
     def is_successful(self) -> bool:
@@ -258,13 +232,13 @@ class PaymentResponse:
     def is_cancelled(self) -> bool:
         """Check if the payment was cancelled."""
         if self.status and self.status.code:
-            return self.status.code.code in _CANCELLED_CODES
+            return self.status.code.code in BuckarooStatusCode.CANCELLED_CODES
         return False
 
     def is_failed(self) -> bool:
         """Check if the payment failed."""
         if self.status and self.status.code:
-            return self.status.code.code in _FAILED_CODES
+            return self.status.code.code in BuckarooStatusCode.FAILED_CODES
         return False
 
     def requires_action(self) -> bool:

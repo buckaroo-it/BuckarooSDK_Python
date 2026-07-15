@@ -9,16 +9,6 @@ class KlarnaKPBuilder(PaymentBuilder):
     """Builder for Klarna KP payments with bank transfer capabilities."""
 
     def required_fields(self, action: str = "Pay") -> Dict[str, Any]:
-        """
-        Get the required fields for this payment method and action.
-        Can be overridden by specific payment builders to customize required fields.
-
-        Args:
-            action (str): The action being performed (Pay, Reserve, etc.)
-
-        Returns:
-            Dict[str, Any]: Dictionary mapping field names to their current values
-        """
         if action.lower() == "reserve":
             return {
                 "currency": self._currency,
@@ -85,37 +75,22 @@ class KlarnaKPBuilder(PaymentBuilder):
 
         return {}
 
-    def reserve(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
+    def reserve(self, validate: bool = True) -> PaymentResponse:
+        """Create a Klarna KP reservation."""
+        return self._post_data_request(self.build("Reserve", validate=validate).to_dict())
 
-        payment_request = self.build("Reserve", validate=validate)
-        request_data = payment_request.to_dict()
+    def cancelReservation(self, validate: bool = True) -> PaymentResponse:
+        """Cancel a Klarna KP reservation."""
+        return self._post_data_request(self.build("CancelReservation", validate=validate).to_dict())
 
-        return self._post_data_request(request_data)
+    def updateReservation(self, validate: bool = True) -> PaymentResponse:
+        """Update a Klarna KP reservation."""
+        return self._post_data_request(self.build("UpdateReservation", validate=validate).to_dict())
 
-    def cancelReservation(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
+    def extendReservation(self, validate: bool = True) -> PaymentResponse:
+        """Extend a Klarna KP reservation."""
+        return self._post_data_request(self.build("ExtendReservation", validate=validate).to_dict())
 
-        payment_request = self.build("CancelReservation", validate=validate)
-        request_data = payment_request.to_dict()
-
-        return self._post_data_request(request_data)
-
-    def updateReservation(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-
-        payment_request = self.build("UpdateReservation", validate=validate)
-        request_data = payment_request.to_dict()
-
-        return self._post_data_request(request_data)
-
-    def extendReservation(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-
-        payment_request = self.build("ExtendReservation", validate=validate)
-        request_data = payment_request.to_dict()
-
-        return self._post_data_request(request_data)
-
-    def addShippingInfo(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-
-        payment_request = self.build("AddShippingInfo", validate=validate)
-        request_data = payment_request.to_dict()
-
-        return self._post_data_request(request_data)
+    def addShippingInfo(self, validate: bool = True) -> PaymentResponse:
+        """Add shipping information to a Klarna KP order."""
+        return self._post_data_request(self.build("AddShippingInfo", validate=validate).to_dict())

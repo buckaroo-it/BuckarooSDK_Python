@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Any, Dict, Type
 import logging
 
 from .builder_factory import BuilderFactory
@@ -159,7 +159,7 @@ class PaymentMethodFactory(BuilderFactory):
         return method.lower() in cls._payment_methods
 
     @classmethod
-    def detect_method_from_payload(cls, payload: Dict) -> str:
+    def detect_method_from_payload(cls, payload: Dict[str, Any]) -> str:
         """
         Detect the payment method from payload parameters.
 

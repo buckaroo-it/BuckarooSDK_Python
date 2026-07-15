@@ -87,9 +87,10 @@ class TestAuthorizeEncrypted:
 # ---------------------------------------------------------------------------
 # capture()
 #
-# AuthorizeCaptureCapable.capture is dead code: PaymentBuilder.capture shadows
-# it through the MRO on every real builder (see TestMroShadowing below). Any
-# test calling the mixin method directly would only exercise unreachable code.
+# ``AuthorizeCaptureCapable`` does not contribute ``capture``;
+# :meth:`BaseBuilder.capture` carries the full
+# ``original_transaction_key`` / ``amount`` signature for every builder.
+# Behavioural coverage lives in the BaseBuilder tests.
 #
 # ---------------------------------------------------------------------------
 # cancelAuthorize()
@@ -208,30 +209,13 @@ class TestCancelAuthorize:
 class TestMroShadowing:
     """Pin how capability methods compose into a builder's MRO."""
 
-    def test_base_builder_capture_shadows_mixin_capture(self):
+    def test_capture_resolves_to_base_builder(self):
         _, client = wire_recording_http()
         builder = _ready_builder(client)
 
-        # The capture the instance resolves is PaymentBuilder's (needs auth key).
-        assert type(builder).capture.__qualname__ == "PaymentBuilder.capture"
-        # The mixin's simpler capture is still reachable via the class itself.
-        assert AuthorizeCaptureCapable.capture.__qualname__ == ("AuthorizeCaptureCapable.capture")
-
-    def test_mixin_capture_posts_capture_action_when_invoked_directly(self):
-        """Direct-invocation pin on the mixin's ``capture`` body.
-
-        No composed builder routes to this method because ``BaseBuilder.capture``
-        shadows it in MRO. The method is only callable as an unbound reference.
-        Pinned here so the shadowed logic still has a behavioral contract.
-        """
-        mock, client = wire_recording_http()
-        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "cap"}))
-        builder = _ready_builder(client)
-
-        response = AuthorizeCaptureCapable.capture(builder, validate=False)
-
-        assert recorded_action(mock) == "Capture"
-        assert response.key == "cap"
+        # ``capture`` lives only on BaseBuilder; the mixin no longer ships one.
+        assert type(builder).capture.__qualname__ == "BaseBuilder.capture"
+        assert not hasattr(AuthorizeCaptureCapable, "capture")
 
 
 class TestMultiCapabilityBuilder:
@@ -240,10 +224,9 @@ class TestMultiCapabilityBuilder:
     def test_all_six_action_methods_invoke_and_post_expected_actions(self):
         """MRO-resolved action methods must each post the right Buckaroo Action.
 
-        ``capture`` resolves to :meth:`PaymentBuilder.capture` (needs an auth
-        key) - the mixin's ``capture`` is dead code. This test pins both the
-        resolution AND the on-wire Action for every method on a composed
-        builder.
+        ``capture`` resolves to :meth:`BaseBuilder.capture` (the mixin no
+        longer ships one). This test pins both the resolution AND the on-wire
+        Action for every method on a composed builder.
         """
         mock, client = wire_recording_http()
         # One queued response per invoked action (six total).

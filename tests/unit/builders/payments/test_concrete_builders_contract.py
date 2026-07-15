@@ -52,7 +52,6 @@ CAPABILITY_METHODS: Dict[Type, List[str]] = {
         "authorize",
         "authorizeEncrypted",
         "cancelAuthorize",
-        "capture",
     ],
     BankTransferCapabilities: ["instantRefund", "payFastCheckout"],
     EncryptedPayCapable: ["payEncrypted"],
@@ -144,6 +143,7 @@ KNOWN_MIXINS: List[Type] = list(CAPABILITY_METHODS.keys())
 # of — direct mixin plus transitive bases.
 EXPECTED_CAPABILITIES: Dict[str, set] = {
     "creditcard": {EncryptedPayCapable, AuthorizeCaptureCapable},
+    "riverty": {AuthorizeCaptureCapable},
     "ideal": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
     "paybybank": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},
     "payconiq": {BankTransferCapabilities, InstantRefundCapable, FastCheckoutCapable},

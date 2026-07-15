@@ -16,7 +16,7 @@ class ApplePayBuilder(PaymentBuilder):
             return {
                 "PaymentData": {
                     "type": str,
-                    "required": True,
+                    "required": False,
                     "description": "Apple Pay payment data",
                 },
                 "CustomerCardName": {

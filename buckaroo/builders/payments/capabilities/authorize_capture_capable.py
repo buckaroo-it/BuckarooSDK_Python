@@ -16,15 +16,38 @@ if TYPE_CHECKING:
 
 
 class AuthorizeCaptureCapable:
-    """Mixin for payment methods that support authorization (Credit Card)."""
+    """Mixin contributing the Authorize / CancelAuthorize action surface.
 
-    def authorize(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
-        """Authorize a payment without capturing it (Credit Card only)."""
-        return self.execute_action("Authorize", validate=validate)
+    ``capture`` lives on :class:`BaseBuilder` with the full
+    ``original_transaction_key`` / ``amount`` signature and is shared by every
+    builder; it is intentionally not duplicated here.
+    """
 
-    def authorizeEncrypted(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
-        """Authorize a payment using encrypted card data (Credit Card only)."""
-        return self.execute_action("AuthorizeEncrypted", validate=validate)
+    def authorize(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
+        """Authorize a payment without capturing it.
+
+        Args:
+            validate: Whether to validate service parameters before building.
+
+        Returns:
+            PaymentResponse: The authorization response.
+        """
+        payment_request = self.build("Authorize", validate=validate)
+        request_data = payment_request.to_dict()
+        return self._post_transaction(request_data)
+
+    def authorizeEncrypted(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
+        """Authorize an encrypted-card payment without capturing it.
+
+        Args:
+            validate: Whether to validate service parameters before building.
+
+        Returns:
+            PaymentResponse: The authorization response.
+        """
+        payment_request = self.build("AuthorizeEncrypted", validate=validate)
+        request_data = payment_request.to_dict()
+        return self._post_transaction(request_data)
 
     def cancelAuthorize(
         self: 'PaymentBuilder',
@@ -51,7 +74,3 @@ class AuthorizeCaptureCapable:
             request_data['AmountCredit'] = request_data.pop('AmountDebit')
 
         return self._post_transaction(request_data)
-
-    def capture(self: 'PaymentBuilder', validate: bool = True) -> PaymentResponse:
-        """Capture a previously authorized payment."""
-        return self.execute_action("Capture", validate=validate)

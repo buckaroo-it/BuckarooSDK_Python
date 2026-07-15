@@ -4,7 +4,7 @@ Payment Response Model for Buckaroo SDK.
 This module provides response objects for payment transactions.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, Iterator, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from .payment_request import Parameter
@@ -205,6 +205,7 @@ class PaymentResponse:
         self.request_errors = data.get("RequestErrors")
         self.related_transactions = data.get("RelatedTransactions")
         self.consumer_message = data.get("ConsumerMessage")
+        self.message = data.get("Message")
         self.order = data.get("Order")
         self.issuing_country = data.get("IssuingCountry")
         self.start_recurrent = data.get("StartRecurrent", False)
@@ -274,6 +275,108 @@ class PaymentResponse:
                 if param.name.lower() == parameter_name.lower():
                     return param.value
         return None
+
+    _ERROR_TYPES = (
+        "ChannelErrors",
+        "ServiceErrors",
+        "ActionErrors",
+        "ParameterErrors",
+        "CustomParameterErrors",
+    )
+
+    @staticmethod
+    def _normalize_error_bucket(bucket: Any) -> List[Dict[str, Any]]:
+        """Coerce a ``RequestErrors`` bucket into a list of dict entries.
+
+        Real-world Buckaroo responses occasionally collapse a single-error
+        bucket into a bare dict, or supply unexpected scalars. Coerce both
+        shapes here so callers can iterate without type checks.
+        """
+        if isinstance(bucket, list):
+            return [entry for entry in bucket if isinstance(entry, dict)]
+        if isinstance(bucket, dict):
+            return [bucket]
+        return []
+
+    def _iter_error_entries(self) -> Iterator[Dict[str, Any]]:
+        """Yield error-entry dicts across every bucket in priority order."""
+        errors = self.request_errors
+        if not isinstance(errors, dict):
+            return
+        for bucket_name in self._ERROR_TYPES:
+            for entry in self._normalize_error_bucket(errors.get(bucket_name)):
+                yield entry
+
+    def has_error(self) -> bool:
+        """Return True when ``RequestErrors`` carries any usable entry."""
+        return next(self._iter_error_entries(), None) is not None
+
+    def get_first_error(self) -> Dict[str, Any]:
+        """Return the first error entry from ``RequestErrors``, or ``{}``."""
+        return next(self._iter_error_entries(), {})
+
+    def has_consumer_message(self) -> bool:
+        """Return True when the response carries a non-empty ConsumerMessage."""
+        message = self.consumer_message or {}
+        if isinstance(message, dict):
+            return bool(message.get("HtmlText"))
+        return False
+
+    def get_consumer_message(self) -> str:
+        """Return the consumer-facing HTML message, or ``''``."""
+        message = self.consumer_message or {}
+        if isinstance(message, dict):
+            return message.get("HtmlText") or ""
+        return ""
+
+    def has_message(self) -> bool:
+        """Return True when the top-level ``Message`` field is set."""
+        return bool(self.message)
+
+    def get_message(self) -> str:
+        """Return the top-level ``Message`` field, or ``''``."""
+        return self.message or ""
+
+    def has_sub_code_message(self) -> bool:
+        """Return True when ``Status.SubCode.Description`` is set."""
+        return bool(self.status and self.status.sub_code and self.status.sub_code.description)
+
+    def get_sub_code_message(self) -> str:
+        """Return the ``Status.SubCode.Description``, or ``''``."""
+        if self.has_sub_code_message():
+            return self.status.sub_code.description
+        return ""
+
+    def has_some_error(self) -> bool:
+        """Return True when any error/message channel carries text."""
+        return bool(self.get_some_error())
+
+    def get_some_error(self) -> str:
+        """Return the most-specific error message from the response.
+
+        Walks the response in priority order, mirroring PHP SDK's
+        ``TransactionResponse::getSomeError``:
+
+        1. The first entry from ``RequestErrors[*]`` (ChannelErrors,
+           ServiceErrors, ActionErrors, ParameterErrors,
+           CustomParameterErrors) → ``ErrorMessage``.
+        2. ``ConsumerMessage.HtmlText`` (consumer-facing copy).
+        3. Top-level ``Message`` (gateway-level message).
+        4. ``Status.SubCode.Description`` (e.g. Riverty 491 reason).
+
+        Returns ``''`` when none of those carry text.
+        """
+        for entry in self._iter_error_entries():
+            message = entry.get("ErrorMessage")
+            if message:
+                return message
+        if self.has_consumer_message():
+            return self.get_consumer_message()
+        if self.has_message():
+            return self.get_message()
+        if self.has_sub_code_message():
+            return self.get_sub_code_message()
+        return ""
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the response back to a dictionary."""

@@ -118,6 +118,7 @@ class PaymentRequest:
     push_url_failure: Optional[str] = None
     client_ip: Optional[ClientIP] = None
     services: Optional[ServiceList] = None
+    services_selectable_by_client: Optional[str] = None
 
     def __post_init__(self):
         """Set default values after initialization."""
@@ -152,5 +153,8 @@ class PaymentRequest:
             request_dict["ClientIP"] = self.client_ip.to_dict()
         if self.services:
             request_dict["Services"] = self.services.to_dict()
+
+        if self.services_selectable_by_client:
+            request_dict["ServicesSelectableByClient"] = self.services_selectable_by_client
 
         return request_dict

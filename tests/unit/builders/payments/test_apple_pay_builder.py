@@ -28,7 +28,7 @@ def test_get_allowed_service_parameters_pay_snapshot(client):
     assert ApplePayBuilder(client).get_allowed_service_parameters("Pay") == {
         "PaymentData": {
             "type": str,
-            "required": True,
+            "required": False,
             "description": "Apple Pay payment data",
         },
         "CustomerCardName": {
@@ -65,7 +65,7 @@ def test_pay_dispatches_applepay_service_through_mock_buckaroo():
 
     builder = populate_required_fields(ApplePayBuilder(client), amount=10.50)
 
-    response = builder.pay(validate=False)
+    response = builder.pay()
 
     assert response.key == "AP-1"
     mock.assert_all_consumed()

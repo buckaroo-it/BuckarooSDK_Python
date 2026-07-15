@@ -27,12 +27,30 @@ def test_get_service_name_returns_klarna(client):
 
 
 def test_get_allowed_service_parameters_pay_snapshot(client):
-    """Cart / grouped-article parameter spec. ``billingCustomer`` and
-    ``shippingCustomer`` declare the customer groups; ``article`` declares the
-    line-item group. All three are marked required lists so the
-    ``add_parameter`` list-of-dicts path groups them into Buckaroo's
-    ``GroupType`` / ``GroupId`` convention at serialise time."""
+    """Pay-as-capture references the prior Reserve via ``dataRequestKey`` as a
+    service parameter. Cart contents are reused server-side from the Reserve."""
     assert KlarnaBuilder(client).get_allowed_service_parameters("Pay") == {
+        "dataRequestKey": {
+            "type": str,
+            "required": True,
+            "description": "Key of the prior Klarna Reserve",
+        },
+    }
+
+
+def test_get_allowed_service_parameters_is_case_insensitive_for_pay(client):
+    """Source lower-cases the action before matching, so "pay" equals "Pay"."""
+    builder = KlarnaBuilder(client)
+    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
+        "Pay"
+    )
+
+
+def test_get_allowed_service_parameters_reserve_snapshot(client):
+    """Reserve action drives the Klarna MOR hosted-page flow. Same required
+    cart trio as Pay (billingCustomer, shippingCustomer, article) plus
+    optional Klarna-specific keys (operatingCountry, pno, gender, locale)."""
+    assert KlarnaBuilder(client).get_allowed_service_parameters("Reserve") == {
         "billingCustomer": {
             "type": list,
             "required": True,
@@ -48,15 +66,34 @@ def test_get_allowed_service_parameters_pay_snapshot(client):
             "required": True,
             "description": "Klarna articles",
         },
+        "operatingCountry": {
+            "type": str,
+            "required": False,
+            "description": "Operating country code",
+        },
+        "pno": {
+            "type": str,
+            "required": False,
+            "description": "Personal identification number",
+        },
+        "gender": {
+            "type": str,
+            "required": False,
+            "description": "Customer gender",
+        },
+        "locale": {
+            "type": str,
+            "required": False,
+            "description": "Customer locale",
+        },
     }
 
 
-def test_get_allowed_service_parameters_is_case_insensitive_for_pay(client):
-    """Source lower-cases the action before matching, so "pay" equals "Pay"."""
+def test_get_allowed_service_parameters_is_case_insensitive_for_reserve(client):
     builder = KlarnaBuilder(client)
-    assert builder.get_allowed_service_parameters("pay") == builder.get_allowed_service_parameters(
-        "Pay"
-    )
+    assert builder.get_allowed_service_parameters(
+        "reserve"
+    ) == builder.get_allowed_service_parameters("Reserve")
 
 
 def test_get_allowed_service_parameters_unsupported_action_returns_empty(client):
@@ -81,3 +118,47 @@ def test_pay_dispatches_klarna_service_through_mock_buckaroo():
 
     assert response.key == "KL-1"
     mock.assert_all_consumed()
+
+
+def test_get_allowed_service_parameters_cancelreservation_is_empty(client):
+    """CancelReservation only needs OriginalTransactionKey at request level."""
+    assert KlarnaBuilder(client).get_allowed_service_parameters("CancelReservation") == {}
+    assert KlarnaBuilder(client).get_allowed_service_parameters("cancelreservation") == {}
+
+
+def test_cancel_reservation_requires_original_transaction_key(client):
+    """Missing key raises ValueError, mirroring cancelAuthorize."""
+    import pytest
+
+    builder = populate_required_fields(KlarnaBuilder(client), amount=10.0)
+    with pytest.raises(ValueError, match="Original transaction key is required"):
+        builder.cancelReservation(original_transaction_key="")
+
+
+def test_cancel_reservation_dispatches_action_with_original_transaction_key():
+    """cancelReservation builds action="CancelReservation" with the key in payload."""
+    from unittest.mock import MagicMock
+
+    class _StubResponse:
+        def to_dict(self):
+            return {"Status": {"Code": {"Code": 190}}}
+
+    captured = {}
+
+    class _StubHttp:
+        def post(self, path, data):
+            captured["path"] = path
+            captured["data"] = data
+            return _StubResponse()
+
+    stub_client = MagicMock()
+    stub_client.http_client = _StubHttp()
+
+    builder = populate_required_fields(KlarnaBuilder(stub_client), amount=49.95)
+    response = builder.cancelReservation(original_transaction_key="RES-KEY-9")
+
+    assert response.to_dict()["Status"]["Code"]["Code"] == 190
+    assert captured["path"] == "/json/transaction"
+    sent = captured["data"]
+    assert sent["OriginalTransactionKey"] == "RES-KEY-9"
+    assert sent["Services"]["ServiceList"][0]["Action"] == "CancelReservation"

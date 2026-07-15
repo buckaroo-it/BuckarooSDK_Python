@@ -34,8 +34,10 @@ class BaseBuilder(ABC):
         self._return_url_error: Optional[str] = None
         self._return_url_reject: Optional[str] = None
         self._continue_on_incomplete: str = "1"
+        self._culture: Optional[str] = None
         self._push_url: Optional[str] = None
         self._push_url_failure: Optional[str] = None
+        self._services_selectable_by_client: Optional[str] = None
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
         self._payload: Dict[str, Any] = {}  # Store original payload
@@ -85,8 +87,23 @@ class BaseBuilder(ABC):
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
         return self
-    
-    def push_url(self, url: str) -> Self:
+
+    def services_selectable_by_client(self, services: str) -> "BaseBuilder":
+        """Set the CSV of services the client may pick on Buckaroo's hosted page."""
+        self._services_selectable_by_client = services
+        return self
+
+    def culture(self, culture: str) -> "BaseBuilder":
+        """Set the culture (language) for the gateway request.
+
+        Sent as the ``Culture`` HTTP request header (e.g. ``nl-NL``); the
+        gateway uses it to localize templates and consumer messages. The
+        gateway ignores a ``Culture`` field placed in the request body.
+        """
+        self._culture = culture
+        return self
+
+    def push_url(self, url: str) -> "BaseBuilder":
         """Set the Push (webhook) URL."""
         self._push_url = url
         return self
@@ -227,6 +244,12 @@ class BaseBuilder(ABC):
         if "continue_on_incomplete" in data:
             self.continue_on_incomplete(data["continue_on_incomplete"])
 
+        if "services_selectable_by_client" in data:
+            self.services_selectable_by_client(data["services_selectable_by_client"])
+
+        if "culture" in data:
+            self.culture(data["culture"])
+
         if "push_url" in data:
             self.push_url(data["push_url"])
         if "push_url_failure" in data:
@@ -356,14 +379,247 @@ class BaseBuilder(ABC):
             push_url_failure=self._push_url_failure,
             client_ip=self._client_ip,
             services=service_list,
+            services_selectable_by_client=self._services_selectable_by_client,
         )
 
         return payment_request
+
+    def pay(self, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
+        """
+        Execute the payment operation.
+
+        Args:
+            validate (bool): Whether to validate service parameters before building
+            strict_validation (bool): If True, throws exceptions for missing required parameters
+
+        Returns:
+            PaymentResponse: Structured payment response object
+
+        Raises:
+            ValueError: If required fields are missing
+            RequiredParameterMissingError: If required service parameters are missing (when strict_validation=True)
+            ParameterValidationError: If service parameters are invalid (when strict_validation=True)
+            AuthenticationError: If authentication fails
+            BuckarooApiError: If API returns an error
+        """
+        # Build the payment request
+        payment_request = self.build("Pay", validate=validate, strict_validation=strict_validation)
+
+        # Convert to dictionary for API
+        request_data = payment_request.to_dict()
+
+        return self._post_transaction(request_data)
+
+    def refund(self, validate: bool = True) -> PaymentResponse:
+        """
+        Execute a refund transaction.
+
+        Args:
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The refund response
+
+        Raises:
+            ValueError: If required fields are missing
+        """
+        # Get original_transaction_key from parameter or payload
+        txn_key = self._payload.get("original_transaction_key")
+        if not txn_key:
+            raise ValueError(
+                "Original transaction key is required for refunds (provide as parameter or in payload)"
+            )
+
+        # Get amount from parameter or payload
+        refund_amount = self._payload.get("refund_amount")
+
+        # Build refund request with original transaction reference
+        payment_request = self.build("Refund", validate=validate)
+
+        # Convert to dictionary and modify for refund
+        request_data = payment_request.to_dict()
+        request_data["OriginalTransactionKey"] = txn_key
+
+        # Set refund amount if specified, otherwise use original amount
+        if refund_amount is not None:
+            request_data["AmountCredit"] = refund_amount
+            # PaymentRequest.to_dict always writes AmountDebit; strip it for refunds
+            del request_data["AmountDebit"]
+        else:
+            # Full refund - swap debit to credit
+            request_data["AmountCredit"] = request_data["AmountDebit"]
+            del request_data["AmountDebit"]
+
+        return self._post_transaction(request_data)
+
+    def pay_remainder(
+        self, original_transaction_key: Optional[str] = None, validate: bool = True
+    ) -> PaymentResponse:
+        """
+        Execute a pay-remainder transaction.
+
+        Pays the open remainder of a group transaction (e.g. after a partial
+        giftcard payment) via the PayRemainder action. The original transaction
+        key is the group transaction key that links this payment into the group.
+
+        Args:
+            original_transaction_key (str, optional): Group transaction key of the
+                partial payment. If None, read from the payload.
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The pay-remainder response
+
+        Raises:
+            ValueError: If no original transaction key is available
+        """
+        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
+        if not txn_key:
+            raise ValueError(
+                "Original transaction key is required for pay remainder "
+                "(provide as parameter or in payload)"
+            )
+
+        payment_request = self.build("PayRemainder", validate=validate)
+        request_data = payment_request.to_dict()
+        request_data["OriginalTransactionKey"] = txn_key
+
+        return self._post_transaction(request_data)
+
+    def capture(
+        self,
+        original_transaction_key: Optional[str] = None,
+        amount: Optional[float] = None,
+        validate: bool = True,
+    ) -> PaymentResponse:
+        """
+        Capture a previously authorized payment.
+
+        Args:
+            original_transaction_key (str, optional): The transaction key of the authorization.
+                                                     If None, will try to get from payload.
+            amount (float, optional): Amount to capture. If None, will try to get from payload
+                                    or capture the full authorized amount.
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The capture response
+        """
+        # Get authorization key from parameter or payload
+        auth_key = (
+            original_transaction_key
+            or self._payload.get("authorization_key")
+            or self._payload.get("original_transaction_key")
+        )
+        if not auth_key:
+            raise ValueError(
+                "Authorization key is required for captures (provide as parameter or in payload)"
+            )
+
+        # Get capture amount from parameter or payload
+        capture_amount = amount or self._payload.get("capture_amount")
+
+        # Build capture request
+        payment_request = self.build("Capture", validate=validate)
+        request_data = payment_request.to_dict()
+
+        # Set capture-specific parameters
+        request_data["OriginalTransactionKey"] = auth_key
+
+        # Set capture amount if specified
+        if capture_amount is not None:
+            request_data["AmountDebit"] = capture_amount
+
+        return self._post_transaction(request_data)
+
+    def cancel(self, original_transaction_key: Optional[str] = None) -> PaymentResponse:
+        """
+        Cancel a pending or authorized transaction.
+
+        Args:
+            original_transaction_key (str, optional): The transaction key to cancel.
+                                                     If None, will try to get from payload.
+
+        Returns:
+            PaymentResponse: The cancellation response
+        """
+        # Get transaction key from parameter or payload
+        txn_key = (
+            original_transaction_key
+            or self._payload.get("cancel_key")
+            or self._payload.get("original_transaction_key")
+        )
+        if not txn_key:
+            raise ValueError(
+                "Transaction key is required for cancellations (provide as parameter or in payload)"
+            )
+
+        # Build cancel request; validate=False because cancel only needs
+        # OriginalTransactionKey, not the full Pay required-field set.
+        payment_request = self.build("Cancel", validate=False)
+        request_data = payment_request.to_dict()
+
+        # Set cancellation parameters
+        request_data["OriginalTransactionKey"] = txn_key
+        # Remove amounts for cancellation
+        request_data.pop("AmountDebit", None)
+        request_data.pop("AmountCredit", None)
+
+        return self._post_transaction(request_data)
+
+    def partial_refund(
+        self, original_transaction_key: Optional[str] = None, amount: Optional[float] = None
+    ) -> PaymentResponse:
+        """
+        Execute a partial refund transaction.
+
+        Args:
+            original_transaction_key (str, optional): The transaction key of the original payment.
+                                                     If None, will try to get from payload.
+            amount (float, optional): Amount to refund. If None, will try to get from payload.
+
+        Returns:
+            PaymentResponse: The partial refund response
+
+        Raises:
+            ValueError: If amount is not provided or invalid
+        """
+        refund_amount = (
+            amount
+            or self._payload.get("refund_amount")
+            or self._payload.get("partial_refund_amount")
+        )
+        if not refund_amount or refund_amount <= 0:
+            raise ValueError(
+                "Partial refund amount must be greater than 0 (provide as parameter or in payload)"
+            )
+
+        _MISSING = object()
+        prev_key = self._payload.get("original_transaction_key", _MISSING)
+        prev_amount = self._payload.get("refund_amount", _MISSING)
+        try:
+            if original_transaction_key:
+                self._payload["original_transaction_key"] = original_transaction_key
+            self._payload["refund_amount"] = refund_amount
+            return self.refund()
+        finally:
+            if prev_key is _MISSING:
+                self._payload.pop("original_transaction_key", None)
+            else:
+                self._payload["original_transaction_key"] = prev_key
+            if prev_amount is _MISSING:
+                self._payload.pop("refund_amount", None)
+            else:
+                self._payload["refund_amount"] = prev_amount
 
     def _post_data_request(self, request_data: Dict[str, Any]) -> PaymentResponse:
         """Post a data request to the Buckaroo API."""
         return self._executor.post_data_request(request_data)
 
     def _post_transaction(self, request_data: Dict[str, Any]) -> PaymentResponse:
-        """Post a transaction to the Buckaroo API."""
-        return self._executor.post_transaction(request_data)
+        """Helper method to post transaction and handle response."""
+        # Send to Buckaroo API. Culture (when set) rides as a request header,
+        # not a body field — the gateway only honors it in the header. Only
+        # passed when present so it stays a no-op for every other request.
+        extra = {"culture": self._culture} if self._culture else {}
+        response = self._client.http_client.post("/json/transaction", request_data, **extra)

@@ -11,6 +11,9 @@
 - [Requirements](#requirements)
 - [Pip Installation](#pip-installation)
 - [Example](#example)
+- [iDIN](#idin)
+- [Instant Refunds](#instant-refunds)
+- [eMandate](#emandate)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -92,6 +95,98 @@ response = (
 ```
 
 Find our full documentation online on [docs.buckaroo.io](https://docs.buckaroo.io).
+
+### iDIN
+
+iDIN lets Dutch banks confirm a consumer's identity on your behalf. It carries no amount or currency — only the return URLs plus the `issuerId` (BIC code of the consumer's bank) service parameter. Three actions are available: `identify()`, `verify()` (age 18+), and `login()`.
+
+```python
+response = payments.create_payment("idin", {
+    "return_url": "https://www.buckaroo.nl",
+    "return_url_cancel": "https://www.buckaroo.nl/cancel",
+    "return_url_error": "https://www.buckaroo.nl/error",
+    "return_url_reject": "https://www.buckaroo.nl/reject",
+    "service_parameters": {"issuerId": "BANKNL2Y"},  # sandbox issuer
+}).identify()
+
+print("key:", response.key)
+print("redirect:", response.get_redirect_url())
+```
+
+See [`examples/idin.py`](examples/idin.py) for a runnable demo of all three actions.
+
+### Instant Refunds
+
+Instant refunds send money back to the shopper immediately instead of via the regular batch refund process. They are processed as an instant payment rather than a standard refund, and are supported for iDEAL and Payconiq via `instantRefund()`. Pass the `original_transaction_key` of a settled payment; `refund_amount` is optional — omit it for a full refund.
+
+```python
+response = payments.create_payment("ideal", {
+    "currency": "EUR",
+    "description": "ideal instant refund demo",
+    "invoice": "IDEAL-REFUND-DEMO-001",
+    "original_transaction_key": "ORIGINAL-TRANSACTION-KEY",
+    "refund_amount": 12.34,  # optional; omit for a full refund
+}).instantRefund()
+
+print("key:", response.key)
+```
+
+See [`examples/instant_refund.py`](examples/instant_refund.py) for a runnable demo covering both iDEAL and Payconiq.
+
+### eMandate
+
+eMandate is a DataRequest-based solution for managing SEPA direct debit mandates, reached through
+`app.solutions` rather than `app.payments`. It comes in two variants that share the same five
+actions — only the service name differs:
+
+- `emandate` — retail (B2C)
+- `emandateb2b` — business (B2B)
+
+```python
+from buckaroo.app import Buckaroo
+
+app = Buckaroo.from_env()
+
+# List available issuers (GetIssuerList — no parameters)
+response = app.solutions.create_solution("emandate").issuer_list()
+
+# Create a mandate (CreateMandate — debtorReference is required)
+response = app.solutions.create_solution(
+    "emandate",
+    {
+        "service_parameters": {
+            "debtorReference": "DEBTOR-001",
+            "debtorBankId": "ABNANL2A",
+            "sequenceType": "1",
+            "purchaseId": "PUR-001",
+            "language": "nl",
+        }
+    },
+).create_mandate()
+mandate_id = response.get_service_parameter("MandateId")
+
+# Look up a mandate's status (GetStatus — mandateId is required)
+response = app.solutions.create_solution(
+    "emandate", {"service_parameters": {"mandateId": mandate_id}}
+).status()
+
+# Modify a mandate (ModifyMandate — mandateId is required)
+response = app.solutions.create_solution(
+    "emandate",
+    {"service_parameters": {"mandateId": mandate_id, "maxAmount": "1000.00"}},
+).modify_mandate()
+
+# Cancel a mandate (CancelMandate — mandateId is required)
+response = app.solutions.create_solution(
+    "emandate",
+    {"service_parameters": {"mandateId": mandate_id, "purchaseId": "PUR-001"}},
+).cancel_mandate()
+```
+
+The B2B variant exposes the same five methods — swap `"emandate"` for `"emandateb2b"`.
+
+See [`examples/emandate.py`](examples/emandate.py) for a runnable demo of all five actions
+against both the B2C and B2B services.
 
 ### Contribute
 

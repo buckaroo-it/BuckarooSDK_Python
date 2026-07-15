@@ -410,15 +410,20 @@ class BaseBuilder(ABC):
 
         return self._post_transaction(request_data)
 
-    def refund(self, validate: bool = True) -> PaymentResponse:
+    def _build_refund_request_data(self, action: str, validate: bool = True) -> Dict[str, Any]:
         """
-        Execute a refund transaction.
+        Build the wire request body shared by refund-style actions.
+
+        Reads ``original_transaction_key`` and ``refund_amount`` from the payload,
+        builds the request for ``action``, and swaps ``AmountDebit`` for
+        ``AmountCredit`` (partial or full).
 
         Args:
+            action (str): The Buckaroo action to build (e.g. "Refund", "instantRefund")
             validate (bool): Whether to validate service parameters before building
 
         Returns:
-            PaymentResponse: The refund response
+            Dict[str, Any]: The refund request body
 
         Raises:
             ValueError: If required fields are missing
@@ -434,7 +439,7 @@ class BaseBuilder(ABC):
         refund_amount = self._payload.get("refund_amount")
 
         # Build refund request with original transaction reference
-        payment_request = self.build("Refund", validate=validate)
+        payment_request = self.build(action, validate=validate)
 
         # Convert to dictionary and modify for refund
         request_data = payment_request.to_dict()
@@ -450,6 +455,22 @@ class BaseBuilder(ABC):
             request_data["AmountCredit"] = request_data["AmountDebit"]
             del request_data["AmountDebit"]
 
+        return request_data
+
+    def refund(self, validate: bool = True) -> PaymentResponse:
+        """
+        Execute a refund transaction.
+
+        Args:
+            validate (bool): Whether to validate service parameters before building
+
+        Returns:
+            PaymentResponse: The refund response
+
+        Raises:
+            ValueError: If required fields are missing
+        """
+        request_data = self._build_refund_request_data("Refund", validate)
         return self._post_transaction(request_data)
 
     def pay_remainder(

@@ -1,6 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
-from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
+from ..models.payment_request import (
+    PaymentRequest,
+    ClientIP,
+    Service,
+    ServiceList,
+    Parameter,
+    CombinableService,
+)
 from ..models.payment_response import PaymentResponse
 from ..services.service_parameter_validator import ServiceParameterValidator
 
@@ -26,8 +33,25 @@ class BaseBuilder(ABC):
         self._services_selectable_by_client: Optional[str] = None
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
+        self._combined_services: List[Service] = []  # Extra services merged in via combine()
         self._payload: Dict[str, Any] = {}  # Store original payload
         self._validator = ServiceParameterValidator(self)
+
+    def combine(self, combinable: "CombinableService") -> "BaseBuilder":
+        """Merge a supplementary service into this transaction.
+
+        Mirrors the ``combine`` pattern of the other Buckaroo SDKs: a
+        supplementary service (e.g. Marketplaces ``Split``) is built on its own,
+        then combined into a payment or refund so both ride in one request's
+        ``ServiceList``. The combined services are appended after this builder's
+        own service when the request is built.
+
+        Builders are single-use: create a fresh one per ``create_payment`` /
+        ``create_solution`` call. Calling ``combine`` more than once accumulates
+        services rather than replacing them.
+        """
+        self._combined_services.extend(combinable.services)
+        return self
 
     def currency(self, currency: str) -> "BaseBuilder":
         """Set the currency for the payment."""
@@ -349,8 +373,8 @@ class BaseBuilder(ABC):
             parameters=self._service_parameters if self._service_parameters else None,
         )
 
-        # Create service list
-        service_list = ServiceList(services=[service])
+        # Create service list, appending any services merged in via combine()
+        service_list = ServiceList(services=[service, *self._combined_services])
 
         # Build payment request
         payment_request = PaymentRequest(

@@ -14,6 +14,7 @@
 - [iDIN](#idin)
 - [Instant Refunds](#instant-refunds)
 - [eMandate](#emandate)
+- [Split Payments](#split-payments)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -187,6 +188,98 @@ The B2B variant exposes the same five methods — swap `"emandate"` for `"emanda
 
 See [`examples/emandate.py`](examples/emandate.py) for a runnable demo of all five actions
 against both the B2C and B2B services.
+
+### Split Payments
+
+Split Payments (Buckaroo service `Marketplaces`) lets a platform divide one
+customer payment across its own funds account and one or more seller accounts.
+Following the other Buckaroo SDKs, `split` and `refund_supplementary` build a
+supplementary service that is *combined* into a payment or refund; `transfer` and
+`manual_transfer` are standalone.
+
+```python
+from buckaroo import BuckarooClient
+from buckaroo.services.payment_service import PaymentService
+from buckaroo.services.solution_service import SolutionService
+
+client = BuckarooClient("STORE_KEY", "SECRET_KEY", mode="test")
+payments = PaymentService(client)
+marketplaces = SolutionService(client)
+```
+
+**Split** — build the split, then combine it into the funding payment (e.g.
+iDEAL). `daysUntilTransfer` is `"0"` for immediate payout, or omit it to hold the
+funds until a later Transfer.
+
+```python
+split = marketplaces.create_solution("marketplaces").split({
+    "daysUntilTransfer": "2",
+    "marketplace": {"Amount": "10.00", "Description": "INV0001 Commission Platform"},
+    "sellers": [
+        {"AccountId": "SELLER_ACCOUNT_1", "Amount": "50.00", "Description": "Payout 1"},
+        {"AccountId": "SELLER_ACCOUNT_2", "Amount": "35.00", "Description": "Payout 2"},
+    ],
+})
+
+response = payments.create_payment("ideal", {
+    "currency": "EUR",
+    "amount": 95.00,
+    "invoice": "INV0001",
+    "description": "Split order INV0001",
+    "service_parameters": {"issuer": "ABNANL2A"},
+    "return_url": "https://example.com/return",
+    "return_url_cancel": "https://example.com/cancel",
+    "return_url_error": "https://example.com/error",
+    "return_url_reject": "https://example.com/reject",
+}).combine(split).pay()
+```
+
+**Transfer** — release held funds of an existing split payment. With no split
+data it transfers everything (Transfer I); pass `marketplace`/`sellers` to
+transfer a partial or re-specified split (Transfer II).
+
+```python
+marketplaces.create_solution("marketplaces").transfer({
+    "originalTransactionKey": "SPLIT_TRANSACTION_KEY",
+})
+```
+
+**RefundSupplementary** — refund the consumer and pull the funds back from the
+target accounts. Combine it into the refund. Without seller data it reverts all
+transfers (I); pass `sellers` to retrieve specific amounts per account (II).
+
+```python
+supplementary = marketplaces.create_solution("marketplaces").refund_supplementary()
+
+payments.create_payment("ideal", {
+    "currency": "EUR",
+    "amount": 50.00,
+    "invoice": "INV0001",
+    "description": "Split refund INV0001",
+    "original_transaction_key": "SPLIT_TRANSACTION_KEY",
+    "refund_amount": 50.00,
+    "return_url": "https://example.com/return",
+    "return_url_cancel": "https://example.com/cancel",
+    "return_url_error": "https://example.com/error",
+    "return_url_reject": "https://example.com/reject",
+}).combine(supplementary).refund()
+```
+
+**ManualTransfer** — move funds directly between two accounts.
+
+```python
+marketplaces.create_solution("marketplaces").manual_transfer({
+    "fromAccountId": "ACCOUNT_A",
+    "toAccountId": "ACCOUNT_B",
+    "fromDescription": "Deduction monthly fee",
+    "toDescription": "Monthly fee third party ABC",
+    "amount": 10.00,
+    "currency": "EUR",
+})
+```
+
+A runnable demo of all six request types is in
+[`examples/marketplaces.py`](examples/marketplaces.py).
 
 ### Contribute
 

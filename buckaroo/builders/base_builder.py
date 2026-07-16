@@ -6,6 +6,7 @@ from ..models.payment_request import (
     Service,
     ServiceList,
     Parameter,
+    CombinableService,
 )
 try:
     from typing import Self
@@ -104,6 +105,16 @@ class BaseBuilder(ABC):
         set it internally.
         """
         self._channel = channel
+        return self
+
+    def combine(self, combinable: CombinableService) -> Self:
+        """Merge a supplementary service (e.g. a Marketplaces Split) into this request.
+
+        The combined service's ``services`` are appended to the host
+        request's ``ServiceList`` when ``pay()``/``refund()`` builds the
+        payload, e.g. ``payments.create_payment("ideal", {...}).combine(mp).pay()``.
+        """
+        self._combined_services.extend(combinable.services)
         return self
 
     def services_selectable_by_client(self, services: str) -> "BaseBuilder":

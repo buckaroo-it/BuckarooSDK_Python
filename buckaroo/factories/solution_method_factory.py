@@ -4,6 +4,7 @@ import logging
 from .builder_factory import BuilderFactory
 from buckaroo.builders.solutions.subscription_builder import SubscriptionBuilder
 from buckaroo.builders.solutions.emandate_builder import EmandateB2BBuilder, EmandateBuilder
+from buckaroo.builders.solutions.marketplaces_builder import MarketplacesBuilder
 from buckaroo.builders.solutions.default_builder import DefaultBuilder
 from buckaroo.builders.solutions.solution_builder import SolutionBuilder
 
@@ -16,6 +17,7 @@ class SolutionMethodFactory(BuilderFactory):
         "subscription": SubscriptionBuilder,
         "emandate": EmandateBuilder,
         "emandateb2b": EmandateB2BBuilder,
+        "marketplaces": MarketplacesBuilder,
     }
 
     @classmethod

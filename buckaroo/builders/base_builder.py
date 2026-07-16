@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
+from ..models.payment_request import (
+    PaymentRequest,
+    ClientIP,
+    Service,
+    ServiceList,
+    Parameter,
+    CombinableService,
+)
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
-from ..models.payment_request import PaymentRequest, ClientIP, Service, ServiceList, Parameter
 from ..models.payment_response import PaymentResponse
 from ..services.service_parameter_validator import ServiceParameterValidator
 from ..services.transaction_service import TransactionExecutor, ITransactionExecutor
@@ -41,10 +48,11 @@ class BaseBuilder(ABC):
         self._services_selectable_by_client: Optional[str] = None
         self._client_ip: Optional[ClientIP] = None
         self._service_parameters: List[Parameter] = []
+        self._combined_services: List[Service] = []  # Extra services merged in via combine()
         self._payload: Dict[str, Any] = {}  # Store original payload
         self._validator = ServiceParameterValidator(self)
 
-    def currency(self, currency: str) -> Self:
+    def currency(self, currency: str) -> "BaseBuilder":
         """Set the currency for the payment."""
         self._currency = currency
         return self
@@ -376,8 +384,8 @@ class BaseBuilder(ABC):
             parameters=self._service_parameters if self._service_parameters else None,
         )
 
-        # Create service list
-        service_list = ServiceList(services=[service])
+        # Create service list, appending any services merged in via combine()
+        service_list = ServiceList(services=[service, *self._combined_services])
 
         # Build payment request
         payment_request = PaymentRequest(

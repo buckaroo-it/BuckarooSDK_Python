@@ -87,6 +87,19 @@ class Service:
 
 
 @dataclass
+class CombinableService:
+    """A built supplementary service to merge into another transaction.
+
+    Returned by builders that produce a service meant to ride along with a
+    payment or refund (e.g. Marketplaces ``Split``). Passed to
+    :meth:`BaseBuilder.combine`, which appends its ``services`` to the host
+    request's ``ServiceList``.
+    """
+
+    services: List["Service"]
+
+
+@dataclass
 class ServiceList:
     """Model for list of services."""
 

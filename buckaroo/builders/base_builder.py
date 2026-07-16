@@ -29,6 +29,7 @@ class BaseBuilder(ABC):
         self._amount_debit: Optional[float] = None
         self._description: Optional[str] = None
         self._invoice: Optional[str] = None
+        self._channel: Optional[str] = None
         self._return_url: Optional[str] = None
         self._return_url_cancel: Optional[str] = None
         self._return_url_error: Optional[str] = None
@@ -86,6 +87,16 @@ class BaseBuilder(ABC):
     def continue_on_incomplete(self, continue_incomplete: str) -> Self:
         """Set whether to continue on incomplete payment."""
         self._continue_on_incomplete = continue_incomplete
+        return self
+
+    def channel(self, channel: str) -> Self:
+        """Set the Channel for the payment (e.g. ``"Web"``).
+
+        Sent as the top-level ``Channel`` request field. Most payment
+        methods leave this unset; some (e.g. POS) require a fixed value and
+        set it internally.
+        """
+        self._channel = channel
         return self
 
     def services_selectable_by_client(self, services: str) -> "BaseBuilder":
@@ -208,6 +219,7 @@ class BaseBuilder(ABC):
             - amount: Payment amount (float)
             - description: Payment description (str)
             - invoice: Invoice number (str)
+            - channel: Channel for the payment (str, e.g. 'Web')
             - return_url: Success return URL (str)
             - return_url_cancel: Cancel return URL (str)
             - return_url_error: Error return URL (str)
@@ -228,6 +240,9 @@ class BaseBuilder(ABC):
 
         if "invoice" in data:
             self.invoice(data["invoice"])
+
+        if "channel" in data:
+            self.channel(data["channel"])
 
         if "return_url" in data:
             self.return_url(data["return_url"])
@@ -370,6 +385,7 @@ class BaseBuilder(ABC):
             amount_debit=self._amount_debit,
             description=self._description,
             invoice=self._invoice,
+            channel=self._channel,
             return_url=self._return_url,
             return_url_cancel=self._return_url_cancel,
             return_url_error=self._return_url_error,

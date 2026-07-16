@@ -109,6 +109,7 @@ class PaymentRequest:
     amount_debit: Optional[float] = None
     description: Optional[str] = None
     invoice: Optional[str] = None
+    channel: Optional[str] = None
     return_url: Optional[str] = None
     return_url_cancel: Optional[str] = None
     return_url_error: Optional[str] = None
@@ -137,6 +138,8 @@ class PaymentRequest:
             request_dict["Description"] = self.description
         if self.invoice is not None:
             request_dict["Invoice"] = self.invoice
+        if self.channel is not None:
+            request_dict["Channel"] = self.channel
         if self.return_url is not None:
             request_dict["ReturnURL"] = self.return_url
         if self.return_url_cancel is not None:

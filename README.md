@@ -14,6 +14,7 @@
 - [iDIN](#idin)
 - [Instant Refunds](#instant-refunds)
 - [eMandate](#emandate)
+- [Point of Sale (POS)](#point-of-sale-pos)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -187,6 +188,42 @@ The B2B variant exposes the same five methods — swap `"emandate"` for `"emanda
 
 See [`examples/emandate.py`](examples/emandate.py) for a runnable demo of all five actions
 against both the B2C and B2B services.
+
+### Point of Sale (POS)
+
+POS transactions are PIN-based in-store payments processed through a physical payment terminal.
+You initiate the transaction via API with the terminal's unique `TerminalID`; Buckaroo routes the
+request to that terminal, which prompts the customer to complete payment there. There's no
+redirect flow, every request is sent with a fixed `Channel: "Web"`, set internally by the SDK.
+
+The immediate response carries a pending/awaiting status. The final result, plus the printable
+`Ticket` receipt text for the customer, arrives later via push notification.
+
+```python
+response = payments.create_payment("pospayment", {
+    "currency": "EUR",
+    "amount": 0.01,
+    "invoice": "TestFactuur01",
+}).terminal_id("50000001").pay()
+
+print("key:", response.key)
+print("pending:", response.is_pending())
+```
+
+Parsing the push notification once the terminal completes the transaction push bodies wrap the
+transaction under a `Transaction` key, so unwrap it before handing it to `PaymentResponse`:
+
+```python
+from buckaroo.models.payment_response import PaymentResponse
+
+transaction = push_json["Transaction"]  # raw body your webhook endpoint received
+response = PaymentResponse({"data": transaction})
+
+ticket = response.get_service_parameter("Ticket")  # printable receipt text
+```
+
+See [`examples/pos_payment.py`](examples/pos_payment.py) for a runnable demo of both the `Pay`
+action and push-notification parsing.
 
 ### Contribute
 

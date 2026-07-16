@@ -6,7 +6,6 @@ from ..models.payment_request import (
     Service,
     ServiceList,
     Parameter,
-    CombinableService,
 )
 try:
     from typing import Self

@@ -240,6 +240,33 @@ def test_from_dict_service_parameters_nested_dict_becomes_grouped_parameters():
     ]
 
 
+def test_from_dict_service_parameters_dict_vs_list_group_type_casing_asymmetry():
+    # add_parameter has two branches with deliberately different casing rules:
+    #   - scalar/dict branch: _upper_first(group_type) preserves internal case
+    #     ("billingCustomer" -> "BillingCustomer").
+    #   - list-of-dicts branch: key.capitalize() flattens internal case
+    #     ("billingCustomer" -> "Billingcustomer").
+    # The list branch is left alone on purpose: changing it would alter In3's
+    # existing verified wire format (In3 declares billingCustomer as type
+    # list everywhere), which is out of scope here. This test pins both
+    # behaviors so a future change to either branch is a conscious decision.
+    dict_builder = populate_required_fields(_make_builder(), amount=10.50)
+    dict_builder.from_dict({"service_parameters": {"billingCustomer": {"firstName": "John"}}})
+    dict_request = dict_builder.build(validate=False).to_dict()
+    dict_params = dict_request["Services"]["ServiceList"][0]["Parameters"]
+    assert dict_params == [
+        {"Name": "Firstname", "GroupType": "BillingCustomer", "GroupID": "", "Value": "John"}
+    ]
+
+    list_builder = populate_required_fields(_make_builder(), amount=10.50)
+    list_builder.from_dict({"service_parameters": {"billingCustomer": [{"firstName": "John"}]}})
+    list_request = list_builder.build(validate=False).to_dict()
+    list_params = list_request["Services"]["ServiceList"][0]["Parameters"]
+    assert list_params == [
+        {"Name": "Firstname", "GroupType": "Billingcustomer", "GroupID": "1", "Value": "John"}
+    ]
+
+
 def test_from_dict_ignores_unknown_field_silently():
     builder = populate_required_fields(_make_builder(), amount=10.50)
     builder.from_dict({"unknown_field": "surprise", "another_mystery": 123})
@@ -284,6 +311,22 @@ def test_add_parameter_grouped_sets_group_type_and_group_id():
             "GroupType": "Customer",
             "GroupID": "7",
             "Value": "Jane",
+        }
+    ]
+
+
+def test_add_parameter_grouped_preserves_case_of_multi_word_group_type():
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    builder.add_parameter("productId", "SKU-1", group_type="ProductLine", group_id="1")
+
+    request = builder.build(validate=False).to_dict()
+    service = request["Services"]["ServiceList"][0]
+    assert service["Parameters"] == [
+        {
+            "Name": "Productid",
+            "GroupType": "ProductLine",
+            "GroupID": "1",
+            "Value": "SKU-1",
         }
     ]
 

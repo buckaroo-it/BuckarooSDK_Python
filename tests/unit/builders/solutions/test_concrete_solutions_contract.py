@@ -31,6 +31,7 @@ CANONICAL_ACTIONS: Dict[str, str] = {
     "emandate": "GetIssuerList",
     "emandateb2b": "GetIssuerList",
     "marketplaces": "Split",
+    "creditmanagement": "CreateInvoice",
 }
 
 

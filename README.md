@@ -15,6 +15,7 @@
 - [Instant Refunds](#instant-refunds)
 - [eMandate](#emandate)
 - [Split Payments](#split-payments)
+- [Credit Management](#credit-management)
 - [Contribute](#contribute)
 - [Versioning](#versioning)
 - [Additional information](#additional-information)
@@ -280,6 +281,166 @@ marketplaces.create_solution("marketplaces").manual_transfer({
 
 A runnable demo of all six request types is in
 [`examples/marketplaces.py`](examples/marketplaces.py).
+
+### Credit Management
+
+Credit Management is a DataRequest-based solution for invoicing and debtor
+administration, reached through `app.solutions` rather than `app.payments`.
+It covers creating and pausing invoices, managing debtors and their files,
+credit notes, product lines, and payment plans. `create_combined_invoice` is
+the exception — it builds a supplementary service that is *combined* into a
+funding payment or refund, like Split Payments.
+
+`invoice` and `currency` are **top-level** request fields for `CreateInvoice`,
+`CreateCombinedInvoice`, `CreateCreditNote`, `PauseInvoice`, `UnPauseInvoice`
+and `InvoiceInfo` — set them via the top-level `invoice`/`currency` payload
+keys (or `.invoice(...)`/`.currency(...)`), not inside `service_parameters`.
+The gateway rejects them as service parameters with `ParameterMissing`.
+`description` is likewise a **top-level** request field for
+`CreatePaymentPlan` — set it via the top-level `description` payload key (or
+`.description(...)`), not inside `service_parameters`. The gateway rejects it
+as an unknown parameter when sent as one.
+`schemeKey` is store-specific: it must belong to the same store as your store
+key. `txnpk6` below is the scheme of the demo account used to write these
+examples — replace it with the scheme key configured for your own store
+(Plaza → Credit Management → CM scheme settings).
+
+```python
+from buckaroo.app import Buckaroo
+
+app = Buckaroo.from_env()
+
+# Create an invoice (CreateInvoice — invoiceAmount, dueDate, schemeKey and a
+# Debtor group with a code are required; invoice/currency go top-level)
+response = app.solutions.create_solution(
+    "creditmanagement",
+    {
+        "invoice": "INV-001",
+        "currency": "EUR",
+        "service_parameters": {
+            "invoiceAmount": "250.00",
+            "dueDate": "2026-09-01",
+            "schemeKey": "txnpk6",
+            "debtor": {"code": "DEBTOR-001"},
+        },
+    },
+).create_invoice()
+invoice_key = response.get_service_parameter("InvoiceKey")
+
+# Create or update a debtor (AddOrUpdateDebtor — a Debtor group with a code
+# is required; Person/Company/Address/Email/Phone groups are optional)
+response = app.solutions.create_solution(
+    "creditmanagement",
+    {
+        "service_parameters": {
+            "debtor": {"code": "DEBTOR-001"},
+            "person": {"firstName": "John", "lastName": "Doe"},
+            "address": {"street": "Main St", "city": "Amsterdam"},
+        }
+    },
+).add_or_update_debtor()
+
+# Look up a debtor (DebtorInfo — a Debtor group with a code is required)
+response = app.solutions.create_solution(
+    "creditmanagement",
+    {"service_parameters": {"debtor": {"code": "DEBTOR-001"}}},
+).debtor_info()
+
+# Add product lines (AddOrUpdateProductLines — articles must be passed as
+# the `articles` method argument, not through service_parameters; each
+# article requires type, totalAmount and totalVat on top of the usual
+# identifier/description/quantity/price)
+builder = app.solutions.create_solution(
+    "creditmanagement",
+    {"service_parameters": {"invoiceKey": "INVK-001"}},
+)
+response = builder.add_or_update_product_lines(
+    articles=[
+        {
+            "identifier": "SKU-1",
+            "description": "Widget",
+            "quantity": "2",
+            "price": "10.00",
+            "type": "Regular",
+            "totalAmount": "20.00",
+            "totalVat": "4.20",
+            "vatPercentage": "21",
+        },
+    ]
+)
+
+# Create a payment plan (CreatePaymentPlan — includedInvoiceKey,
+# dossierNumber, startDate, interval, paymentPlanCostAmount and
+# recipientEmail are required service parameters; description goes
+# top-level; either installmentCount or installmentAmount must also be
+# given. Requires an active Buckaroo Credit Management subscription and an
+# included invoice past its due date — enforced by the gateway, not the SDK)
+response = app.solutions.create_solution(
+    "creditmanagement",
+    {
+        "description": "3-month plan",
+        "service_parameters": {
+            "includedInvoiceKey": "INVK-001",
+            "dossierNumber": "DOSSIER-001",
+            "startDate": "2026-09-01",
+            "interval": "Month",
+            "paymentPlanCostAmount": "5.00",
+            "recipientEmail": "debtor@example.com",
+            "installmentCount": "3",
+        }
+    },
+).create_payment_plan()
+
+# Look up an invoice (InvoiceInfo — invoice is required, top-level)
+response = app.solutions.create_solution(
+    "creditmanagement", {"invoice": "INV-001"}
+).invoice_info()
+```
+
+`create_combined_invoice` accepts the same invoice service fields as
+`create_invoice`, including the `Debtor` group, and combines into the
+funding payment or refund. The combined request has a single shared top
+level, so `invoice`/`currency` are set on the *funding* payment, not on the
+CreditManagement3 sub-builder:
+
+```python
+cm = app.solutions.create_solution(
+    "creditmanagement",
+    {
+        "service_parameters": {
+            "invoiceAmount": "95.00",
+            "dueDate": "2026-09-01",
+            "schemeKey": "txnpk6",
+            "debtor": {"code": "DEBTOR-001"},
+        }
+    },
+).create_combined_invoice()
+
+response = (
+    app.payments.create_payment("ideal", {
+        "currency": "EUR",
+        "amount": 95.00,
+        "invoice": "INV-002",
+        "description": "Combined invoice order INV-002",
+        "service_parameters": {"issuer": "ABNANL2A"},
+        "return_url": "https://example.com/return",
+        "return_url_cancel": "https://example.com/cancel",
+        "return_url_error": "https://example.com/error",
+        "return_url_reject": "https://example.com/reject",
+    })
+    .combine(cm)
+    .pay()
+)
+```
+
+Other actions follow the same shape: `create_credit_note` (`invoice`
+top-level, `originalInvoiceNumber` and `Debtor` as service parameters),
+`resume_debtor_file`/`pause_debtor_file`, `pause_invoice`/`unpause_invoice`
+(`invoice` top-level, no service parameters), and `terminate_payment_plan`
+(`includedInvoiceKey`).
+
+See [`examples/credit_management.py`](examples/credit_management.py) for a
+runnable demo of the main actions.
 
 ### Contribute
 

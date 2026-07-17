@@ -12,6 +12,18 @@ from ..models.payment_response import PaymentResponse
 from ..services.service_parameter_validator import ServiceParameterValidator
 
 
+def _upper_first(text: str) -> str:
+    """Upshift the first letter, leaving the rest of the case untouched.
+
+    CreditManagement3's AddOrUpdateProductLines rejects a flattened
+    ``"Productline"`` group type — it needs ``"ProductLine"`` verbatim, so
+    ``str.capitalize()`` is unusable here: it lowercases everything after the
+    first letter. This still turns ``from_dict``'s lowercase keys
+    (``"debtor"``) into ``"Debtor"``.
+    """
+    return text[:1].upper() + text[1:]
+
+
 class BaseBuilder(ABC):
     """Abstract base class for all builders (payments and solutions)."""
 
@@ -153,6 +165,11 @@ class BaseBuilder(ABC):
                         parameter = Parameter(
                             name=item_key.capitalize(),
                             value=str_value,
+                            # Deliberately .capitalize() and not _upper_first(): existing
+                            # builders reach this branch with camelCase keys (In3's
+                            # "billingCustomer") and already ship "Billingcustomer" on the
+                            # wire. Preserving the case here would change their requests,
+                            # which is out of scope and unverified against the gateway.
                             group_type=key.capitalize(),  # e.g., "articles"
                             group_id=str(index + 1),  # 1-based index
                         )
@@ -166,7 +183,7 @@ class BaseBuilder(ABC):
         parameter = Parameter(
             name=key.capitalize(),
             value=str_value,
-            group_type=group_type.capitalize(),
+            group_type=_upper_first(group_type),
             group_id=group_id,
         )
 

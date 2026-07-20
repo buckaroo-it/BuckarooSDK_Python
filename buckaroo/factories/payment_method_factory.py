@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Any, Dict, Type
 import logging
 
 from .builder_factory import BuilderFactory
@@ -44,6 +44,7 @@ from buckaroo.builders.payments.mbway_builder import MBWayBuilder
 from buckaroo.builders.payments.paypal_builder import PaypalBuilder
 from buckaroo.builders.payments.paybybank_builder import PayByBankBuilder
 from buckaroo.builders.payments.payperemail_builder import PayPerEmailBuilder
+from buckaroo.builders.payments.pos_builder import PosBuilder
 
 
 class PaymentMethodFactory(BuilderFactory):
@@ -81,6 +82,7 @@ class PaymentMethodFactory(BuilderFactory):
         "paypal": PaypalBuilder,
         "paybybank": PayByBankBuilder,
         "payperemail": PayPerEmailBuilder,
+        "pospayment": PosBuilder,
         "przelewy24": Przelewy24Builder,
         "riverty": RivertyBuilder,
         "sepadirectdebit": SepaDirectDebitBuilder,
@@ -159,7 +161,7 @@ class PaymentMethodFactory(BuilderFactory):
         return method.lower() in cls._payment_methods
 
     @classmethod
-    def detect_method_from_payload(cls, payload: Dict) -> str:
+    def detect_method_from_payload(cls, payload: Dict[str, Any]) -> str:
         """
         Detect the payment method from payload parameters.
 

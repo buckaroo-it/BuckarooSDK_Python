@@ -1,11 +1,13 @@
-"""Tests for :class:`buckaroo.builders.base_builder.BaseBuilder`.
+"""Tests for :class:`buckaroo.builders.base_builder.BaseBuilder` and
+:class:`buckaroo.builders.payments.payment_builder.PaymentBuilder`.
 
-Exercises the base builder directly via a tiny concrete subclass — no
-coupling to any real payment method and, importantly, no inheritance
-from :class:`PaymentBuilder` (which shadows nearly every ``BaseBuilder``
-method with an identical copy). Tests assert through the public API
-(``PaymentRequest.to_dict()``, returned ``Parameter`` objects) rather
-than private attributes.
+Shared ``BaseBuilder`` behavior (fluent setters, ``build()``, validation,
+``add_parameter``, ``from_dict``) is exercised through ``_ConcreteBaseBuilder``
+which extends ``PaymentBuilder``.  Payment lifecycle methods (``pay``,
+``refund``, ``capture``, etc.) live on ``PaymentBuilder`` and are also
+exercised here since this file owns the lightweight stub infrastructure.
+Tests assert through the public API (``PaymentRequest.to_dict()``,
+returned ``Parameter`` objects) rather than private attributes.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from buckaroo.builders.base_builder import BaseBuilder
+from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.exceptions._parameter_validation_error import (
     ParameterValidationError,
 )
@@ -23,11 +26,11 @@ from tests.support.builders import populate_required_fields
 
 
 # ---------------------------------------------------------------------------
-# Helpers: concrete BaseBuilder subclass with no PaymentBuilder in the MRO.
+# Helpers: concrete PaymentBuilder subclass used for testing.
 
 
-class _ConcreteBaseBuilder(BaseBuilder):
-    """Minimal concrete :class:`BaseBuilder` for testing its own code paths."""
+class _ConcreteBaseBuilder(PaymentBuilder):
+    """Minimal concrete subclass for testing ``BaseBuilder`` and ``PaymentBuilder`` code paths."""
 
     def __init__(
         self,
@@ -60,10 +63,6 @@ def _core_allowed_params() -> dict:
     }
 
 
-# ``_ConcreteBaseBuilder`` extends :class:`BaseBuilder` directly so these tests
-# hit the base-class methods; ``make_test_builder`` returns a
-# :class:`PaymentBuilder` subclass, which would shadow nearly every method with
-# an identical copy and mask base-class coverage.
 def _make_builder(
     *,
     service_name: str = "dummy",

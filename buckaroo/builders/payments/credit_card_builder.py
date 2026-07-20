@@ -21,13 +21,31 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
         action_lower = action.lower()
 
         if action_lower == "payencrypted":
-            return {"encryptedcarddata": {"type": str, "required": True, "description": "Encrypted card data"}}
+            return {
+                "encryptedcarddata": {
+                    "type": str,
+                    "required": True,
+                    "description": "Encrypted card data",
+                }
+            }
 
         if action_lower == "paywithsecuritycode":
-            return {"encryptedsecuritycode": {"type": str, "required": True, "description": "Encrypted security code"}}
+            return {
+                "encryptedsecuritycode": {
+                    "type": str,
+                    "required": True,
+                    "description": "Encrypted security code",
+                }
+            }
 
         if action_lower in ("paywithtoken", "authorizewithtoken"):
-            return {"sessionid": {"type": str, "required": True, "description": "Session ID token from Hosted Fields submitSession()"}}
+            return {
+                "sessionid": {
+                    "type": str,
+                    "required": True,
+                    "description": "Session ID token from Hosted Fields submitSession()",
+                }
+            }
 
         return {}
 

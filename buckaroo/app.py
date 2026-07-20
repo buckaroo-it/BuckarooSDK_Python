@@ -43,7 +43,7 @@ class BuckarooConfig:
     retry_attempts: int = 3
 
     @classmethod
-    def from_env(cls) -> 'BuckarooConfig':
+    def from_env(cls) -> "BuckarooConfig":
         """Create configuration from environment variables."""
         # Get log level from env
         log_level_str = os.getenv("BUCKAROO_LOG_LEVEL", "INFO").upper()
@@ -240,4 +240,3 @@ class Buckaroo:
                 self.logger.log_exception(exc_val, context={"context_manager": "exit"})
             else:
                 self.logger.log_debug("Exiting Buckaroo app context successfully")
-

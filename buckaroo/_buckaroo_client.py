@@ -1,4 +1,3 @@
-
 import logging
 from typing import Optional
 from .exceptions._authentication_error import AuthenticationError

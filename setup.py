@@ -29,8 +29,8 @@ setup(
     package_data={"buckaroo": ["py.typed"]},
     zip_safe=False,
     install_requires=[
-        'typing_extensions >= 4.5.0',
-        'requests >= 2.20',
+        "typing_extensions >= 4.5.0",
+        "requests >= 2.20",
     ],
     python_requires=">=3.9",
     project_urls={

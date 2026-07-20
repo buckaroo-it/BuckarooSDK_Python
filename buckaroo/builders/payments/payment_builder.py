@@ -18,7 +18,9 @@ class PaymentBuilder(BaseBuilder):
 
     def pay(self, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
         """Execute the payment."""
-        request_data = self.build("Pay", validate=validate, strict_validation=strict_validation).to_dict()
+        request_data = self.build(
+            "Pay", validate=validate, strict_validation=strict_validation
+        ).to_dict()
         return self._post_transaction(request_data)
 
     def refund(
@@ -28,19 +30,19 @@ class PaymentBuilder(BaseBuilder):
         validate: bool = True,
     ) -> PaymentResponse:
         """Execute a full refund."""
-        txn_key = original_transaction_key or self._payload.get('original_transaction_key')
+        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
         if not txn_key:
             raise ValueError("Original transaction key is required for refund")
 
-        refund_amount = amount if amount is not None else self._payload.get('refund_amount')
-        request_data = self._build_keyed_request('Refund', txn_key, validate=validate)
+        refund_amount = amount if amount is not None else self._payload.get("refund_amount")
+        request_data = self._build_keyed_request("Refund", txn_key, validate=validate)
 
         if refund_amount is not None:
-            request_data['AmountCredit'] = refund_amount
-            request_data.pop('AmountDebit', None)
+            request_data["AmountCredit"] = refund_amount
+            request_data.pop("AmountDebit", None)
         else:
-            if 'AmountDebit' in request_data:
-                request_data['AmountCredit'] = request_data.pop('AmountDebit')
+            if "AmountDebit" in request_data:
+                request_data["AmountCredit"] = request_data.pop("AmountDebit")
 
         return self._post_transaction(request_data)
 
@@ -54,24 +56,24 @@ class PaymentBuilder(BaseBuilder):
             raise ValueError("Partial refund amount must be greater than 0")
 
         _MISSING = object()
-        saved_key = self._payload.get('original_transaction_key', _MISSING)
-        saved_amount = self._payload.get('refund_amount', _MISSING)
+        saved_key = self._payload.get("original_transaction_key", _MISSING)
+        saved_amount = self._payload.get("refund_amount", _MISSING)
 
         if original_transaction_key is not None:
-            self._payload['original_transaction_key'] = original_transaction_key
-        self._payload['refund_amount'] = amount
+            self._payload["original_transaction_key"] = original_transaction_key
+        self._payload["refund_amount"] = amount
 
         try:
             return self.refund()
         finally:
             if saved_key is _MISSING:
-                self._payload.pop('original_transaction_key', None)
+                self._payload.pop("original_transaction_key", None)
             else:
-                self._payload['original_transaction_key'] = saved_key
+                self._payload["original_transaction_key"] = saved_key
             if saved_amount is _MISSING:
-                self._payload.pop('refund_amount', None)
+                self._payload.pop("refund_amount", None)
             else:
-                self._payload['refund_amount'] = saved_amount
+                self._payload["refund_amount"] = saved_amount
 
     def pay_remainder(
         self, original_transaction_key: Optional[str] = None, validate: bool = True
@@ -82,14 +84,14 @@ class PaymentBuilder(BaseBuilder):
         The original transaction key is the group transaction key that links
         this payment into the group; read from the payload when not supplied.
         """
-        txn_key = original_transaction_key or self._payload.get('original_transaction_key')
+        txn_key = original_transaction_key or self._payload.get("original_transaction_key")
         if not txn_key:
             raise ValueError(
                 "Original transaction key is required for pay remainder "
                 "(provide as parameter or in payload)"
             )
 
-        request_data = self._build_keyed_request('PayRemainder', txn_key, validate=validate)
+        request_data = self._build_keyed_request("PayRemainder", txn_key, validate=validate)
         return self._post_transaction(request_data)
 
     # ``capture`` is intentionally not defined here: it lives on
@@ -100,25 +102,31 @@ class PaymentBuilder(BaseBuilder):
         """Cancel a pending or authorized transaction."""
         txn_key = (
             original_transaction_key
-            or self._payload.get('cancel_key')
-            or self._payload.get('original_transaction_key')
+            or self._payload.get("cancel_key")
+            or self._payload.get("original_transaction_key")
         )
         if not txn_key:
             raise ValueError("Transaction key is required for cancel")
 
-        request_data = self._build_keyed_request('Pay', txn_key)
-        request_data.pop('AmountDebit', None)
-        request_data.pop('AmountCredit', None)
+        request_data = self._build_keyed_request("Pay", txn_key)
+        request_data.pop("AmountDebit", None)
+        request_data.pop("AmountCredit", None)
 
         return self._post_transaction(request_data)
 
-    def execute_action(self, action: str, validate: bool = True, strict_validation: bool = False) -> PaymentResponse:
+    def execute_action(
+        self, action: str, validate: bool = True, strict_validation: bool = False
+    ) -> PaymentResponse:
         """Execute any named action supported by this payment method."""
-        request_data = self.build(action, validate=validate, strict_validation=strict_validation).to_dict()
+        request_data = self.build(
+            action, validate=validate, strict_validation=strict_validation
+        ).to_dict()
         return self._post_transaction(request_data)
 
-    def _build_keyed_request(self, action: str, txn_key: str, validate: bool = True) -> Dict[str, Any]:
+    def _build_keyed_request(
+        self, action: str, txn_key: str, validate: bool = True
+    ) -> Dict[str, Any]:
         """Build a request dict that references an original transaction."""
         request_data = self.build(action, validate=validate).to_dict()
-        request_data['OriginalTransactionKey'] = txn_key
+        request_data["OriginalTransactionKey"] = txn_key
         return request_data

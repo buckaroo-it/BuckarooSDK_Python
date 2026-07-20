@@ -77,14 +77,14 @@ class BuckarooHttpClient:
         # the content digest is an input component to HMAC-SHA256 and is not
         # used as a standalone integrity primitive.
         if content:
-            content_bytes = content.encode('utf-8')
+            content_bytes = content.encode("utf-8")
             try:
                 # usedforsecurity=False satisfies FIPS-mode environments (Python 3.9+)
                 md5_hash = hashlib.md5(content_bytes, usedforsecurity=False).digest()
             except TypeError:
                 # Python < 3.9 does not support usedforsecurity keyword argument
                 md5_hash = hashlib.md5(content_bytes).digest()
-            content_b64 = base64.b64encode(md5_hash).decode('utf-8')
+            content_b64 = base64.b64encode(md5_hash).decode("utf-8")
         else:
             content_b64 = ""
 

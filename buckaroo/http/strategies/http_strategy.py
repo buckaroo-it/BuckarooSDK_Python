@@ -49,11 +49,11 @@ class HttpStrategy(ABC):
 
     def _apply_defaults(self, **kwargs) -> None:
         """Apply configuration kwargs, resetting to defaults for omitted keys."""
-        self._timeout = kwargs.get('timeout', 30)
-        self._verify_ssl = kwargs.get('verify_ssl', True)
-        self._retry_attempts = kwargs.get('retry_attempts', 3)
-        self._retry_delay = kwargs.get('retry_delay', 1.0)
-        self._default_headers = kwargs.get('default_headers', {})
+        self._timeout = kwargs.get("timeout", 30)
+        self._verify_ssl = kwargs.get("verify_ssl", True)
+        self._retry_attempts = kwargs.get("retry_attempts", 3)
+        self._retry_delay = kwargs.get("retry_delay", 1.0)
+        self._default_headers = kwargs.get("default_headers", {})
 
     @abstractmethod
     def configure(self, **kwargs) -> None:

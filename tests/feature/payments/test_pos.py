@@ -94,9 +94,7 @@ class TestPosFeature:
         mock_strategy.queue(BuckarooMockRequest.json("POST", "*/json/transaction", response_body))
 
         response = (
-            buckaroo.payments.create_payment(
-                "POSPAYMENT", _pos_payload(invoice="INV-POS-CASE")
-            )
+            buckaroo.payments.create_payment("POSPAYMENT", _pos_payload(invoice="INV-POS-CASE"))
             .terminal_id(_TERMINAL_ID)
             .pay()
         )

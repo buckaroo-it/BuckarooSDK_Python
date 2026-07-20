@@ -12,6 +12,7 @@ from .payment_request import Parameter
 # Named constants for Buckaroo transaction status codes
 class BuckarooStatusCode:
     """Named constants for Buckaroo transaction status codes."""
+
     # Success
     SUCCESS = 190
 
@@ -35,7 +36,12 @@ class BuckarooStatusCode:
 
     PENDING_CODES = {PENDING_INPUT, PENDING_PROCESSING, AWAITING_CONSUMER, ON_HOLD}
     FAILED_CODES = {PAYMENT_FAILED, VALIDATION_FAILED, TECHNICAL_ERROR, REJECTED}
-    CANCELLED_CODES = {CANCELLED, CANCELLED_BY_CONSUMER_LATE, CANCELLED_BY_MERCHANT, CANCELLED_BY_CONSUMER}
+    CANCELLED_CODES = {
+        CANCELLED,
+        CANCELLED_BY_CONSUMER_LATE,
+        CANCELLED_BY_MERCHANT,
+        CANCELLED_BY_CONSUMER,
+    }
 
 
 @dataclass
@@ -51,13 +57,10 @@ class StatusCode:
         if data is None:
             data = {}
         if isinstance(data, int):
-            return cls(code=data, description='')
+            return cls(code=data, description="")
         if isinstance(data, dict):
-            return cls(
-                code=data.get('Code', 0),
-                description=data.get('Description', '')
-            )
-        return cls(code=0, description='')
+            return cls(code=data.get("Code", 0), description=data.get("Description", ""))
+        return cls(code=0, description="")
 
 
 @dataclass
@@ -129,14 +132,10 @@ class Service:
             data = {}
 
         parameters = []
-        if 'Parameters' in data and data['Parameters']:
-            parameters = [Parameter.from_dict(param) for param in data['Parameters']]
+        if "Parameters" in data and data["Parameters"]:
+            parameters = [Parameter.from_dict(param) for param in data["Parameters"]]
 
-        return cls(
-            name=data.get('Name', ''),
-            action=data.get('Action'),
-            parameters=parameters
-        )
+        return cls(name=data.get("Name", ""), action=data.get("Action"), parameters=parameters)
 
 
 class PaymentResponse:

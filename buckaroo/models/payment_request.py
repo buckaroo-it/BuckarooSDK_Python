@@ -5,6 +5,7 @@ from dataclasses import dataclass
 @dataclass
 class Parameter:
     """Model for a service parameter (used for both requests and responses)."""
+
     name: str
     value: Optional[str]
     group_type: Optional[str] = None
@@ -16,20 +17,20 @@ class Parameter:
             "Name": self.name,
             "GroupType": self.group_type or "",
             "GroupID": self.group_id or "",
-            "Value": self.value
+            "Value": self.value,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Parameter':
+    def from_dict(cls, data: Dict[str, Any]) -> "Parameter":
         """Create Parameter from API response dictionary."""
         if data is None:
             data = {}
-        value = data.get('Value')
+        value = data.get("Value")
         return cls(
-            name=data.get('Name', ''),
+            name=data.get("Name", ""),
             value=str(value) if value is not None else None,
-            group_type=data.get('GroupType') or None,
-            group_id=data.get('GroupID') or None,
+            group_type=data.get("GroupType") or None,
+            group_id=data.get("GroupID") or None,
         )
 
 
@@ -118,6 +119,7 @@ class ServiceList:
 @dataclass
 class PaymentRequest:
     """Model for complete payment request."""
+
     currency: Optional[str] = None
     amount_debit: Optional[float] = None
     description: Optional[str] = None

@@ -50,7 +50,7 @@ class AuthorizeCaptureCapable:
         return self._post_transaction(request_data)
 
     def cancelAuthorize(
-        self: 'PaymentBuilder',
+        self: "PaymentBuilder",
         original_transaction_key: Optional[str] = None,
         validate: bool = True,
     ) -> PaymentResponse:
@@ -60,17 +60,15 @@ class AuthorizeCaptureCapable:
         """
         txn_key = (
             original_transaction_key
-            or self._payload.get('original_transaction_key')
-            or self._payload.get('authorization_key')
+            or self._payload.get("original_transaction_key")
+            or self._payload.get("authorization_key")
         )
         if not txn_key:
-            raise ValueError(
-                "original_transaction_key is required for cancelAuthorize"
-            )
+            raise ValueError("original_transaction_key is required for cancelAuthorize")
 
         request_data = self._build_keyed_request("CancelAuthorize", txn_key, validate=validate)
 
-        if 'AmountDebit' in request_data:
-            request_data['AmountCredit'] = request_data.pop('AmountDebit')
+        if "AmountDebit" in request_data:
+            request_data["AmountCredit"] = request_data.pop("AmountDebit")
 
         return self._post_transaction(request_data)

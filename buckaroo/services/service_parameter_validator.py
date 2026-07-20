@@ -67,7 +67,7 @@ class ServiceParameterValidator:
                             f"Parameter '{key}' must be one of types {type_names} or 'true'/'false' string",
                             parameter_name=key,
                             expected_type=str(type_names),
-                            service_name=self._get_service_name()
+                            service_name=self._get_service_name(),
                         )
                 else:
                     type_names = [t.__name__ for t in expected_type]
@@ -75,7 +75,7 @@ class ServiceParameterValidator:
                         f"Parameter '{key}' must be one of types {type_names}, got {type(value).__name__}",
                         parameter_name=key,
                         expected_type=str(type_names),
-                        service_name=self._get_service_name()
+                        service_name=self._get_service_name(),
                     )
         else:
             if not isinstance(value, expected_type):
@@ -86,14 +86,14 @@ class ServiceParameterValidator:
                             f"Parameter '{key}' must be a boolean or 'true'/'false' string",
                             parameter_name=key,
                             expected_type=expected_type.__name__,
-                            service_name=self._get_service_name()
+                            service_name=self._get_service_name(),
                         )
                 else:
                     raise ParameterValidationError(
                         f"Parameter '{key}' must be of type {expected_type.__name__}, got {type(value).__name__}",
                         parameter_name=key,
                         expected_type=expected_type.__name__,
-                        service_name=self._get_service_name()
+                        service_name=self._get_service_name(),
                     )
 
     def validate_single_parameter(self, key: str, value: Any, action: str = "Pay") -> None:
@@ -116,7 +116,7 @@ class ServiceParameterValidator:
                 f"Allowed parameters: {list(allowed_params.keys())}",
                 parameter_name=key,
                 action=action,
-                service_name=self._get_service_name()
+                service_name=self._get_service_name(),
             )
 
         param_config = allowed_params[key]
@@ -182,14 +182,14 @@ class ServiceParameterValidator:
                 raise RequiredParameterMissingError(
                     parameter_name=missing_required[0],
                     action=action,
-                    service_name=self._get_service_name()
+                    service_name=self._get_service_name(),
                 )
             else:
                 # Multiple missing parameters
                 raise ParameterValidationError(
                     f"Required parameters missing for {self._get_service_name()} {action} action: {', '.join(missing_required)}",
                     action=action,
-                    service_name=self._get_service_name()
+                    service_name=self._get_service_name(),
                 )
 
     def validate_and_filter_parameters(
@@ -226,7 +226,9 @@ class ServiceParameterValidator:
                     # Grouped parameter is valid - no need to validate individual fields
                     valid_parameters.append(param)
                 else:
-                    invalid_params.append(f"{param.name} (group: {param.group_type}): group not allowed for {self._get_service_name()} {action} action")
+                    invalid_params.append(
+                        f"{param.name} (group: {param.group_type}): group not allowed for {self._get_service_name()} {action} action"
+                    )
             else:
                 # Regular parameter - validate including source check
                 normalized_param_name = self.normalize_parameter_name(param.name)
@@ -260,10 +262,14 @@ class ServiceParameterValidator:
                     except ParameterValidationError as e:
                         invalid_params.append(f"{param.name}: {str(e)}")
                 else:
-                    invalid_params.append(f"{param.name}: not allowed for {self._get_service_name()} {action} action")
+                    invalid_params.append(
+                        f"{param.name}: not allowed for {self._get_service_name()} {action} action"
+                    )
 
         if invalid_params:
-            logging.warning("Filtered out invalid service parameters for %s action: %s", action, invalid_params)
+            logging.warning(
+                "Filtered out invalid service parameters for %s action: %s", action, invalid_params
+            )
 
         return valid_parameters
 
@@ -293,7 +299,9 @@ class ServiceParameterValidator:
             for param in parameters:
                 normalized_param_name = self.normalize_parameter_name(param.name)
                 allowed_params = self._get_allowed_params(action)
-                normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
+                normalized_allowed = {
+                    self.normalize_parameter_name(key): key for key in allowed_params.keys()
+                }
 
                 if normalized_param_name in normalized_allowed:
                     allowed_param_name = normalized_allowed[normalized_param_name]
@@ -304,7 +312,7 @@ class ServiceParameterValidator:
                         f"Parameter '{param.name}' is not allowed for {self._get_service_name()} {action} action",
                         parameter_name=param.name,
                         action=action,
-                        service_name=self._get_service_name()
+                        service_name=self._get_service_name(),
                     )
 
             return parameters
@@ -338,7 +346,9 @@ class ServiceParameterValidator:
             bool: True if parameter is allowed, False otherwise
         """
         allowed_params = self._get_allowed_params(action)
-        normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
+        normalized_allowed = {
+            self.normalize_parameter_name(key): key for key in allowed_params.keys()
+        }
         normalized_param = self.normalize_parameter_name(param_name)
 
         return normalized_param in normalized_allowed
@@ -355,7 +365,9 @@ class ServiceParameterValidator:
             str: Official parameter name, or empty string if not found
         """
         allowed_params = self._get_allowed_params(action)
-        normalized_allowed = {self.normalize_parameter_name(key): key for key in allowed_params.keys()}
+        normalized_allowed = {
+            self.normalize_parameter_name(key): key for key in allowed_params.keys()
+        }
         normalized_param = self.normalize_parameter_name(param_name)
 
         return normalized_allowed.get(normalized_param, "")

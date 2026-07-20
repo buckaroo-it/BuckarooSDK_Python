@@ -8,6 +8,7 @@ from ..models.payment_request import (
     Parameter,
     CombinableService,
 )
+
 try:
     from typing import Self
 except ImportError:
@@ -43,7 +44,9 @@ class BaseBuilder(ABC):
                       real HTTP calls.
         """
         self._client = client
-        self._executor: ITransactionExecutor = executor if executor is not None else TransactionExecutor(client)
+        self._executor: ITransactionExecutor = (
+            executor if executor is not None else TransactionExecutor(client)
+        )
         self._currency: Optional[str] = None
         self._amount_debit: Optional[float] = None
         self._description: Optional[str] = None
@@ -159,7 +162,9 @@ class BaseBuilder(ABC):
         self._client_ip = ClientIP(type=ip_type, address=ip_address)
         return self
 
-    def add_parameter(self, key: str, value: Any, group_type: Optional[str] = None, group_id: Optional[str] = None) -> Self:
+    def add_parameter(
+        self, key: str, value: Any, group_type: Optional[str] = None, group_id: Optional[str] = None
+    ) -> Self:
         """Add a custom parameter to the service.
 
         Args:
@@ -376,15 +381,17 @@ class BaseBuilder(ABC):
         Args:
             action (str): The action being performed (Pay, Authorize, Refund, Capture, etc.)
         """
-        missing_fields = [field for field, value in self.required_fields(action).items() if value is None]
+        missing_fields = [
+            field for field, value in self.required_fields(action).items() if value is None
+        ]
         if len(missing_fields) == 1:
             raise RequiredParameterMissingError(missing_fields[0], action=action)
         elif missing_fields:
-            raise ValueError(
-                f"Missing required fields: {', '.join(missing_fields)}"
-            )
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
-    def build(self, action: str = "Pay", validate: bool = True, strict_validation: bool = False) -> PaymentRequest:
+    def build(
+        self, action: str = "Pay", validate: bool = True, strict_validation: bool = False
+    ) -> PaymentRequest:
         """Build the payment request.
 
         Args:

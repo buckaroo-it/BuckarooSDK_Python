@@ -6,6 +6,7 @@ builders only need to construct the request payload, not manage HTTP concerns.
 """
 
 from typing import Dict, Any
+
 try:
     from typing import Protocol, runtime_checkable
 except ImportError:
@@ -39,8 +40,8 @@ class TransactionExecutor:
     to it, keeping the HTTP concern out of the builder layer.
     """
 
-    _TRANSACTION_ENDPOINT = '/json/transaction'
-    _DATA_REQUEST_ENDPOINT = '/json/DataRequest'
+    _TRANSACTION_ENDPOINT = "/json/transaction"
+    _DATA_REQUEST_ENDPOINT = "/json/DataRequest"
 
     def __init__(self, client) -> None:
         """

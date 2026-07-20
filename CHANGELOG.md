@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [Released]
 
 ## [1.0.0]
+- BTI-977 Add Point of Sale (POS) payment method
 - BTI-22 Add Credit Management solution
 - BTI-16 Add Split Payments (Marketplaces) solution
 - BTI-23 Add eMandate solution (B2C + B2B)

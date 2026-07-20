@@ -200,7 +200,7 @@ class BaseBuilder(ABC):
         parameter = Parameter(
             name=key.capitalize(),
             value=str_value,
-            group_type=group_type.capitalize() if group_type else None,
+            group_type=_upper_first(group_type) if group_type else None,
             group_id=group_id,
         )
 

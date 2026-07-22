@@ -1,10 +1,11 @@
-from typing import Dict, Type
+from typing import Any, Dict, Type
 import logging
 
 from .builder_factory import BuilderFactory
 from buckaroo.builders.payments.alipay_builder import AlipayBuilder
 from buckaroo.builders.payments.apple_pay_builder import ApplePayBuilder
 from buckaroo.builders.payments.bancontact_builder import BancontactBuilder
+from buckaroo.builders.payments.banking_builder import BankingBuilder
 from buckaroo.builders.payments.belfius_builder import BelfiusBuilder
 from buckaroo.builders.payments.bizum_builder import BizumBuilder
 from buckaroo.builders.payments.blik_builder import BlikBuilder
@@ -17,6 +18,7 @@ from buckaroo.builders.payments.external_payment_builder import ExternalPaymentB
 from buckaroo.builders.payments.giftcards_builder import GiftcardsBuilder
 from buckaroo.builders.payments.google_pay_builder import GooglePayBuilder
 from buckaroo.builders.payments.ideal_qr_builder import IdealQrBuilder
+from buckaroo.builders.payments.idin_builder import IdinBuilder
 from buckaroo.builders.payments.in3_builder import In3Builder
 from buckaroo.builders.payments.kbc_builder import KBCBuilder
 from buckaroo.builders.payments.billink_builder import BillinkBuilder
@@ -42,6 +44,7 @@ from buckaroo.builders.payments.mbway_builder import MBWayBuilder
 from buckaroo.builders.payments.paypal_builder import PaypalBuilder
 from buckaroo.builders.payments.paybybank_builder import PayByBankBuilder
 from buckaroo.builders.payments.payperemail_builder import PayPerEmailBuilder
+from buckaroo.builders.payments.pos_builder import PosBuilder
 
 
 class PaymentMethodFactory(BuilderFactory):
@@ -52,6 +55,7 @@ class PaymentMethodFactory(BuilderFactory):
         "alipay": AlipayBuilder,
         "applepay": ApplePayBuilder,
         "bancontact": BancontactBuilder,
+        "banking": BankingBuilder,
         "belfius": BelfiusBuilder,
         "bizum": BizumBuilder,
         "billink": BillinkBuilder,
@@ -66,6 +70,7 @@ class PaymentMethodFactory(BuilderFactory):
         "googlepay": GooglePayBuilder,
         "ideal": IdealBuilder,
         "idealqr": IdealQrBuilder,
+        "idin": IdinBuilder,
         "in3": In3Builder,
         "kbc": KBCBuilder,
         "knaken": KnakenBuilder,
@@ -77,6 +82,7 @@ class PaymentMethodFactory(BuilderFactory):
         "paypal": PaypalBuilder,
         "paybybank": PayByBankBuilder,
         "payperemail": PayPerEmailBuilder,
+        "pospayment": PosBuilder,
         "przelewy24": Przelewy24Builder,
         "riverty": RivertyBuilder,
         "sepadirectdebit": SepaDirectDebitBuilder,
@@ -155,7 +161,7 @@ class PaymentMethodFactory(BuilderFactory):
         return method.lower() in cls._payment_methods
 
     @classmethod
-    def detect_method_from_payload(cls, payload: Dict) -> str:
+    def detect_method_from_payload(cls, payload: Dict[str, Any]) -> str:
         """
         Detect the payment method from payload parameters.
 

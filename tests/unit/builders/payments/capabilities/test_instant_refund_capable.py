@@ -52,7 +52,7 @@ class TestInstantRefund:
         mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
-        builder.instantRefund(validate=False)
+        builder.instantRefund("ABC123", validate=False)
 
         assert recorded_action(mock) == "instantRefund"
 
@@ -61,7 +61,7 @@ class TestInstantRefund:
         mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
-        builder.instantRefund(validate=False)
+        builder.instantRefund("ABC123", validate=False)
 
         assert len(mock.calls) == 1
         call = mock.calls[0]
@@ -73,7 +73,7 @@ class TestInstantRefund:
         mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
         builder = _ready_builder(client)
 
-        builder.instantRefund(validate=False)
+        builder.instantRefund("ABC123", validate=False)
 
         service = recorded_request(mock)["Services"]["ServiceList"][0]
         assert service["Name"] == "ideal"
@@ -89,10 +89,53 @@ class TestInstantRefund:
         )
         builder = _ready_builder(client)
 
-        response = builder.instantRefund(validate=False)
+        response = builder.instantRefund("ABC123", validate=False)
 
         assert isinstance(response, PaymentResponse)
         assert response.key == "refund-123"
+
+    def test_raises_value_error_without_original_transaction_key(self):
+        _mock, client = wire_recording_http()
+        builder = _ready_builder(client)
+
+        with pytest.raises(ValueError, match="Original transaction key is required"):
+            builder.instantRefund(validate=False)
+
+    def test_full_refund_sends_original_transaction_key_and_swaps_amount_to_credit(self):
+        mock, client = wire_recording_http()
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
+        builder = _ready_builder(client)
+
+        builder.instantRefund("ABC123", validate=False)
+
+        request = recorded_request(mock)
+        assert request["OriginalTransactionKey"] == "ABC123"
+        assert request["AmountCredit"] == 10.0
+        assert "AmountDebit" not in request
+
+    def test_partial_refund_uses_refund_amount_from_payload(self):
+        mock, client = wire_recording_http()
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
+        builder = _ready_builder(client)
+        builder._payload["refund_amount"] = 3.25
+
+        builder.instantRefund("ABC123", validate=False)
+
+        request = recorded_request(mock)
+        assert request["OriginalTransactionKey"] == "ABC123"
+        assert request["AmountCredit"] == 3.25
+        assert "AmountDebit" not in request
+
+    def test_reads_original_transaction_key_from_payload_fallback(self):
+        mock, client = wire_recording_http()
+        mock.queue(BuckarooMockRequest.json("POST", "*/json/transaction*", {"Key": "ok"}))
+        builder = _ready_builder(client)
+        builder._payload["original_transaction_key"] = "FROM-PAYLOAD"
+
+        builder.instantRefund(validate=False)
+
+        request = recorded_request(mock)
+        assert request["OriginalTransactionKey"] == "FROM-PAYLOAD"
 
     def test_forwards_validate_flag_true_triggers_validation(self):
         """``validate=True`` runs the real service-parameter validator against
@@ -111,6 +154,6 @@ class TestInstantRefund:
         )
 
         with pytest.raises(RequiredParameterMissingError) as exc:
-            builder.instantRefund(validate=True)
+            builder.instantRefund("ABC123", validate=True)
 
         assert exc.value.parameter_name == "refund_reason"

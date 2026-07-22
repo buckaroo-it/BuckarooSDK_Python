@@ -1,11 +1,13 @@
-"""Tests for :class:`buckaroo.builders.base_builder.BaseBuilder`.
+"""Tests for :class:`buckaroo.builders.base_builder.BaseBuilder` and
+:class:`buckaroo.builders.payments.payment_builder.PaymentBuilder`.
 
-Exercises the base builder directly via a tiny concrete subclass — no
-coupling to any real payment method and, importantly, no inheritance
-from :class:`PaymentBuilder` (which shadows nearly every ``BaseBuilder``
-method with an identical copy). Tests assert through the public API
-(``PaymentRequest.to_dict()``, returned ``Parameter`` objects) rather
-than private attributes.
+Shared ``BaseBuilder`` behavior (fluent setters, ``build()``, validation,
+``add_parameter``, ``from_dict``) is exercised through ``_ConcreteBaseBuilder``
+which extends ``PaymentBuilder``.  Payment lifecycle methods (``pay``,
+``refund``, ``capture``, etc.) live on ``PaymentBuilder`` and are also
+exercised here since this file owns the lightweight stub infrastructure.
+Tests assert through the public API (``PaymentRequest.to_dict()``,
+returned ``Parameter`` objects) rather than private attributes.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from buckaroo.builders.base_builder import BaseBuilder
+from buckaroo.builders.payments.payment_builder import PaymentBuilder
 from buckaroo.exceptions._parameter_validation_error import (
     ParameterValidationError,
 )
@@ -23,11 +26,11 @@ from tests.support.builders import populate_required_fields
 
 
 # ---------------------------------------------------------------------------
-# Helpers: concrete BaseBuilder subclass with no PaymentBuilder in the MRO.
+# Helpers: concrete PaymentBuilder subclass used for testing.
 
 
-class _ConcreteBaseBuilder(BaseBuilder):
-    """Minimal concrete :class:`BaseBuilder` for testing its own code paths."""
+class _ConcreteBaseBuilder(PaymentBuilder):
+    """Minimal concrete subclass for testing ``BaseBuilder`` and ``PaymentBuilder`` code paths."""
 
     def __init__(
         self,
@@ -60,10 +63,6 @@ def _core_allowed_params() -> dict:
     }
 
 
-# ``_ConcreteBaseBuilder`` extends :class:`BaseBuilder` directly so these tests
-# hit the base-class methods; ``make_test_builder`` returns a
-# :class:`PaymentBuilder` subclass, which would shadow nearly every method with
-# an identical copy and mask base-class coverage.
 def _make_builder(
     *,
     service_name: str = "dummy",
@@ -240,6 +239,33 @@ def test_from_dict_service_parameters_nested_dict_becomes_grouped_parameters():
     ]
 
 
+def test_from_dict_service_parameters_dict_vs_list_group_type_casing_asymmetry():
+    # add_parameter has two branches with deliberately different casing rules:
+    #   - scalar/dict branch: _upper_first(group_type) preserves internal case
+    #     ("billingCustomer" -> "BillingCustomer").
+    #   - list-of-dicts branch: key.capitalize() flattens internal case
+    #     ("billingCustomer" -> "Billingcustomer").
+    # The list branch is left alone on purpose: changing it would alter In3's
+    # existing verified wire format (In3 declares billingCustomer as type
+    # list everywhere), which is out of scope here. This test pins both
+    # behaviors so a future change to either branch is a conscious decision.
+    dict_builder = populate_required_fields(_make_builder(), amount=10.50)
+    dict_builder.from_dict({"service_parameters": {"billingCustomer": {"firstName": "John"}}})
+    dict_request = dict_builder.build(validate=False).to_dict()
+    dict_params = dict_request["Services"]["ServiceList"][0]["Parameters"]
+    assert dict_params == [
+        {"Name": "Firstname", "GroupType": "BillingCustomer", "GroupID": "", "Value": "John"}
+    ]
+
+    list_builder = populate_required_fields(_make_builder(), amount=10.50)
+    list_builder.from_dict({"service_parameters": {"billingCustomer": [{"firstName": "John"}]}})
+    list_request = list_builder.build(validate=False).to_dict()
+    list_params = list_request["Services"]["ServiceList"][0]["Parameters"]
+    assert list_params == [
+        {"Name": "Firstname", "GroupType": "Billingcustomer", "GroupID": "1", "Value": "John"}
+    ]
+
+
 def test_from_dict_ignores_unknown_field_silently():
     builder = populate_required_fields(_make_builder(), amount=10.50)
     builder.from_dict({"unknown_field": "surprise", "another_mystery": 123})
@@ -284,6 +310,22 @@ def test_add_parameter_grouped_sets_group_type_and_group_id():
             "GroupType": "Customer",
             "GroupID": "7",
             "Value": "Jane",
+        }
+    ]
+
+
+def test_add_parameter_grouped_preserves_case_of_multi_word_group_type():
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    builder.add_parameter("productId", "SKU-1", group_type="ProductLine", group_id="1")
+
+    request = builder.build(validate=False).to_dict()
+    service = request["Services"]["ServiceList"][0]
+    assert service["Parameters"] == [
+        {
+            "Name": "Productid",
+            "GroupType": "ProductLine",
+            "GroupID": "1",
+            "Value": "SKU-1",
         }
     ]
 

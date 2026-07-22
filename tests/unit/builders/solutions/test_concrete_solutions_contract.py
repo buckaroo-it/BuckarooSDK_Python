@@ -28,6 +28,10 @@ from buckaroo.factories.solution_method_factory import SolutionMethodFactory
 # ``SolutionMethodFactory._solution_methods``.
 CANONICAL_ACTIONS: Dict[str, str] = {
     "subscription": "CreateSubscription",
+    "emandate": "GetIssuerList",
+    "emandateb2b": "GetIssuerList",
+    "marketplaces": "Split",
+    "creditmanagement": "CreateInvoice",
 }
 
 

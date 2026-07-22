@@ -144,7 +144,7 @@ def test_instant_refund_works(client, mock_strategy):
         )
     )
     builder = populate_required_fields(SofortBuilder(client))
-    response = builder.instantRefund()
+    response = builder.instantRefund("ABC123")
     assert response is not None
 
 

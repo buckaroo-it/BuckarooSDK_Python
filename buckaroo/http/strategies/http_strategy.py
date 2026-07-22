@@ -4,6 +4,7 @@ HTTP Strategy Interface for Buckaroo SDK.
 This module defines the abstract base class for HTTP client strategies.
 """
 
+import json as _json
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
@@ -24,11 +25,9 @@ class HttpResponse:
 
     def json(self) -> Dict[str, Any]:
         """Parse response text as JSON."""
-        import json
-
         try:
-            return json.loads(self.text) if self.text else {}
-        except json.JSONDecodeError:
+            return _json.loads(self.text) if self.text else {}
+        except _json.JSONDecodeError:
             return {"raw_content": self.text}
 
 
@@ -36,17 +35,29 @@ class HttpStrategy(ABC):
     """
     Abstract base class for HTTP client strategies.
 
-    This defines the interface that all HTTP client implementations must follow.
+    Stores common configuration fields and provides a default :meth:`configure`
+    implementation.  Subclasses that need extra setup should call
+    ``super().configure(**kwargs)`` before their own logic.
     """
+
+    def __init__(self) -> None:
+        self._timeout: int = 30
+        self._verify_ssl: bool = True
+        self._retry_attempts: int = 3
+        self._retry_delay: float = 1.0
+        self._default_headers: Dict[str, str] = {}
+
+    def _apply_defaults(self, **kwargs) -> None:
+        """Apply configuration kwargs, resetting to defaults for omitted keys."""
+        self._timeout = kwargs.get("timeout", 30)
+        self._verify_ssl = kwargs.get("verify_ssl", True)
+        self._retry_attempts = kwargs.get("retry_attempts", 3)
+        self._retry_delay = kwargs.get("retry_delay", 1.0)
+        self._default_headers = kwargs.get("default_headers", {})
 
     @abstractmethod
     def configure(self, **kwargs) -> None:
-        """
-        Configure the HTTP client with settings like timeout, retry, etc.
-
-        Args:
-            **kwargs: Configuration parameters specific to the implementation
-        """
+        """Configure this strategy. Subclasses must implement this."""
 
     @abstractmethod
     def request(
@@ -58,38 +69,12 @@ class HttpStrategy(ABC):
         timeout: Optional[int] = None,
         verify_ssl: bool = True,
     ) -> HttpResponse:
-        """
-        Make an HTTP request.
-
-        Args:
-            method: HTTP method (GET, POST, etc.)
-            url: Request URL
-            headers: Request headers
-            data: Request body data
-            timeout: Request timeout in seconds
-            verify_ssl: Whether to verify SSL certificates
-
-        Returns:
-            HttpResponse: Response object
-
-        Raises:
-            Exception: If the request fails
-        """
+        """Make an HTTP request and return an :class:`HttpResponse`."""
 
     @abstractmethod
     def is_available(self) -> bool:
-        """
-        Check if this HTTP strategy is available on the system.
-
-        Returns:
-            bool: True if the strategy can be used
-        """
+        """Return True if this strategy can be used on the current system."""
 
     @abstractmethod
     def get_name(self) -> str:
-        """
-        Get the name of this HTTP strategy.
-
-        Returns:
-            str: Strategy name
-        """
+        """Return a short identifier for this strategy (e.g. ``'requests'``)."""

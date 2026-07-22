@@ -6,6 +6,7 @@ from buckaroo.factories.solution_method_factory import SolutionMethodFactory
 from buckaroo.builders.solutions.solution_builder import SolutionBuilder
 from buckaroo.builders.solutions.subscription_builder import SubscriptionBuilder
 from buckaroo.builders.solutions.default_builder import DefaultBuilder
+from buckaroo.builders.solutions.emandate_builder import EmandateB2BBuilder, EmandateBuilder
 
 
 @pytest.fixture(autouse=True)
@@ -103,6 +104,13 @@ def test_detect_method_from_payload_lowercases_uppercase_method():
     assert (
         SolutionMethodFactory.detect_method_from_payload({"method": "SUBSCRIPTION"})
         == "subscription"
+    )
+
+
+def test_create_builder_resolves_both_emandate_keys(client):
+    assert isinstance(SolutionMethodFactory.create_builder("emandate", client), EmandateBuilder)
+    assert isinstance(
+        SolutionMethodFactory.create_builder("emandateb2b", client), EmandateB2BBuilder
     )
 
 

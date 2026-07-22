@@ -9,7 +9,7 @@ def test_version_attribute_matches_version_module():
     from buckaroo import _version
 
     assert buckaroo.__version__ == _version.VERSION
-    assert buckaroo.__version__ == "1.0.0"
+    assert buckaroo.__version__ == "0.2.0"
 
 
 def test_public_api_reexports():
@@ -49,4 +49,4 @@ def test_setup_py_can_read_version_module():
     version_file = Path(buckaroo.__file__).parent / "_version.py"
     namespace = runpy.run_path(str(version_file))
 
-    assert namespace["VERSION"] == "1.0.0"
+    assert namespace["VERSION"] == "0.2.0"

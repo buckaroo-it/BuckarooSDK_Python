@@ -6,6 +6,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 
+## [0.2.0]
+- BTI-977 Add Point of Sale (POS) payment method
+- BTI-22 Add Credit Management solution
+- BTI-16 Add Split Payments (Marketplaces) solution
+- BTI-23 Add eMandate solution (B2C + B2B)
+- BTI-21 Implement instant refunds for iDEAL and Payconiq
+- BTI-20 Add iDIN verification method (identify, verify, login)
+- BTI-17 Add PayPerEmail example and feature test
+- BTI-584 Update Klarna MOR to DataRequestKey flow
+- BTI-1077 Add In3 authorize/capture flow
+- BTI-721 Add Banking service (PaymentOrder payout)
+- BTI-978 Add In3 route param for ABN-AMRO Achteraf Betalen
+
 ## [0.1.1]
 - BTI-1091 Send the culture code as the `Culture` request header
 - Add PayPerEmail builder for PaymentInvitation

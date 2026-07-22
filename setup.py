@@ -1,4 +1,5 @@
 import os
+import re
 from setuptools import setup, find_packages
 
 
@@ -7,9 +8,11 @@ ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(ROOT_DIR, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
-version_contents = {}
 with open(os.path.join(ROOT_DIR, "buckaroo", "_version.py"), encoding="utf-8") as f:
-    exec(f.read(), version_contents)
+    version_match = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', f.read(), re.MULTILINE)
+if not version_match:
+    raise RuntimeError("Cannot find VERSION in buckaroo/_version.py")
+version_contents = {"VERSION": version_match.group(1)}
 
 setup(
     name="buckaroo-sdk",

@@ -64,18 +64,11 @@ class AuthorizeCaptureCapable:
             or self._payload.get("authorization_key")
         )
         if not txn_key:
-            raise ValueError(
-                "Original transaction key is required for cancelAuthorize "
-                "(provide 'original_transaction_key' in payload)"
-            )
+            raise ValueError("original_transaction_key is required for cancelAuthorize")
 
-        payment_request = self.build("CancelAuthorize", validate=validate)
-        request_data = payment_request.to_dict()
+        request_data = self._build_keyed_request("CancelAuthorize", txn_key, validate=validate)
 
-        request_data["OriginalTransactionKey"] = txn_key
-
-        # PaymentRequest.to_dict always writes AmountDebit; swap to AmountCredit
-        # since Buckaroo expects AmountCredit for cancel-authorize.
-        request_data["AmountCredit"] = request_data.pop("AmountDebit")
+        if "AmountDebit" in request_data:
+            request_data["AmountCredit"] = request_data.pop("AmountDebit")
 
         return self._post_transaction(request_data)

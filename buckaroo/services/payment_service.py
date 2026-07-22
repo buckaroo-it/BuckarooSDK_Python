@@ -35,7 +35,7 @@ class PaymentService(object):
             ...     .currency("EUR") \\
             ...     .amount(6.0) \\
             ...     .description("Test payment") \\
-            ...     .execute()
+            ...     .pay()
 
             >>> # Using parameters dictionary for quick setup
             >>> payment = client.payments.create_payment("ideal", {
@@ -47,13 +47,13 @@ class PaymentService(object):
             ...     'return_url_cancel': 'https://example.com/cancel',
             ...     'return_url_error': 'https://example.com/error',
             ...     'return_url_reject': 'https://example.com/reject'
-            ... }).execute()
+            ... }).pay()
 
             >>> # Combining both approaches
             >>> payment = client.payments.create_payment("ideal", {
             ...     'currency': 'EUR',
             ...     'amount': 6.0
-            ... }).description("Updated description").execute()
+            ... }).description("Updated description").pay()
         """
         builder = self._factory.create_builder(method, self._client)
 
@@ -109,7 +109,7 @@ class PaymentService(object):
             ...     'issuer': 'ABNANL2A',
             ...     'return_url': 'https://example.com/success'
             ... })
-            >>> response = payment.execute()
+            >>> response = payment.pay()
 
             >>> # Credit card payment (auto-detected by card fields)
             >>> payment = app.payments.create({
@@ -120,7 +120,7 @@ class PaymentService(object):
             ...     'expiry_year': '2025',
             ...     'cvv': '123'
             ... })
-            >>> response = payment.execute()
+            >>> response = payment.pay()
 
             >>> # Refund operation (separate method call)
             >>> refund_response = payment.refund('TXN_123', 10.00)

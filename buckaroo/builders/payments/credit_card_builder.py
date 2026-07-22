@@ -18,102 +18,58 @@ class CreditcardBuilder(PaymentBuilder, EncryptedPayCapable, AuthorizeCaptureCap
 
     def get_allowed_service_parameters(self, action: str = "Pay") -> Dict[str, Any]:
         """Get the allowed service parameters for Credit Card payments based on action."""
+        action_lower = action.lower()
 
-        if action.lower() == "payencrypted":
-            # Encrypted payment uses encrypted data instead of raw card details
+        if action_lower == "payencrypted":
             return {
                 "encryptedcarddata": {
                     "type": str,
                     "required": True,
                     "description": "Encrypted card data",
-                },
+                }
             }
 
-        if action.lower() == "paywithsecuritycode":
-            # Payment with security code uses encrypted data instead of raw card details
+        if action_lower == "paywithsecuritycode":
             return {
                 "encryptedsecuritycode": {
                     "type": str,
                     "required": True,
                     "description": "Encrypted security code",
-                },
+                }
             }
 
-        if action.lower() == "paywithtoken":
-            # Hosted Fields inline payment: token from submitSession()
+        if action_lower in ("paywithtoken", "authorizewithtoken"):
             return {
                 "sessionid": {
                     "type": str,
                     "required": True,
                     "description": "Session ID token from Hosted Fields submitSession()",
-                },
-            }
-
-        if action.lower() == "authorizewithtoken":
-            # Hosted Fields inline authorize: token from submitSession()
-            return {
-                "sessionid": {
-                    "type": str,
-                    "required": True,
-                    "description": "Session ID token from Hosted Fields submitSession()",
-                },
+                }
             }
 
         return {}
 
-    def payWithSecurityCode(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        Process a payment with a security code.
+    def payWithSecurityCode(self, validate: bool = True) -> PaymentResponse:
+        """Process a payment with a security code."""
+        return self.execute_action("PayWithSecurityCode", validate=validate)
 
-        Args:
-            validate (bool): Whether to validate service parameters before building
+    def payWithToken(self, validate: bool = True) -> PaymentResponse:
+        """Process a payment using a Hosted Fields session token.
 
-        Returns:
-            PaymentResponse: The payment response
-        """
-        payment_request = self.build("PayWithSecurityCode", validate=validate)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
-
-    def payWithToken(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        Process a payment using a Hosted Fields session token.
-
-        The SessionId parameter must be set via add_parameter('SessionId', token)
-        before calling this method. The token comes from the Hosted Fields
-        submitSession() call on the client side.
-
+        Set the SessionId parameter via add_parameter('SessionId', token) before calling.
+        The token comes from the Hosted Fields submitSession() call on the client side.
         The response may include a RequiredAction for 3DS authentication.
         """
-        payment_request = self.build("PayWithToken", validate=validate)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
+        return self.execute_action("PayWithToken", validate=validate)
 
-    def authorizeWithToken(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        Authorize a payment using a Hosted Fields session token.
+    def authorizeWithToken(self, validate: bool = True) -> PaymentResponse:
+        """Authorize a payment using a Hosted Fields session token.
 
-        The SessionId parameter must be set via add_parameter('SessionId', token)
-        before calling this method. The token comes from the Hosted Fields
-        submitSession() call on the client side.
-
+        Set the SessionId parameter via add_parameter('SessionId', token) before calling.
         The response may include a RequiredAction for 3DS authentication.
         """
-        payment_request = self.build("AuthorizeWithToken", validate=validate)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
+        return self.execute_action("AuthorizeWithToken", validate=validate)
 
-    def payRecurrent(self: "PaymentBuilder", validate: bool = True) -> PaymentResponse:
-        """
-        PayRecurrent a previously authorized payment.
-
-        Args:
-            validate (bool): Whether to validate service parameters before building
-
-        Returns:
-            PaymentResponse: The payment response
-        """
-
-        payment_request = self.build("PayRecurrent", validate=validate)
-        request_data = payment_request.to_dict()
-        return self._post_transaction(request_data)
+    def payRecurrent(self, validate: bool = True) -> PaymentResponse:
+        """Execute a recurring payment against a previously stored token."""
+        return self.execute_action("PayRecurrent", validate=validate)

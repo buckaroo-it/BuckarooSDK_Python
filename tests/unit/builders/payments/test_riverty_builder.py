@@ -173,5 +173,5 @@ def test_authorize_end_to_end_via_mock_buckaroo(
 def test_cancel_authorize_requires_original_transaction_key(client: BuckarooClient) -> None:
     """Missing key raises ValueError — same contract as creditcard."""
     builder = populate_required_fields(RivertyBuilder(client), amount=10.0)
-    with pytest.raises(ValueError, match="Original transaction key is required"):
+    with pytest.raises(ValueError, match="original_transaction_key is required"):
         builder.cancelAuthorize(original_transaction_key="")

@@ -276,7 +276,7 @@ class TestCancelReservation:
         sent = recorded_request(mock)
         assert "OriginalTransactionKey" not in sent
         names = [p["Name"] for p in sent["Services"]["ServiceList"][0]["Parameters"]]
-        assert "Datarequestkey" in names
+        assert "DataRequestKey" in names
         assert response.key == "KL-CAN-1"
         mock.assert_all_consumed()
 

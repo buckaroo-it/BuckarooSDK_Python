@@ -67,9 +67,9 @@ class TestCreditManagementFeature:
         }
         assert ("Invoice", "") not in params
         assert ("Currency", "") not in params
-        assert params[("Invoiceamount", "")] == "250.00"
-        assert params[("Duedate", "")] == "2026-09-01"
-        assert params[("Schemekey", "")] == "SCHEME-2"
+        assert params[("InvoiceAmount", "")] == "250.00"
+        assert params[("DueDate", "")] == "2026-09-01"
+        assert params[("SchemeKey", "")] == "SCHEME-2"
         assert params[("Code", "Debtor")] == "DEBTOR-999"
 
     def test_create_invoice_without_required_params_raises_before_wire(self, buckaroo):
@@ -201,7 +201,7 @@ class TestCreditManagementFeature:
         assert response.status.code.code == 190
         assert recorded_action(mock_strategy) == action
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Debtorfileguid"] == "FILE-GUID-999"
+        assert params["DebtorFileGuid"] == "FILE-GUID-999"
 
     @pytest.mark.parametrize("method_name", ["resume_debtor_file", "pause_debtor_file"])
     def test_debtor_file_actions_without_debtor_file_guid_raise_before_wire(
@@ -271,7 +271,7 @@ class TestCreditManagementFeature:
             for p in recorded_service_parameters(mock_strategy)
         }
         assert ("Invoice", "") not in params
-        assert params[("Originalinvoicenumber", "")] == "INV-999"
+        assert params[("OriginalInvoiceNumber", "")] == "INV-999"
         assert params[("Code", "Debtor")] == "DEBTOR-999"
 
     def test_create_credit_note_without_debtor_raises_before_wire(self, buckaroo):
@@ -314,7 +314,7 @@ class TestCreditManagementFeature:
             (p["Name"], p["GroupType"], p["GroupID"]): p["Value"]
             for p in recorded_service_parameters(mock_strategy)
         }
-        assert params[("Invoicekey", "", "")] == "INVK-999"
+        assert params[("InvoiceKey", "", "")] == "INVK-999"
         assert params[("Productid", "ProductLine", "1")] == "SKU-1"
         assert params[("Productname", "ProductLine", "1")] == "Widget"
         assert params[("Quantity", "ProductLine", "1")] == "2"
@@ -365,13 +365,13 @@ class TestCreditManagementFeature:
         assert request["Description"] == "3-month plan"
 
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Includedinvoicekey"] == "INVK-999"
-        assert params["Dossiernumber"] == "DOSSIER-999"
-        assert params["Startdate"] == "2026-09-01"
+        assert params["IncludedInvoiceKey"] == "INVK-999"
+        assert params["DossierNumber"] == "DOSSIER-999"
+        assert params["StartDate"] == "2026-09-01"
         assert params["Interval"] == "Month"
-        assert params["Paymentplancostamount"] == "5.00"
-        assert params["Recipientemail"] == "debtor@example.com"
-        assert params["Installmentcount"] == "3"
+        assert params["PaymentPlanCostAmount"] == "5.00"
+        assert params["RecipientEmail"] == "debtor@example.com"
+        assert params["InstallmentCount"] == "3"
         assert "Description" not in params
 
     def test_create_payment_plan_without_included_invoice_key_raises_before_wire(self, buckaroo):
@@ -408,7 +408,7 @@ class TestCreditManagementFeature:
         assert response.status.code.code == 190
         assert recorded_action(mock_strategy) == "TerminatePaymentPlan"
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Includedinvoicekey"] == "INVK-999"
+        assert params["IncludedInvoiceKey"] == "INVK-999"
 
     def test_terminate_payment_plan_without_included_invoice_key_raises_before_wire(self, buckaroo):
         builder = buckaroo.solutions.create_solution("creditmanagement")
@@ -473,7 +473,7 @@ class TestCreditManagementCombinedInvoice:
             (p["Name"], p["GroupType"]): p["Value"] for p in services[1]["Parameters"]
         }
         assert ("Invoice", "") not in invoice_params
-        assert invoice_params[("Invoiceamount", "")] == "95.00"
+        assert invoice_params[("InvoiceAmount", "")] == "95.00"
         assert invoice_params[("Code", "Debtor")] == "DEBTOR-999"
 
         assert response.get_service_parameter("InvoiceKey") == "INVK-COMBINED-1"

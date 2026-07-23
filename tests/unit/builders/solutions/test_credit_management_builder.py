@@ -338,7 +338,7 @@ def test_debtor_file_actions_post_debtor_file_guid_to_data_request(
 
     service = recorded_request(mock_strategy)["Services"]["ServiceList"][0]
     params = {p["Name"]: p["Value"] for p in service["Parameters"]}
-    assert params["Debtorfileguid"] == "FILE-GUID-001"
+    assert params["DebtorFileGuid"] == "FILE-GUID-001"
 
 
 @pytest.mark.parametrize("method_name", ["resume_debtor_file", "pause_debtor_file"])
@@ -439,9 +439,9 @@ def test_create_credit_note_posts_invoice_top_level_and_debtor_group_to_data_req
 
     service = request["Services"]["ServiceList"][0]
     params = {(p["Name"], p["GroupType"]): p["Value"] for p in service["Parameters"]}
-    assert params[("Originalinvoicenumber", "")] == "INV-001"
-    assert params[("Invoicedate", "")] == "2026-07-16"
-    assert params[("Invoiceamount", "")] == "10.0"
+    assert params[("OriginalInvoiceNumber", "")] == "INV-001"
+    assert params[("InvoiceDate", "")] == "2026-07-16"
+    assert params[("InvoiceAmount", "")] == "10.0"
     assert params[("Code", "Debtor")] == "DEBTOR-001"
 
 
@@ -500,7 +500,7 @@ def test_add_or_update_product_lines_posts_indexed_grouped_articles(client, mock
 
     service = recorded_request(mock_strategy)["Services"]["ServiceList"][0]
     params = {(p["Name"], p["GroupType"], p["GroupID"]): p["Value"] for p in service["Parameters"]}
-    assert params[("Invoicekey", "", "")] == "INVK-001"
+    assert params[("InvoiceKey", "", "")] == "INVK-001"
     assert params[("Productid", "ProductLine", "1")] == "SKU-1"
     assert params[("Productname", "ProductLine", "1")] == "Widget"
     assert params[("Quantity", "ProductLine", "1")] == "2"
@@ -669,13 +669,13 @@ def test_create_payment_plan_posts_to_data_request(client, mock_strategy):
 
     service = request["Services"]["ServiceList"][0]
     params = {p["Name"]: p["Value"] for p in service["Parameters"]}
-    assert params["Includedinvoicekey"] == "INVK-001"
-    assert params["Dossiernumber"] == "DOSSIER-1"
-    assert params["Startdate"] == "2026-09-01"
+    assert params["IncludedInvoiceKey"] == "INVK-001"
+    assert params["DossierNumber"] == "DOSSIER-1"
+    assert params["StartDate"] == "2026-09-01"
     assert params["Interval"] == "Month"
-    assert params["Paymentplancostamount"] == "5.00"
-    assert params["Recipientemail"] == "debtor@example.com"
-    assert params["Installmentcount"] == "3"
+    assert params["PaymentPlanCostAmount"] == "5.00"
+    assert params["RecipientEmail"] == "debtor@example.com"
+    assert params["InstallmentCount"] == "3"
     assert "Description" not in params
 
 
@@ -720,7 +720,7 @@ def test_terminate_payment_plan_posts_to_data_request(client, mock_strategy):
 
     service = recorded_request(mock_strategy)["Services"]["ServiceList"][0]
     params = {p["Name"]: p["Value"] for p in service["Parameters"]}
-    assert params["Includedinvoicekey"] == "INVK-001"
+    assert params["IncludedInvoiceKey"] == "INVK-001"
 
 
 def test_terminate_payment_plan_raises_when_included_invoice_key_missing(client):

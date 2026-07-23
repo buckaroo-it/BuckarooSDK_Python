@@ -102,4 +102,4 @@ class TestPayFastCheckout:
 
         service = recorded_request(mock)["Services"]["ServiceList"][0]
         parameter_names = [p["Name"] for p in (service.get("Parameters") or [])]
-        assert "Someunknownparam" in parameter_names
+        assert "SomeUnknownParam" in parameter_names

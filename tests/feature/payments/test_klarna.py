@@ -58,7 +58,7 @@ class TestKlarnaFeature:
         body = json.loads(mock_strategy.calls[-1]["data"])
         services = body["Services"]["ServiceList"]
         names = [p["Name"] for p in services[0]["Parameters"]]
-        assert "Datarequestkey" in names
+        assert "DataRequestKey" in names
 
     def test_klarna_cancel_reservation_posts_data_request_key(self, buckaroo, mock_strategy):
         """Follow-up actions carry the Buckaroo DataRequestKey (no reservation
@@ -79,7 +79,7 @@ class TestKlarnaFeature:
         assert service["Action"] == "CancelReservation"
         assert "OriginalTransactionKey" not in body
         names = [p["Name"] for p in service["Parameters"]]
-        assert "Datarequestkey" in names
+        assert "DataRequestKey" in names
 
     def test_klarna_update_reservation_dispatches_to_data_request(self, buckaroo, mock_strategy):
         response_body = Helpers.pending_redirect_response("klarna", action="UpdateReservation")
@@ -136,5 +136,5 @@ class TestKlarnaFeature:
         service = json.loads(mock_strategy.calls[-1]["data"])["Services"]["ServiceList"][0]
         assert service["Action"] == "Pay"
         names = [p["Name"] for p in service["Parameters"]]
-        assert "Datarequestkey" in names
-        assert "Trackingnumber" in names
+        assert "DataRequestKey" in names
+        assert "TrackingNumber" in names

@@ -21,9 +21,10 @@ class TestGiftcardsFeature:
     ):
         """service_parameters dict must reach ServiceList[0].Parameters.
 
-        The SDK capitalizes parameter names, so ``"PIN"`` becomes ``"Pin"``
-        on the wire. Assert both the value pairing and the presence of both
-        keys so a builder that silently drops service_parameters would fail.
+        Top-level param names keep their internal casing, so ``"PIN"`` reaches
+        the wire as ``"PIN"``. Assert both the value pairing and the presence
+        of both keys so a builder that silently drops service_parameters would
+        fail.
         """
         recording_mock.queue(
             BuckarooMockRequest.json(
@@ -44,7 +45,7 @@ class TestGiftcardsFeature:
         assert recorded_action(recording_mock) == "Pay"
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(recording_mock)}
         assert params.get("Cardnumber") == "1234567890123456"
-        assert params.get("Pin") == "1234"
+        assert params.get("PIN") == "1234"
 
     def test_giftcards_pay_redirect_mode_omits_card_parameters(
         self, recording_buckaroo, recording_mock

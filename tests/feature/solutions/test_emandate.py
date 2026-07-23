@@ -76,9 +76,9 @@ class TestEmandateFeature:
         assert recorded_action(mock_strategy) == "CreateMandate"
 
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Debtorreference"] == "DEBTOR-999"
-        assert params["Sequencetype"] == "1"
-        assert params["Purchaseid"] == "PUR-1"
+        assert params["DebtorReference"] == "DEBTOR-999"
+        assert params["SequenceType"] == "1"
+        assert params["PurchaseId"] == "PUR-1"
 
     def test_create_mandate_without_debtor_reference_raises_before_wire(self, buckaroo):
         builder = buckaroo.solutions.create_solution("emandate")
@@ -114,7 +114,7 @@ class TestEmandateFeature:
         assert recorded_action(mock_strategy) == "GetStatus"
 
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Mandateid"] == "MND-777"
+        assert params["MandateId"] == "MND-777"
 
     def test_status_without_mandate_id_raises_before_wire(self, buckaroo):
         builder = buckaroo.solutions.create_solution("emandate")
@@ -157,8 +157,8 @@ class TestEmandateFeature:
         assert recorded_action(mock_strategy) == "ModifyMandate"
 
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Mandateid"] == "MND-555"
-        assert params["Maxamount"] == "1000.00"
+        assert params["MandateId"] == "MND-555"
+        assert params["MaxAmount"] == "1000.00"
 
     def test_modify_mandate_without_mandate_id_raises_before_wire(self, buckaroo):
         builder = buckaroo.solutions.create_solution("emandate")
@@ -200,8 +200,8 @@ class TestEmandateFeature:
         assert recorded_action(mock_strategy) == "CancelMandate"
 
         params = {p["Name"]: p["Value"] for p in recorded_service_parameters(mock_strategy)}
-        assert params["Mandateid"] == "MND-321"
-        assert params["Purchaseid"] == "PUR-2"
+        assert params["MandateId"] == "MND-321"
+        assert params["PurchaseId"] == "PUR-2"
 
     def test_cancel_mandate_without_mandate_id_raises_before_wire(self, buckaroo):
         builder = buckaroo.solutions.create_solution("emandate")

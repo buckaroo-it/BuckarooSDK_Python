@@ -298,6 +298,23 @@ def test_add_parameter_flat_capitalizes_name_and_stringifies_value():
     ]
 
 
+def test_add_parameter_flat_keeps_internal_capitals():
+    # Top-level names keep internal caps: "customerFirstName" -> "CustomerFirstName".
+    builder = populate_required_fields(_make_builder(), amount=10.50)
+    builder.add_parameter("customerFirstName", "Jan")
+
+    request = builder.build(validate=False).to_dict()
+    service = request["Services"]["ServiceList"][0]
+    assert service["Parameters"] == [
+        {
+            "Name": "CustomerFirstName",
+            "GroupType": "",
+            "GroupID": "",
+            "Value": "Jan",
+        }
+    ]
+
+
 def test_add_parameter_grouped_sets_group_type_and_group_id():
     builder = populate_required_fields(_make_builder(), amount=10.50)
     builder.add_parameter("firstName", "Jane", group_type="customer", group_id="7")

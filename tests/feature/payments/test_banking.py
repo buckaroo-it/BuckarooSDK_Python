@@ -51,9 +51,9 @@ class TestBankingFeature:
         service = sent["Services"]["ServiceList"][0]
         assert service["Name"] == "Banking"
         assert service["Action"] == "PaymentOrder"
-        assert {"Name": "Accountholdername", "Value": "Arensman"} in [
+        assert {"Name": "AccountHolderName", "Value": "Arensman"} in [
             {"Name": p["Name"], "Value": p["Value"]} for p in service["Parameters"]
         ]
-        assert {"Name": "Iban", "Value": "NL44RABO0123456789"} in [
+        assert {"Name": "IBAN", "Value": "NL44RABO0123456789"} in [
             {"Name": p["Name"], "Value": p["Value"]} for p in service["Parameters"]
         ]

@@ -111,9 +111,9 @@ class CreditManagementBuilder(SolutionBuilder):
     # type, then caller-friendly field name -> wire field name (matched
     # case-insensitively against the already-added ``Parameter``s).
     # DebtorInfo maps the debtor's code to wire name "Debtorcode" (not
-    # "Code", unlike AddOrUpdateDebtor/CreateInvoice); the wire name is run
-    # through ``.capitalize()`` like every other parameter name, so the
-    # camelCase written here does not survive as-is.
+    # "Code", unlike AddOrUpdateDebtor/CreateInvoice); as a grouped parameter
+    # its wire name is run through ``.capitalize()``, so the camelCase written
+    # here does not survive as-is.
     _WIRE_NAMES: Dict[str, Dict[str, Dict[str, str]]] = {
         "debtorinfo": {"Debtor": {"code": "DebtorCode"}},
     }

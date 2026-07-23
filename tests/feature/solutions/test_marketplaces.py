@@ -85,7 +85,7 @@ class TestMarketplacesSplit:
         split = {
             (p["Name"], p["GroupType"], p["GroupID"]): p["Value"] for p in services[1]["Parameters"]
         }
-        assert split[("Daysuntiltransfer", "", "")] == "2"
+        assert split[("DaysUntilTransfer", "", "")] == "2"
         assert split[("Amount", "Marketplace", "")] == "10.00"
         assert split[("Accountid", "Seller", "1")] == "789C60F316D24B088ACD471"
         assert split[("Accountid", "Seller", "2")] == "369C60F316D24B088ACD238"
@@ -145,7 +145,7 @@ class TestMarketplacesTransfer:
         assert params[("Amount", "Marketplace", "")] == "10.00"
         assert params[("Accountid", "Seller", "1")] == "789C60F316D24B088ACD471"
         # DaysUntilTransfer never applies to a Transfer.
-        assert not any(name == "Daysuntiltransfer" for name, _, _ in params)
+        assert not any(name == "DaysUntilTransfer" for name, _, _ in params)
 
     def test_transfer_requires_original_key(self, buckaroo):
         with pytest.raises(ValueError):
@@ -245,10 +245,10 @@ class TestMarketplacesManualTransfer:
         assert "AmountDebit" not in body
 
         params = {p["Name"]: p["Value"] for p in service["Parameters"]}
-        assert params["Fromaccountid"] == "AAAAAAAAAAAAAAAAAAA"
-        assert params["Toaccountid"] == "BBBBBBBBBBBBBBBBBBB"
-        assert params["Fromdescription"] == "Deduction monthly fee"
-        assert params["Todescription"] == "Monthly fee third party ABC"
+        assert params["FromAccountId"] == "AAAAAAAAAAAAAAAAAAA"
+        assert params["ToAccountId"] == "BBBBBBBBBBBBBBBBBBB"
+        assert params["FromDescription"] == "Deduction monthly fee"
+        assert params["ToDescription"] == "Monthly fee third party ABC"
         assert response.status.code.code == 190
 
     def test_manual_transfer_requires_all_fields(self, buckaroo):

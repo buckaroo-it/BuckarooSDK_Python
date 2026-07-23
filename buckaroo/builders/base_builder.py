@@ -202,8 +202,10 @@ class BaseBuilder(ABC):
         # Convert value to string for API compatibility
         str_value = str(value).lower() if isinstance(value, bool) else str(value)
 
+        # Top-level names keep internal caps ("CustomerFirstName"); grouped
+        # names stay flattened via capitalize().
         parameter = Parameter(
-            name=key.capitalize(),
+            name=key.capitalize() if group_type else _upper_first(key),
             value=str_value,
             group_type=_upper_first(group_type) if group_type else None,
             group_id=group_id,

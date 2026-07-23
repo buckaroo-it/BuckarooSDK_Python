@@ -187,7 +187,7 @@ def test_refund_build_validates_when_intersolve_email_absent(client):
 
     service = request.to_dict()["Services"]["ServiceList"][0]
     names = {p["Name"] for p in service["Parameters"]}
-    assert "Lastname" in names
+    assert "LastName" in names
     assert "Email" not in names
 
 
@@ -205,7 +205,7 @@ def test_refund_build_keeps_intersolve_email_when_supplied(client):
 
     service = request.to_dict()["Services"]["ServiceList"][0]
     names = {p["Name"] for p in service["Parameters"]}
-    assert {"Lastname", "Email"} <= names
+    assert {"LastName", "Email"} <= names
 
 
 def test_get_allowed_service_parameters_refund_is_case_insensitive(client):

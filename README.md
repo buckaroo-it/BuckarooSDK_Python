@@ -67,12 +67,15 @@ Create a payment with any of the available payment methods. In this example, we 
 ```python
 # Create a new payment
 response = (
-    payments.create_payment("creditcard", {
-        "currency": "EUR",
-        "amount": 10.00,                       # The amount we want to charge
-        "invoice": "UNIQUE-INVOICE-NO",        # Each payment must contain a unique invoice number
-        "service_parameters": {"brand": "visa"},  # Request to pay with Visa
-    })
+    payments.create_payment(
+        "creditcard",
+        {
+            "currency": "EUR",
+            "amount": 10.00,  # The amount we want to charge
+            "invoice": "UNIQUE-INVOICE-NO",  # Each payment must contain a unique invoice number
+            "service_parameters": {"brand": "visa"},  # Request to pay with Visa
+        },
+    )
     .description("Order #UNIQUE-INVOICE-NO")
     .pay()
 )
@@ -90,10 +93,10 @@ You can also use the fluent interface directly:
 ```python
 response = (
     payments.create_payment("creditcard")
-        .currency("EUR")
-        .amount(10.00)
-        .invoice("UNIQUE-INVOICE-NO")
-        .pay()
+    .currency("EUR")
+    .amount(10.00)
+    .invoice("UNIQUE-INVOICE-NO")
+    .pay()
 )
 ```
 
@@ -104,13 +107,16 @@ Find our full documentation online on [docs.buckaroo.io](https://docs.buckaroo.i
 iDIN lets Dutch banks confirm a consumer's identity on your behalf. It carries no amount or currency — only the return URLs plus the `issuerId` (BIC code of the consumer's bank) service parameter. Three actions are available: `identify()`, `verify()` (age 18+), and `login()`.
 
 ```python
-response = payments.create_payment("idin", {
-    "return_url": "https://www.buckaroo.nl",
-    "return_url_cancel": "https://www.buckaroo.nl/cancel",
-    "return_url_error": "https://www.buckaroo.nl/error",
-    "return_url_reject": "https://www.buckaroo.nl/reject",
-    "service_parameters": {"issuerId": "BANKNL2Y"},  # sandbox issuer
-}).identify()
+response = payments.create_payment(
+    "idin",
+    {
+        "return_url": "https://www.buckaroo.nl",
+        "return_url_cancel": "https://www.buckaroo.nl/cancel",
+        "return_url_error": "https://www.buckaroo.nl/error",
+        "return_url_reject": "https://www.buckaroo.nl/reject",
+        "service_parameters": {"issuerId": "BANKNL2Y"},  # sandbox issuer
+    },
+).identify()
 
 print("key:", response.key)
 print("redirect:", response.get_redirect_url())
@@ -123,13 +129,16 @@ See [`examples/idin.py`](examples/idin.py) for a runnable demo of all three acti
 Instant refunds send money back to the shopper immediately instead of via the regular batch refund process. They are processed as an instant payment rather than a standard refund, and are supported for iDEAL and Payconiq via `instantRefund()`. Pass the `original_transaction_key` of a settled payment; `refund_amount` is optional — omit it for a full refund.
 
 ```python
-response = payments.create_payment("ideal", {
-    "currency": "EUR",
-    "description": "ideal instant refund demo",
-    "invoice": "IDEAL-REFUND-DEMO-001",
-    "original_transaction_key": "ORIGINAL-TRANSACTION-KEY",
-    "refund_amount": 12.34,  # optional; omit for a full refund
-}).instantRefund()
+response = payments.create_payment(
+    "ideal",
+    {
+        "currency": "EUR",
+        "description": "ideal instant refund demo",
+        "invoice": "IDEAL-REFUND-DEMO-001",
+        "original_transaction_key": "ORIGINAL-TRANSACTION-KEY",
+        "refund_amount": 12.34,  # optional; omit for a full refund
+    },
+).instantRefund()
 
 print("key:", response.key)
 ```
@@ -214,26 +223,35 @@ iDEAL). `daysUntilTransfer` is `"0"` for immediate payout, or omit it to hold th
 funds until a later Transfer.
 
 ```python
-split = marketplaces.create_solution("marketplaces").split({
-    "daysUntilTransfer": "2",
-    "marketplace": {"Amount": "10.00", "Description": "INV0001 Commission Platform"},
-    "sellers": [
-        {"AccountId": "SELLER_ACCOUNT_1", "Amount": "50.00", "Description": "Payout 1"},
-        {"AccountId": "SELLER_ACCOUNT_2", "Amount": "35.00", "Description": "Payout 2"},
-    ],
-})
+split = marketplaces.create_solution("marketplaces").split(
+    {
+        "daysUntilTransfer": "2",
+        "marketplace": {"Amount": "10.00", "Description": "INV0001 Commission Platform"},
+        "sellers": [
+            {"AccountId": "SELLER_ACCOUNT_1", "Amount": "50.00", "Description": "Payout 1"},
+            {"AccountId": "SELLER_ACCOUNT_2", "Amount": "35.00", "Description": "Payout 2"},
+        ],
+    }
+)
 
-response = payments.create_payment("ideal", {
-    "currency": "EUR",
-    "amount": 95.00,
-    "invoice": "INV0001",
-    "description": "Split order INV0001",
-    "service_parameters": {"issuer": "ABNANL2A"},
-    "return_url": "https://example.com/return",
-    "return_url_cancel": "https://example.com/cancel",
-    "return_url_error": "https://example.com/error",
-    "return_url_reject": "https://example.com/reject",
-}).combine(split).pay()
+response = (
+    payments.create_payment(
+        "ideal",
+        {
+            "currency": "EUR",
+            "amount": 95.00,
+            "invoice": "INV0001",
+            "description": "Split order INV0001",
+            "service_parameters": {"issuer": "ABNANL2A"},
+            "return_url": "https://example.com/return",
+            "return_url_cancel": "https://example.com/cancel",
+            "return_url_error": "https://example.com/error",
+            "return_url_reject": "https://example.com/reject",
+        },
+    )
+    .combine(split)
+    .pay()
+)
 ```
 
 **Transfer** — release held funds of an existing split payment. With no split
@@ -241,9 +259,11 @@ data it transfers everything (Transfer I); pass `marketplace`/`sellers` to
 transfer a partial or re-specified split (Transfer II).
 
 ```python
-marketplaces.create_solution("marketplaces").transfer({
-    "originalTransactionKey": "SPLIT_TRANSACTION_KEY",
-})
+marketplaces.create_solution("marketplaces").transfer(
+    {
+        "originalTransactionKey": "SPLIT_TRANSACTION_KEY",
+    }
+)
 ```
 
 **RefundSupplementary** — refund the consumer and pull the funds back from the
@@ -253,31 +273,36 @@ transfers (I); pass `sellers` to retrieve specific amounts per account (II).
 ```python
 supplementary = marketplaces.create_solution("marketplaces").refund_supplementary()
 
-payments.create_payment("ideal", {
-    "currency": "EUR",
-    "amount": 50.00,
-    "invoice": "INV0001",
-    "description": "Split refund INV0001",
-    "original_transaction_key": "SPLIT_TRANSACTION_KEY",
-    "refund_amount": 50.00,
-    "return_url": "https://example.com/return",
-    "return_url_cancel": "https://example.com/cancel",
-    "return_url_error": "https://example.com/error",
-    "return_url_reject": "https://example.com/reject",
-}).combine(supplementary).refund()
+payments.create_payment(
+    "ideal",
+    {
+        "currency": "EUR",
+        "amount": 50.00,
+        "invoice": "INV0001",
+        "description": "Split refund INV0001",
+        "original_transaction_key": "SPLIT_TRANSACTION_KEY",
+        "refund_amount": 50.00,
+        "return_url": "https://example.com/return",
+        "return_url_cancel": "https://example.com/cancel",
+        "return_url_error": "https://example.com/error",
+        "return_url_reject": "https://example.com/reject",
+    },
+).combine(supplementary).refund()
 ```
 
 **ManualTransfer** — move funds directly between two accounts.
 
 ```python
-marketplaces.create_solution("marketplaces").manual_transfer({
-    "fromAccountId": "ACCOUNT_A",
-    "toAccountId": "ACCOUNT_B",
-    "fromDescription": "Deduction monthly fee",
-    "toDescription": "Monthly fee third party ABC",
-    "amount": 10.00,
-    "currency": "EUR",
-})
+marketplaces.create_solution("marketplaces").manual_transfer(
+    {
+        "fromAccountId": "ACCOUNT_A",
+        "toAccountId": "ACCOUNT_B",
+        "fromDescription": "Deduction monthly fee",
+        "toDescription": "Monthly fee third party ABC",
+        "amount": 10.00,
+        "currency": "EUR",
+    }
+)
 ```
 
 A runnable demo of all six request types is in
@@ -388,14 +413,12 @@ response = app.solutions.create_solution(
             "paymentPlanCostAmount": "5.00",
             "recipientEmail": "debtor@example.com",
             "installmentCount": "3",
-        }
+        },
     },
 ).create_payment_plan()
 
 # Look up an invoice (InvoiceInfo — invoice is required, top-level)
-response = app.solutions.create_solution(
-    "creditmanagement", {"invoice": "INV-001"}
-).invoice_info()
+response = app.solutions.create_solution("creditmanagement", {"invoice": "INV-001"}).invoice_info()
 ```
 
 `create_combined_invoice` accepts the same invoice service fields as
@@ -418,17 +441,20 @@ cm = app.solutions.create_solution(
 ).create_combined_invoice()
 
 response = (
-    app.payments.create_payment("ideal", {
-        "currency": "EUR",
-        "amount": 95.00,
-        "invoice": "INV-002",
-        "description": "Combined invoice order INV-002",
-        "service_parameters": {"issuer": "ABNANL2A"},
-        "return_url": "https://example.com/return",
-        "return_url_cancel": "https://example.com/cancel",
-        "return_url_error": "https://example.com/error",
-        "return_url_reject": "https://example.com/reject",
-    })
+    app.payments.create_payment(
+        "ideal",
+        {
+            "currency": "EUR",
+            "amount": 95.00,
+            "invoice": "INV-002",
+            "description": "Combined invoice order INV-002",
+            "service_parameters": {"issuer": "ABNANL2A"},
+            "return_url": "https://example.com/return",
+            "return_url_cancel": "https://example.com/cancel",
+            "return_url_error": "https://example.com/error",
+            "return_url_reject": "https://example.com/reject",
+        },
+    )
     .combine(cm)
     .pay()
 )
@@ -454,11 +480,18 @@ The immediate response carries a pending/awaiting status. The final result, plus
 `Ticket` receipt text for the customer, arrives later via push notification.
 
 ```python
-response = payments.create_payment("pospayment", {
-    "currency": "EUR",
-    "amount": 0.01,
-    "invoice": "TestFactuur01",
-}).terminal_id("50000001").pay()
+response = (
+    payments.create_payment(
+        "pospayment",
+        {
+            "currency": "EUR",
+            "amount": 0.01,
+            "invoice": "TestFactuur01",
+        },
+    )
+    .terminal_id("50000001")
+    .pay()
+)
 
 print("key:", response.key)
 print("pending:", response.is_pending())

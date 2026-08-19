@@ -62,7 +62,7 @@ class BuckarooConfig:
     logging_enabled: bool = True
     verify_ssl: bool = True
     custom_endpoint: Optional[str] = None
-    user_agent: str = "BuckarooSDK-Python/1.0.0"
+    user_agent: str = "BuckarooSDK-Python/1.1.0"
     max_redirects: int = 5
 
     def __post_init__(self):

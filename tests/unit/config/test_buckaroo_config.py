@@ -44,7 +44,7 @@ def test_defaults():
     assert cfg.logging_enabled is True
     assert cfg.verify_ssl is True
     assert cfg.custom_endpoint is None
-    assert cfg.user_agent == "BuckarooSDK-Python/1.0.0"
+    assert cfg.user_agent == "BuckarooSDK-Python/1.1.0"
     assert cfg.max_redirects == 5
 
 

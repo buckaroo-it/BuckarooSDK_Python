@@ -407,9 +407,7 @@ response = app.solutions.create_solution(
 ).create_payment_plan()
 
 # InvoiceInfo - invoice is required, top-level
-response = app.solutions.create_solution(
-    "creditmanagement", {"invoice": "INV-001"}
-).invoice_info()
+response = app.solutions.create_solution("creditmanagement", {"invoice": "INV-001"}).invoice_info()
 ```
 
 `create_combined_invoice` accepts the same invoice service fields as `create_invoice`, including the `Debtor` group. A combined request has a single shared top level, so `invoice` and `currency` are set on the *funding* payment rather than on the CreditManagement3 sub-builder:

@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 
+## [1.1.0]
+- BTI-16 Add solution: Split Payments
+- BTI-17 Add solution: PayPerEmail
+- BTI-20 Add verification method: iDIN
+- BTI-21 Add solution: Instant Refunds
+- BTI-22 Add solution: Credit Management
+- BTI-23 Add solution: Emandate
+
 ## [0.2.0]
 - BTI-977 Add Point of Sale (POS) payment method
 - BTI-22 Add Credit Management solution

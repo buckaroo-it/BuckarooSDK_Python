@@ -24,7 +24,6 @@ from buckaroo.builders.payments.kbc_builder import KBCBuilder
 from buckaroo.builders.payments.billink_builder import BillinkBuilder
 from buckaroo.builders.payments.klarna_builder import KlarnaBuilder
 from buckaroo.builders.payments.klarnakp_builder import KlarnaKPBuilder
-from buckaroo.builders.payments.knaken_builder import KnakenBuilder
 from buckaroo.builders.payments.przelewy24_builder import Przelewy24Builder
 from buckaroo.builders.payments.riverty_builder import RivertyBuilder
 from buckaroo.builders.payments.sepadirectdebit_builder import SepaDirectDebitBuilder
@@ -73,7 +72,6 @@ class PaymentMethodFactory(BuilderFactory):
         "idin": IdinBuilder,
         "in3": In3Builder,
         "kbc": KBCBuilder,
-        "knaken": KnakenBuilder,
         "klarna": KlarnaBuilder,
         "klarnakp": KlarnaKPBuilder,
         "multibanco": MultibancoBuilder,

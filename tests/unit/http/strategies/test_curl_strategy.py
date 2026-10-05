@@ -1,5 +1,6 @@
 """Unit tests for buckaroo.http.strategies.curl_strategy."""
 
+import shutil
 import subprocess
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -93,68 +94,6 @@ class TestBuildCurlCommand:
         cmd = strategy._build_curl_command(method="GET", url="https://x", verify_ssl=True)
 
         assert "--insecure" not in cmd
-
-    def test_merges_default_headers_with_per_call_headers(self):
-        strategy = CurlStrategy()
-        strategy.configure(default_headers={"X-Default": "d", "X-Shared": "default"})
-
-        cmd = strategy._build_curl_command(
-            method="GET",
-            url="https://x",
-            headers={"X-Call": "c", "X-Shared": "perCall"},
-        )
-
-        header_values = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "-H"]
-        assert "X-Default: d" in header_values
-        assert "X-Call: c" in header_values
-        # per-call wins over default for overlapping key
-        assert "X-Shared: perCall" in header_values
-        assert "X-Shared: default" not in header_values
-
-    def test_headers_omitted_when_neither_default_nor_per_call_provided(self):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method="GET", url="https://x")
-
-        assert "-H" not in cmd
-
-    @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
-    def test_data_attached_for_write_methods(self, method):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method=method, url="https://x", data='{"a":1}')
-
-        assert "--data" in cmd
-        assert cmd[cmd.index("--data") + 1] == '{"a":1}'
-
-    @pytest.mark.parametrize("method", ["GET", "DELETE"])
-    def test_data_omitted_for_read_methods(self, method):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method=method, url="https://x", data='{"a":1}')
-
-        assert "--data" not in cmd
-
-    def test_data_omitted_when_data_is_none_even_for_post(self):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method="POST", url="https://x", data=None)
-
-        assert "--data" not in cmd
-
-    def test_url_is_last_argument(self):
-        strategy = CurlStrategy()
-        strategy.configure(default_headers={"X-Default": "d"})
-
-        cmd = strategy._build_curl_command(
-            method="POST",
-            url="https://api.test/path",
-            headers={"X-Call": "c"},
-            data="body",
-            verify_ssl=False,
-        )
-
-        assert cmd[-1] == "https://api.test/path"
 
     def test_lowercase_method_is_uppercased(self):
         strategy = CurlStrategy()
@@ -344,7 +283,8 @@ class TestRequestHappyPath:
         assert cmd[0] == "curl"
         assert cmd[-1] == "https://api.test/path"
         assert "--insecure" in cmd
-        assert "--data" in cmd
+        assert "--data" not in cmd
+        assert 'data-raw = "payload"' in kwargs["input"]
         assert kwargs["timeout"] == 10
         assert kwargs["capture_output"] is True
         assert kwargs["text"] is True
@@ -452,3 +392,39 @@ class TestIsAvailable:
 class TestGetName:
     def test_returns_curl(self):
         assert CurlStrategy().get_name() == "curl"
+
+
+@pytest.mark.skipif(not shutil.which("curl"), reason="curl is required")
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
+def test_private_headers_and_body_reach_server_unchanged(local_endpoint, monkeypatch, method):
+    url, received = local_endpoint
+    strategy = CurlStrategy()
+    strategy.configure(default_headers={"X-Default": "synthetic-default", "X-Shared": "default"})
+    body = '@not-a-file\n"\nurl = "http://127.0.0.1:1/injected"\n# café\t\\end\r\n'
+    authorization = "hmac synthetic:signature:nonce:timestamp"
+    header_value = 'synthetic-"quoted"-\\value'
+    real_run = subprocess.run
+
+    def inspect_command(cmd, **kwargs):
+        for secret in (body, authorization, header_value, "synthetic-default"):
+            assert secret not in " ".join(cmd)
+        assert kwargs.get("shell", False) is False
+        return real_run(cmd, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", inspect_command)
+    response = strategy.request(
+        method,
+        url,
+        headers={"Authorization": authorization, "X-Test": header_value, "X-Shared": "per-call"},
+        data=body,
+        timeout=5,
+    )
+    assert response.status_code == 200
+    assert len(received) == 1
+    actual_method, headers, actual_body = received[0]
+    assert actual_method == method
+    assert actual_body == body.encode("utf-8")
+    assert headers["Authorization"] == authorization
+    assert headers["X-Test"] == header_value
+    assert headers["X-Default"] == "synthetic-default"
+    assert headers["X-Shared"] == "per-call"

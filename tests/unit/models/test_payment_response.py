@@ -673,3 +673,12 @@ def test_has_error_false_when_request_errors_is_scalar():
     assert response.has_error() is False
     assert response.get_first_error() == {}
     assert response.get_some_error() == ""
+
+
+@pytest.mark.parametrize("flag", [True, False])
+def test_high_level_response_preserves_explicit_success_flag(flag):
+    # The high-level wrapper accepts a caller-supplied verdict independently
+    # of the transport response; keep that existing contract.
+    for envelope in [{}, {"status_code": 200, "success": True, "data": {"Status": {"Code": 190}}}]:
+        response = PaymentResponse({**envelope, "is_successful_payment": flag})
+        assert response.is_successful() is flag

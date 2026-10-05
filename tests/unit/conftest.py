@@ -1,8 +1,5 @@
 """Shared fixtures for unit tests."""
 
-import threading
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-
 import pytest
 
 from buckaroo._buckaroo_client import BuckarooClient
@@ -43,33 +40,3 @@ def env_credentials(monkeypatch):
     monkeypatch.setenv("BUCKAROO_STORE_KEY", "sk")
     monkeypatch.setenv("BUCKAROO_SECRET_KEY", "ss")
     return monkeypatch
-
-
-@pytest.fixture
-def local_endpoint():
-    received = []
-
-    class Handler(BaseHTTPRequestHandler):
-        def do_POST(self):
-            body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
-            received.append((self.command, dict(self.headers), body))
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(b'{"access_token":"synthetic-token"}')
-
-        do_PUT = do_POST
-        do_PATCH = do_POST
-        do_GET = do_POST
-
-        def log_message(self, *args):
-            pass
-
-    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f"http://127.0.0.1:{server.server_port}/token", received
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join(timeout=5)

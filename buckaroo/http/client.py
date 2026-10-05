@@ -244,7 +244,27 @@ class BuckarooResponse:
 
     def is_successful_payment(self) -> bool:
         """Check if the payment was successful based on Buckaroo response."""
-        return self.success and self.get_status_code() == 190
+        if not self.success:
+            return False
+
+        # Check Buckaroo-specific success indicators
+        if self._data and "Status" in self._data:
+            # Buckaroo status codes for successful payments
+            success_statuses = [190, 490, 491, 492, 790, 791, 792, 793]
+            status = self._data.get("Status", {})
+            if status and "Code" in status:
+                code = status.get("Code")
+                # Handle nested Code structure
+                if isinstance(code, dict):
+                    actual_code = code.get("Code")
+                elif isinstance(code, int):
+                    actual_code = code
+                else:
+                    actual_code = None
+
+                return actual_code in success_statuses if actual_code is not None else False
+
+        return self.success
 
     def get_payment_key(self) -> Optional[str]:
         """Get the payment key from the response."""
@@ -267,15 +287,25 @@ class BuckarooResponse:
 
     def get_status_code(self) -> Optional[int]:
         """Get the Buckaroo status code."""
-        if not isinstance(self._data, dict):
+        if not self._data:
             return None
-        status = self._data.get("Status")
-        if not isinstance(status, dict):
+
+        status = self._data.get("Status", {})
+        if not status:
             return None
+
         code = status.get("Code")
+        if code is None:
+            return None
+
+        # Handle nested Code structure: {"Code": 490, "Description": "Failed"}
         if isinstance(code, dict):
-            code = code.get("Code")
-        return code if type(code) is int else None
+            return code.get("Code")
+        # Handle simple integer code
+        elif isinstance(code, int):
+            return code
+
+        return None
 
     def get_status_message(self) -> Optional[str]:
         """Get the Buckaroo status message."""

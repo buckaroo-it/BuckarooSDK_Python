@@ -165,14 +165,12 @@ class BuckarooLoggingObserver:
                 try:
                     data = json.loads(data)
                 except json.JSONDecodeError:
-                    return "***BODY_OMITTED***" if self.config.mask_sensitive_data else data
+                    return data
 
             masked_data = self._mask_sensitive_data(data)
-            if self.config.mask_sensitive_data:
-                return json.dumps(masked_data, indent=2)
             return json.dumps(masked_data, indent=2, default=str)
         except Exception:
-            return "***BODY_OMITTED***" if self.config.mask_sensitive_data else str(data)
+            return str(data)
 
     def log_request(
         self,

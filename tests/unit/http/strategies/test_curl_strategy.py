@@ -1,5 +1,6 @@
 """Unit tests for buckaroo.http.strategies.curl_strategy."""
 
+import shutil
 import subprocess
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -391,3 +392,39 @@ class TestIsAvailable:
 class TestGetName:
     def test_returns_curl(self):
         assert CurlStrategy().get_name() == "curl"
+
+
+@pytest.mark.skipif(not shutil.which("curl"), reason="curl is required")
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
+def test_private_headers_and_body_reach_server_unchanged(local_endpoint, monkeypatch, method):
+    url, received = local_endpoint
+    strategy = CurlStrategy()
+    strategy.configure(default_headers={"X-Default": "synthetic-default", "X-Shared": "default"})
+    body = '@not-a-file\n"\nurl = "http://127.0.0.1:1/injected"\n# café\t\\end\r\n'
+    authorization = "hmac synthetic:signature:nonce:timestamp"
+    header_value = 'synthetic-"quoted"-\\value'
+    real_run = subprocess.run
+
+    def inspect_command(cmd, **kwargs):
+        for secret in (body, authorization, header_value, "synthetic-default"):
+            assert secret not in " ".join(cmd)
+        assert kwargs.get("shell", False) is False
+        return real_run(cmd, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", inspect_command)
+    response = strategy.request(
+        method,
+        url,
+        headers={"Authorization": authorization, "X-Test": header_value, "X-Shared": "per-call"},
+        data=body,
+        timeout=5,
+    )
+    assert response.status_code == 200
+    assert len(received) == 1
+    actual_method, headers, actual_body = received[0]
+    assert actual_method == method
+    assert actual_body == body.encode("utf-8")
+    assert headers["Authorization"] == authorization
+    assert headers["X-Test"] == header_value
+    assert headers["X-Default"] == "synthetic-default"
+    assert headers["X-Shared"] == "per-call"

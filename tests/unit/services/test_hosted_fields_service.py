@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import base64
+import shutil
+import subprocess
 
 import pytest
 
+from buckaroo.http.strategies import CurlStrategy
 from buckaroo.exceptions._buckaroo_error import BuckarooError
 from buckaroo.services.hosted_fields_service import HostedFieldsService
 from tests.support.mock_request import BuckarooMockRequest
@@ -184,3 +187,21 @@ class TestConstruction:
     def test_rejects_empty_client_secret(self, mock_strategy):
         with pytest.raises(ValueError):
             HostedFieldsService(client_id="x", client_secret="", http_strategy=mock_strategy)
+
+
+@pytest.mark.skipif(not shutil.which("curl"), reason="curl is required")
+def test_hosted_fields_basic_credentials_are_private(local_endpoint, monkeypatch):
+    url, received = local_endpoint
+    service = HostedFieldsService("synthetic-id", "synthetic-secret", http_strategy=CurlStrategy())
+    monkeypatch.setattr(service, "OAUTH_TOKEN_URL", url)
+    authorization = "Basic " + base64.b64encode(b"synthetic-id:synthetic-secret").decode()
+    real_run = subprocess.run
+
+    def inspect_command(cmd, **kwargs):
+        assert authorization not in " ".join(cmd)
+        return real_run(cmd, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", inspect_command)
+    assert service.get_token() == {"access_token": "synthetic-token"}
+    assert received[0][1]["Authorization"] == authorization
+    assert received[0][2] == b"scope=hostedfields%3Asave&grant_type=client_credentials"

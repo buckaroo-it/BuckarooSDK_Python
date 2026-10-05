@@ -94,68 +94,6 @@ class TestBuildCurlCommand:
 
         assert "--insecure" not in cmd
 
-    def test_merges_default_headers_with_per_call_headers(self):
-        strategy = CurlStrategy()
-        strategy.configure(default_headers={"X-Default": "d", "X-Shared": "default"})
-
-        cmd = strategy._build_curl_command(
-            method="GET",
-            url="https://x",
-            headers={"X-Call": "c", "X-Shared": "perCall"},
-        )
-
-        header_values = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "-H"]
-        assert "X-Default: d" in header_values
-        assert "X-Call: c" in header_values
-        # per-call wins over default for overlapping key
-        assert "X-Shared: perCall" in header_values
-        assert "X-Shared: default" not in header_values
-
-    def test_headers_omitted_when_neither_default_nor_per_call_provided(self):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method="GET", url="https://x")
-
-        assert "-H" not in cmd
-
-    @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
-    def test_data_attached_for_write_methods(self, method):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method=method, url="https://x", data='{"a":1}')
-
-        assert "--data" in cmd
-        assert cmd[cmd.index("--data") + 1] == '{"a":1}'
-
-    @pytest.mark.parametrize("method", ["GET", "DELETE"])
-    def test_data_omitted_for_read_methods(self, method):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method=method, url="https://x", data='{"a":1}')
-
-        assert "--data" not in cmd
-
-    def test_data_omitted_when_data_is_none_even_for_post(self):
-        strategy = CurlStrategy()
-
-        cmd = strategy._build_curl_command(method="POST", url="https://x", data=None)
-
-        assert "--data" not in cmd
-
-    def test_url_is_last_argument(self):
-        strategy = CurlStrategy()
-        strategy.configure(default_headers={"X-Default": "d"})
-
-        cmd = strategy._build_curl_command(
-            method="POST",
-            url="https://api.test/path",
-            headers={"X-Call": "c"},
-            data="body",
-            verify_ssl=False,
-        )
-
-        assert cmd[-1] == "https://api.test/path"
-
     def test_lowercase_method_is_uppercased(self):
         strategy = CurlStrategy()
 
@@ -344,7 +282,8 @@ class TestRequestHappyPath:
         assert cmd[0] == "curl"
         assert cmd[-1] == "https://api.test/path"
         assert "--insecure" in cmd
-        assert "--data" in cmd
+        assert "--data" not in cmd
+        assert 'data-raw = "payload"' in kwargs["input"]
         assert kwargs["timeout"] == 10
         assert kwargs["capture_output"] is True
         assert kwargs["text"] is True

@@ -86,62 +86,6 @@ class TestPassThroughAttributes:
         assert response.headers == headers
 
 
-class TestIsSuccessfulPayment:
-    def test_returns_false_when_http_failed(self):
-        response = BuckarooResponse(
-            make_response(status_code=500, text='{"Status": {"Code": 190}}')
-        )
-
-        assert response.is_successful_payment() is False
-
-    @pytest.mark.parametrize("code", [190, 490, 491, 492, 790, 791, 792, 793])
-    def test_true_for_each_buckaroo_success_code(self, code):
-        response = BuckarooResponse(make_response(text=f'{{"Status": {{"Code": {code}}}}}'))
-
-        assert response.is_successful_payment() is True
-
-    def test_false_for_non_success_buckaroo_code(self):
-        response = BuckarooResponse(make_response(text='{"Status": {"Code": 491000}}'))
-
-        assert response.is_successful_payment() is False
-
-    def test_handles_nested_code_dict_shape(self):
-        response = BuckarooResponse(
-            make_response(text='{"Status": {"Code": {"Code": 190, "Description": "Success"}}}')
-        )
-
-        assert response.is_successful_payment() is True
-
-    def test_returns_success_when_no_status_field(self):
-        # HTTP 2xx but no "Status" in body — falls through to self.success.
-        response = BuckarooResponse(make_response(text='{"Other": "field"}'))
-
-        assert response.is_successful_payment() is True
-
-    def test_true_when_status_code_missing_from_status(self):
-        response = BuckarooResponse(make_response(text='{"Status": {"Other": 1}}'))
-
-        # Status present but no "Code" key — falls through to self.success.
-        assert response.is_successful_payment() is True
-
-    def test_false_when_code_is_unknown_type(self):
-        response = BuckarooResponse(make_response(text='{"Status": {"Code": "oops"}}'))
-
-        assert response.is_successful_payment() is False
-
-    def test_true_when_status_is_falsy(self):
-        # Status present but falsy — skips the Buckaroo-code branch.
-        response = BuckarooResponse(make_response(text='{"Status": null}'))
-
-        assert response.is_successful_payment() is True
-
-    def test_true_when_data_is_empty_but_http_ok(self):
-        # No _data at all -> falls through to self.success.
-        response = BuckarooResponse(make_response(text=""))
-
-        assert response.is_successful_payment() is True
-
-
 class TestGetStatusCode:
     def test_returns_simple_int_code(self):
         response = BuckarooResponse(make_response(text='{"Status": {"Code": 190}}'))

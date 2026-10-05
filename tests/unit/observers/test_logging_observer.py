@@ -170,9 +170,9 @@ def test_format_json_parses_json_string_and_masks():
     assert parsed["amount"] == 10
 
 
-def test_format_json_non_json_string_returned_verbatim():
+def test_format_json_non_json_string_is_omitted():
     obs = _observer()
-    assert obs._format_json("not json at all") == "not json at all"
+    assert obs._format_json("not json at all") == "***BODY_OMITTED***"
 
 
 def test_format_json_dict_input_produces_masked_json():
@@ -183,19 +183,21 @@ def test_format_json_dict_input_produces_masked_json():
     assert parsed["currency"] == "EUR"
 
 
-def test_format_json_non_serialisable_falls_back_to_str():
-    class NotJSON:
-        def __repr__(self):
-            return "<NotJSON>"
+def test_format_json_non_serialisable_is_omitted():
+    obs = _observer()
+    assert obs._format_json({object(): "value"}) == "***BODY_OMITTED***"
+
+
+def test_opaque_object_body_is_omitted(caplog):
+    class OpaqueBody:
+        def __str__(self):
+            return "synthetic-secret"
 
     obs = _observer()
-    # json.dumps handles most things via default=str; force a failure by
-    # triggering an exception path — a dict with a non-serialisable key
-    # (keys must be str/int/float/bool/None) raises TypeError.
-    weird = {object(): "value"}
-    result = obs._format_json(weird)
-    assert isinstance(result, str)
-    assert result == str(weird)
+    with caplog.at_level(logging.INFO, logger="buckaroo_sdk"):
+        obs.log_response(200, body=OpaqueBody())
+    assert "synthetic-secret" not in caplog.text
+    assert "***BODY_OMITTED***" in caplog.text
 
 
 # --- Case-insensitive substring matching ---
@@ -692,3 +694,25 @@ def test_child_log_info_family_merges_context(caplog, method, expected_level):
     assert rec.levelno == expected_level
     assert "abc" in rec.message
     assert "hello" in rec.message
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "token=synthetic-secret&iban=NL00SYNTHETIC",
+        '{"token":"synthetic-secret"',
+        {1: "bad key", "token": "synthetic-secret"},
+    ],
+)
+@pytest.mark.parametrize("direction", ["request", "response"])
+@pytest.mark.parametrize("mask", [True, False])
+def test_log_body_failure_paths_respect_masking(body, direction, mask, caplog):
+    observer = _observer(mask=mask)
+    with caplog.at_level(logging.INFO, logger="buckaroo_sdk"):
+        if direction == "request":
+            observer.log_request("POST", "https://example.invalid", body=body)
+        else:
+            observer.log_response(200, body=body)
+    assert ("synthetic-secret" in caplog.text) is (not mask)
+    if mask:
+        assert "***BODY_OMITTED***" in caplog.text

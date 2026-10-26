@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [Released]
 
 ## [1.2.0]
-- BTI-1701 Fix unpaid payments reported as successful and secrets exposed by curl and logs
+- BTI-1701 Security update
 - BTI-1351 Remove GoSettle as payment method (deprecated)
 
 ## [1.1.0]

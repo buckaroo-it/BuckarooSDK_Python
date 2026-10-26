@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 
+## [1.2.0]
+- BTI-1701 Fix unpaid payments reported as successful and secrets exposed by curl and logs
+- BTI-1351 Remove GoSettle as payment method (deprecated)
+
 ## [1.1.0]
 - BTI-16 Add solution: Split Payments
 - BTI-17 Add solution: PayPerEmail

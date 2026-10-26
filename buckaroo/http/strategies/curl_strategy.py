@@ -54,11 +54,17 @@ class CurlStrategy(HttpStrategy):
         cmd = self._build_curl_command(
             method=method,
             url=url,
-            headers=headers,
-            data=data,
             timeout=timeout or self._timeout,
             verify_ssl=verify_ssl,
         )
+
+        # Keep credentials and payloads off the process command line.
+        config_lines = []
+        for key, value in {**self._default_headers, **(headers or {})}.items():
+            config_lines.append(f"header = {self._quote_config_value(f'{key}: {value}')}")
+        if data and method.upper() in ["POST", "PUT", "PATCH"]:
+            config_lines.append(f"data-raw = {self._quote_config_value(data)}")
+        config_input = "\n".join(config_lines) + "\n"
 
         # Execute curl with retry logic
         if self._retry_attempts <= 0:
@@ -68,8 +74,10 @@ class CurlStrategy(HttpStrategy):
             try:
                 result = subprocess.run(
                     cmd,
+                    input=config_input,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
                     timeout=timeout or self._timeout,
                     check=False,  # Don't raise on non-zero exit codes
                 )
@@ -95,8 +103,6 @@ class CurlStrategy(HttpStrategy):
         self,
         method: str,
         url: str,
-        headers: Optional[Dict[str, str]] = None,
-        data: Optional[str] = None,
         timeout: int = 30,
         verify_ssl: bool = True,
     ) -> List[str]:
@@ -106,8 +112,6 @@ class CurlStrategy(HttpStrategy):
         Args:
             method: HTTP method
             url: Request URL
-            headers: Request headers
-            data: Request body data
             timeout: Request timeout
             verify_ssl: Whether to verify SSL
 
@@ -116,6 +120,8 @@ class CurlStrategy(HttpStrategy):
         """
         cmd = [
             "curl",
+            "--config",
+            "-",
             "-X",
             method.upper(),
             "--location",  # Follow redirects
@@ -131,22 +137,26 @@ class CurlStrategy(HttpStrategy):
         if not verify_ssl:
             cmd.extend(["--insecure"])
 
-        # Add headers
-        all_headers = {**self._default_headers}
-        if headers:
-            all_headers.update(headers)
-
-        for key, value in all_headers.items():
-            cmd.extend(["-H", f"{key}: {value}"])
-
-        # Add data for POST/PUT requests
-        if data and method.upper() in ["POST", "PUT", "PATCH"]:
-            cmd.extend(["--data", data])
-
         # Add URL last
         cmd.append(url)
 
         return cmd
+
+    @staticmethod
+    def _quote_config_value(value: str) -> str:
+        """Quote a literal curl config value without allowing new options."""
+        if "\0" in value:
+            raise ValueError("curl input cannot contain NUL characters")
+        for original, escaped in (
+            ("\\", "\\\\"),
+            ('"', '\\"'),
+            ("\n", "\\n"),
+            ("\r", "\\r"),
+            ("\t", "\\t"),
+            ("\v", "\\v"),
+        ):
+            value = value.replace(original, escaped)
+        return f'"{value}"'
 
     def _parse_curl_output(self, result: subprocess.CompletedProcess) -> HttpResponse:
         """

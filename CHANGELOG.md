@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 
+## [1.2.0]
+- BTI-1701 Security update
+- BTI-1351 Remove GoSettle as payment method (deprecated)
+
 ## [1.1.0]
 - BTI-16 Add solution: Split Payments
 - BTI-17 Add solution: PayPerEmail
@@ -54,7 +58,6 @@ All notable changes to this project will be documented in this file.
 - BA-1003 Add payment method: Creditcards
 - BA-1004 Add payment method: EPS
 - BA-1005 Add payment method: Giftcards
-- BA-1006 Add payment method: goSettle
 - BA-1007 Add payment method: Google Pay
 - BA-1008 Add payment method: External Payment
 - BA-1009 Add payment method: iDEAL | Wero

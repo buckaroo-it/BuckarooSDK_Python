@@ -5,6 +5,8 @@ Buckaroo-specific fields. These tests construct HttpResponse instances
 directly — no HTTP client, no mocks.
 """
 
+import json
+
 import pytest
 
 from buckaroo.http.client import BuckarooResponse
@@ -84,62 +86,6 @@ class TestPassThroughAttributes:
         response = BuckarooResponse(make_response(headers=headers))
 
         assert response.headers == headers
-
-
-class TestIsSuccessfulPayment:
-    def test_returns_false_when_http_failed(self):
-        response = BuckarooResponse(
-            make_response(status_code=500, text='{"Status": {"Code": 190}}')
-        )
-
-        assert response.is_successful_payment() is False
-
-    @pytest.mark.parametrize("code", [190, 490, 491, 492, 790, 791, 792, 793])
-    def test_true_for_each_buckaroo_success_code(self, code):
-        response = BuckarooResponse(make_response(text=f'{{"Status": {{"Code": {code}}}}}'))
-
-        assert response.is_successful_payment() is True
-
-    def test_false_for_non_success_buckaroo_code(self):
-        response = BuckarooResponse(make_response(text='{"Status": {"Code": 491000}}'))
-
-        assert response.is_successful_payment() is False
-
-    def test_handles_nested_code_dict_shape(self):
-        response = BuckarooResponse(
-            make_response(text='{"Status": {"Code": {"Code": 190, "Description": "Success"}}}')
-        )
-
-        assert response.is_successful_payment() is True
-
-    def test_returns_success_when_no_status_field(self):
-        # HTTP 2xx but no "Status" in body — falls through to self.success.
-        response = BuckarooResponse(make_response(text='{"Other": "field"}'))
-
-        assert response.is_successful_payment() is True
-
-    def test_true_when_status_code_missing_from_status(self):
-        response = BuckarooResponse(make_response(text='{"Status": {"Other": 1}}'))
-
-        # Status present but no "Code" key — falls through to self.success.
-        assert response.is_successful_payment() is True
-
-    def test_false_when_code_is_unknown_type(self):
-        response = BuckarooResponse(make_response(text='{"Status": {"Code": "oops"}}'))
-
-        assert response.is_successful_payment() is False
-
-    def test_true_when_status_is_falsy(self):
-        # Status present but falsy — skips the Buckaroo-code branch.
-        response = BuckarooResponse(make_response(text='{"Status": null}'))
-
-        assert response.is_successful_payment() is True
-
-    def test_true_when_data_is_empty_but_http_ok(self):
-        # No _data at all -> falls through to self.success.
-        response = BuckarooResponse(make_response(text=""))
-
-        assert response.is_successful_payment() is True
 
 
 class TestGetStatusCode:
@@ -339,3 +285,42 @@ class TestToDict:
             "data": {"Key": "k"},
             "headers": headers,
         }
+
+
+@pytest.mark.parametrize(
+    "status,expected",
+    [
+        ({"Code": code}, code == 190)
+        for code in [190, 490, 491, 492, 690, 790, 791, 792, 793, 794, 890, 891, 999]
+    ]
+    + [({"Code": {"Code": code}}, code == 190) for code in [190, 490, 791]]
+    + [
+        (status, False)
+        for status in [
+            None,
+            {},
+            [],
+            "invalid",
+            190,
+            {"Code": None},
+            {"Code": []},
+            {"Code": "190"},
+            {"Code": 190.0},
+        ]
+    ],
+)
+def test_payment_success_requires_explicit_paid_status(status, expected):
+    data = {"Status": status, "RequiredAction": {"RedirectURL": "https://example.invalid/pay"}}
+    raw = HttpResponse(200, {}, json.dumps(data), True)
+    assert BuckarooResponse(raw).is_successful_payment() is expected
+
+
+@pytest.mark.parametrize("body", ["", "{}", "null", "[]", '"invalid"'])
+def test_missing_payment_status_is_not_paid(body):
+    assert BuckarooResponse(HttpResponse(200, {}, body, True)).is_successful_payment() is False
+
+
+def test_http_failure_is_not_payment_success():
+    raw = HttpResponse(500, {}, '{"Status":{"Code":190}}', False)
+    response = BuckarooResponse(raw)
+    assert response.is_successful_payment() is False
